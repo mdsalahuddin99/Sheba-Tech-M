@@ -53,6 +53,12 @@ async function __validateItemsStock(
     const product = productMap.get(item.productId);
     if (!product) throw new ServiceError("NOT_FOUND", `Product ${item.productId} not found`);
 
+    if (product.isService) {
+      // Services do not track stock or serials
+      productSnapshots.set(item.productId, { cost: 0, name: product.name });
+      continue;
+    }
+
     if (product.trackSerials) {
       const serialCount = Number(serialCounts.get(item.productId) ?? 0);
       if (serialCount < item.qty) {
@@ -120,7 +126,7 @@ export async function create(ctx: Ctx, input: SaleCreateInput) {
 
   // Step 1: Validate stock + prepare data (inside transaction)
   const raw = await prisma.$transaction(async (tx): Promise<any> => {
-    const { warehouseStockMap, productSnapshots } = await __validateItemsStock(tx, ctx, input, warehouseId);
+    const { warehouseStockMap, productSnapshots, productMap } = await __validateItemsStock(tx, ctx, input, warehouseId);
 
     // Calculate totals — DUE tenders are credit, not actual payment
     const [count, shop] = await Promise.all([
@@ -185,6 +191,7 @@ export async function create(ctx: Ctx, input: SaleCreateInput) {
     // Aggregate quantities by productId to perform single update for duplicate cart items
     const productQtyMap = new Map<string, number>();
     for (const item of input.items) {
+      if (productMap.get(item.productId)?.isService) continue;
       productQtyMap.set(item.productId, (productQtyMap.get(item.productId) ?? 0) + item.qty);
     }
 

@@ -38,6 +38,7 @@ interface Product {
   category?: string;
   subcategory?: string;
   warehouseStocks?: Array<{ qty: number }>;
+  isService?: boolean;
 }
 
 interface ProductFilterBarProps {
@@ -137,6 +138,7 @@ export function ProductFilterBar({
       // Note: if warehouseId is set but warehouseStocks is undefined (stale cache),
       // we keep the global stock so the product remains searchable.
 
+      if (p.isService) return true;
       if (availableStock - inInvoice <= 0) return false;
       return true;
     });
@@ -181,6 +183,7 @@ export function ProductFilterBar({
           const code = (e.target as HTMLInputElement).value.trim();
           if (code) {
             await onBarcodeEnter(code);
+            onSearchChange("", false);
             (e.target as HTMLInputElement).value = "";
           }
         }

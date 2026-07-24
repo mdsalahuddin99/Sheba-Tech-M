@@ -81,7 +81,7 @@ export function PaymentCollector({
   const afterDiscount = round2(Math.max(0, subtotal));
   const paidNum = round2(payments.reduce((s, p) => s + p.amount, 0));
   const dueNum = round2(Math.max(0, afterDiscount - paidNum));
-  const enteredAmount = pendingAmount ? (Number(pendingAmount) || 0) : dueNum;
+  const enteredAmount = Number(pendingAmount) || 0;
   const projectedDue = Math.max(0, dueNum - enteredAmount);
   const projectedPaid = paidNum + enteredAmount;
 
@@ -111,7 +111,7 @@ export function PaymentCollector({
   const remainingWalletBalance = Math.max(0, walletBalance - walletUsed);
 
   // Auto-fill pendingAmount with remaining due amount on mount or due change
-  const prevDueRef = useRef(dueNum);
+  const prevDueRef = useRef<number>(-1);
   useEffect(() => {
     if (dueNum !== prevDueRef.current) {
       // dueNum changed, update the pendingAmount to match the new due

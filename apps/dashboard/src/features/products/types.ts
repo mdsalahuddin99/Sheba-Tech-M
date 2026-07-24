@@ -102,6 +102,7 @@ export interface Product {
   onlinePrice?: number;
   compareAtPrice?: number;
   isPublished?: boolean;
+  isService?: boolean;
 
   // ---- Bundle / Kit (Phase 4) ----
   /** 'simple' (default) or 'bundle' (composed of other products). */

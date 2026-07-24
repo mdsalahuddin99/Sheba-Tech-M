@@ -129,6 +129,7 @@ interface InvoiceLineItemsProps {
   onChangeSerials: (rowId: string, serials: string[]) => void;
   onChangeWarranty: (rowId: string, months: number) => void;
   onChangeDiscount?: (rowId: string, discount: number) => void;
+  onChangePrice?: (rowId: string, price: number) => void;
   onRemoveRow: (rowId: string) => void;
   searchInputRef: React.RefObject<HTMLInputElement | null>;
 }
@@ -139,6 +140,7 @@ export function InvoiceLineItems({
   onChangeSerials,
   onChangeWarranty,
   onChangeDiscount,
+  onChangePrice,
   onRemoveRow,
   searchInputRef,
 }: InvoiceLineItemsProps) {
@@ -265,7 +267,8 @@ export function InvoiceLineItems({
                       value={row.qty}
                       min={1}
                       max={stock}
-                      className="w-14 text-center h-7 text-sm border-border bg-card rounded-[4px] px-1"
+                      disabled={product?.isService}
+                      className="w-14 text-center h-7 text-sm border-border bg-card rounded-[4px] px-1 disabled:opacity-50"
                       onChange={(e) => {
                         const qty = Math.max(1, parseInt(e.target.value) || 1);
                         if (qty > stock) {
@@ -309,9 +312,24 @@ export function InvoiceLineItems({
 
                 {/* Unit price */}
                 <td className="px-2 py-2 text-right">
-                  <span className="text-sm text-slate-700 tabular-nums">
-                    {formatCurrency(row.price)}
-                  </span>
+                  {onChangePrice && product?.isService ? (
+                    <Input
+                      type="number"
+                      min={0}
+                      step="any"
+                      value={row.price === 0 ? "" : row.price}
+                      onChange={(e) => {
+                        const val = parseFloat(e.target.value);
+                        onChangePrice(row.id, isNaN(val) ? 0 : val);
+                      }}
+                      placeholder="0.00"
+                      className="w-20 h-7 text-xs border-border bg-card rounded-[4px] text-right px-2 ml-auto font-medium tabular-nums"
+                    />
+                  ) : (
+                    <span className="text-sm text-slate-700 tabular-nums">
+                      {formatCurrency(row.price)}
+                    </span>
+                  )}
                 </td>
 
                 {/* Line total */}

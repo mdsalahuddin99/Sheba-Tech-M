@@ -66,6 +66,8 @@ export const translations = {
   "nav.reports": { en: "Reports", bn: "রিপোর্ট" },
   "nav.notifications": { en: "Notifications", bn: "নোটিফিকেশন" },
   "nav.settings": { en: "Settings", bn: "সেটিংস" },
+  "nav.rolesAndPermissions": { en: "Roles & Permissions", bn: "রোলস ও পারমিশন" },
+  "nav.help": { en: "Help & Support", bn: "হেল্প ও সাপোর্ট" },
   "nav.billing": { en: "Billing", bn: "বিলিং" },
 
   // Header

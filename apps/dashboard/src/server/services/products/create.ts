@@ -52,6 +52,7 @@ export async function create(ctx: Ctx, input: ProductCreateInput) {
       unit: input.unit ?? "pc",
       isPublished: input.isPublished ?? false,
       isFlashDeal: input.isFlashDeal ?? false,
+      isService: input.isService ?? false,
       onlinePrice: input.onlinePrice,
       compareAtPrice: input.compareAtPrice,
       // Extended fields

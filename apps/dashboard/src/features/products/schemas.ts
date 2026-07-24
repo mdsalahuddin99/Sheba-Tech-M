@@ -39,6 +39,7 @@ export const productSchema = z.object({
   ),
   unit: z.string().trim().min(1).max(20).default("pcs"),
   active: z.boolean().default(false),
+  isService: z.boolean().default(false),
   isTrending: z.boolean().optional(),
   emoji: z.string().trim().min(1).max(8).default("📦"),
   imageUrl: z.string().url().optional().or(z.literal("")),

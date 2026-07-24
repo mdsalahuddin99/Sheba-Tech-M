@@ -24,6 +24,7 @@ export interface ProductCreateInput {
   isFlashDeal?: boolean;
   onlinePrice?: number;
   compareAtPrice?: number;
+  isService?: boolean;
   // Extended fields
   brand?: string;
   model?: string;
@@ -63,6 +64,7 @@ export interface ProductUpdateInput {
   barcode?: string;
   onlinePrice?: number;
   compareAtPrice?: number;
+  isService?: boolean;
   // Extended fields
   brand?: string;
   model?: string;

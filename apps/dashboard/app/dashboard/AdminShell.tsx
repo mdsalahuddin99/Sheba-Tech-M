@@ -37,6 +37,7 @@ import {
   List,
   RefreshCw,
   Plus,
+  HelpCircle,
 } from "lucide-react";
 import type { UserRole } from "@/features/auth/types";
 import { cn } from "@/shared/lib/utils";
@@ -66,7 +67,7 @@ const navGroups: NavGroup[] = [
   {
     labelKey: "nav.customers" as TranslationKey,
     icon: Users,
-    permissions: ["PEOPLE"],
+    permissions: ["customers:view"],
     items: [
       { to: "/dashboard/customers?action=new", labelKey: "nav.newCustomer" as TranslationKey, icon: UserPlus },
       { to: "/dashboard/customers", labelKey: "nav.customerList" as TranslationKey, icon: Users },
@@ -75,7 +76,7 @@ const navGroups: NavGroup[] = [
   {
     labelKey: "nav.group.sales" as TranslationKey,
     icon: ShoppingCart,
-    permissions: ["POS"],
+    permissions: ["sales:view"],
     items: [
       { to: "/dashboard/sales/create", labelKey: "nav.pos", icon: ScanBarcode },
       { to: "/dashboard/sales", labelKey: "nav.sales", icon: ShoppingCart },
@@ -87,7 +88,7 @@ const navGroups: NavGroup[] = [
   {
     labelKey: "nav.suppliers" as TranslationKey,
     icon: Receipt,
-    permissions: ["PEOPLE"],
+    permissions: ["suppliers:view"],
     items: [
       { to: "/dashboard/suppliers?action=new", labelKey: "nav.newSupplier" as TranslationKey, icon: UserPlus },
       { to: "/dashboard/suppliers", labelKey: "nav.supplierList" as TranslationKey, icon: Receipt },
@@ -96,7 +97,7 @@ const navGroups: NavGroup[] = [
   {
     labelKey: "nav.group.purchases" as TranslationKey,
     icon: Truck,
-    permissions: ["INVENTORY"],
+    permissions: ["purchases:view"],
     items: [
       { to: "/dashboard/purchases?action=new", labelKey: "nav.newPurchase" as TranslationKey, icon: PackagePlus },
       { to: "/dashboard/purchases", labelKey: "nav.purchaseHistory" as TranslationKey, icon: Truck },
@@ -105,7 +106,7 @@ const navGroups: NavGroup[] = [
   {
     labelKey: "nav.products" as TranslationKey,
     icon: Package,
-    permissions: ["INVENTORY", "POS"],
+    permissions: ["products:view"],
     items: [
       { to: "/dashboard/products?action=new", labelKey: "nav.newProduct" as TranslationKey, icon: PackagePlus },
       { to: "/dashboard/products", labelKey: "nav.productList" as TranslationKey, icon: Package },
@@ -114,7 +115,7 @@ const navGroups: NavGroup[] = [
   {
     labelKey: "nav.categories" as TranslationKey,
     icon: FolderTree,
-    permissions: ["INVENTORY", "POS"],
+    permissions: ["product_categories:view", "expense_categories:view"],
     items: [
       { to: "/dashboard/categories?action=new", labelKey: "nav.newCategory" as TranslationKey, icon: FolderTree },
       { to: "/dashboard/categories", labelKey: "nav.categories", icon: FolderTree },
@@ -125,7 +126,7 @@ const navGroups: NavGroup[] = [
   {
     labelKey: "nav.group.inventory" as TranslationKey,
     icon: Boxes,
-    permissions: ["INVENTORY"],
+    permissions: ["inventory:view"],
     items: [
       { to: "/dashboard/inventory", labelKey: "nav.inventory", icon: Boxes },
       { to: "/dashboard/inventory/transfers", labelKey: "nav.transfers", icon: ArrowLeftRight },
@@ -135,7 +136,7 @@ const navGroups: NavGroup[] = [
   {
     labelKey: "nav.group.warranty" as TranslationKey,
     icon: ShieldCheck,
-    permissions: ["POS", "INVENTORY"],
+    permissions: ["warranty:view"],
     items: [
       { to: "/dashboard/warranty-lookup", labelKey: "nav.warrantyLookup" as TranslationKey, icon: ShieldCheck },
       { to: "/dashboard/warranty-claims", labelKey: "nav.warrantyClaims" as TranslationKey, icon: ShieldAlert },
@@ -144,7 +145,7 @@ const navGroups: NavGroup[] = [
   {
     labelKey: "nav.group.ecommerce" as TranslationKey,
     icon: ShoppingBag,
-    permissions: ["ECOMMERCE"],
+    permissions: ["ecommerce:view"],
     items: [
       { to: "/dashboard/online-orders", labelKey: "nav.onlineOrders", icon: ShoppingBag },
       { to: "/dashboard/online-categories", labelKey: "nav.onlineCategories" as TranslationKey, icon: FolderTree },
@@ -158,7 +159,7 @@ const navGroups: NavGroup[] = [
   {
     labelKey: "nav.group.finance" as TranslationKey,
     icon: Banknote,
-    permissions: ["FINANCE"],
+    permissions: ["expenses:view"],
     items: [
       { to: "/dashboard/accounts", labelKey: "nav.accounts", icon: Wallet },
       { to: "/dashboard/expenses", labelKey: "nav.expenses", icon: Banknote },
@@ -167,7 +168,7 @@ const navGroups: NavGroup[] = [
   {
     labelKey: "nav.group.reports" as TranslationKey,
     icon: BarChart3,
-    permissions: ["REPORTS"],
+    permissions: ["reports:view"],
     items: [
       { to: "/dashboard/reports", labelKey: "nav.reports", icon: BarChart3 },
     ],
@@ -175,9 +176,11 @@ const navGroups: NavGroup[] = [
   {
     labelKey: "nav.group.system" as TranslationKey,
     icon: Settings,
-    permissions: ["SETTINGS"],
+    permissions: ["settings:view"],
     items: [
       { to: "/dashboard/settings", labelKey: "nav.settings", icon: Settings },
+      { to: "/dashboard/permissions", labelKey: "nav.rolesAndPermissions" as TranslationKey, icon: ShieldCheck },
+      { to: "/dashboard/help", labelKey: "nav.help" as TranslationKey, icon: HelpCircle },
     ],
   },
 ];

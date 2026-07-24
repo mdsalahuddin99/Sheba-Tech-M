@@ -21,6 +21,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   adapter: PrismaAdapter(prisma),
   session: { strategy: "jwt" },
   trustHost: true,
+  basePath: "/api/auth",
   providers: [
     // Email/password login
     Credentials({
@@ -75,13 +76,11 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       } else if (token.sub) {
         // Fetch fresh permissions from DB if needed
         // Temp bypass for turbopack prisma caching issue
-        /*
         const dbUser = await prisma.user.findUnique({ where: { id: token.sub }, select: { role: true, permissions: true } });
         if (dbUser) {
           token.role = dbUser.role;
           token.permissions = dbUser.permissions ?? [];
         }
-        */
       }
       return token;
     },

@@ -62,7 +62,7 @@ export function CreateSaleClient() {
     heldSales, refetchHeldSales, currentCustomer, customers,
     loadDraftId, subtotal, invoiceTotal, addProductToVoucher,
     handleBarcodeEnter, changeQty, changeSerials, changeWarranty,
-    changeDiscount, removeRow, clearVoucher, holdCurrentSale,
+    changePrice, changeDiscount, removeRow, clearVoucher, holdCurrentSale,
     resumeHeldSale, deleteHeldSale, handleCheckout, handleCameraBarcode,
     pendingMethod, setPendingMethod,
     pendingAmount, setPendingAmount,
@@ -297,6 +297,7 @@ export function CreateSaleClient() {
                     onChangeSerials={changeSerials}
                     onChangeWarranty={changeWarranty}
                     onChangeDiscount={changeDiscount}
+                    onChangePrice={changePrice}
                     onRemoveRow={removeRow}
                     searchInputRef={vSearchRef}
                   />

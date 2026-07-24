@@ -37,6 +37,7 @@ export function ProductFormCascadingFields({ form, editing }: Props) {
   const productName = useWatch({ name: "name", control }); // Product Name (string)
   const model = useWatch({ name: "model", control }); // Model ID
   const searchTags = useWatch({ name: "searchTags", control }) as string[] ?? [];
+  const isService = useWatch({ name: "isService", control });
 
   // ── Compatible model tag input state ──
   const [tagInput, setTagInput] = useState("");
@@ -310,40 +311,42 @@ export function ProductFormCascadingFields({ form, editing }: Props) {
       )} />
 
       {/* 3. Brand */}
-      <FormField control={control} name="brand" render={({ field }) => (
-        <FormItem className="space-y-1">
-          <div className="flex flex-row items-center gap-2">
-            <FormLabel className="w-[110px] shrink-0 text-right">Brand</FormLabel>
-            <div className="flex gap-1 items-center flex-1 min-w-0">
-              <div className="flex-1 min-w-0">
-                <AsyncSuggest
-                  value={field.value ?? ""}
-                  onValueChange={(v) => field.onChange(v)}
-                  placeholder="Search brand..."
-                  allowClear
+      {!isService && (
+        <FormField control={control} name="brand" render={({ field }) => (
+          <FormItem className="space-y-1">
+            <div className="flex flex-row items-center gap-2">
+              <FormLabel className="w-[110px] shrink-0 text-right">Brand</FormLabel>
+              <div className="flex gap-1 items-center flex-1 min-w-0">
+                <div className="flex-1 min-w-0">
+                  <AsyncSuggest
+                    value={field.value ?? ""}
+                    onValueChange={(v) => field.onChange(v)}
+                    placeholder="Search brand..."
+                    allowClear
+                    disabled={!subcategory}
+                    defaultOptions={brands.map((b: any) => ({ value: b.id, label: b.name }))}
+                    fetchOptions={async (search) => {
+                      const res = await apiFetch<any[]>(
+                        `/api/catalog?entity=brands&search=${encodeURIComponent(search)}${subcategory ? `&subcategory=${encodeURIComponent(subcategory)}` : ""}`
+                      );
+                      return res.map((b: any) => ({ value: b.id, label: b.name }));
+                    }}
+                  />
+                </div>
+                <Button
+                  type="button" size="icon" variant="outline" className="h-10 w-10 shrink-0"
+                  onClick={() => openQuickCreate("brands")}
                   disabled={!subcategory}
-                  defaultOptions={brands.map((b: any) => ({ value: b.id, label: b.name }))}
-                  fetchOptions={async (search) => {
-                    const res = await apiFetch<any[]>(
-                      `/api/catalog?entity=brands&search=${encodeURIComponent(search)}${subcategory ? `&subcategory=${encodeURIComponent(subcategory)}` : ""}`
-                    );
-                    return res.map((b: any) => ({ value: b.id, label: b.name }));
-                  }}
-                />
+                  title="Add new brand"
+                >
+                  <Plus className="h-4 w-4" />
+                </Button>
               </div>
-              <Button
-                type="button" size="icon" variant="outline" className="h-10 w-10 shrink-0"
-                onClick={() => openQuickCreate("brands")}
-                disabled={!subcategory}
-                title="Add new brand"
-              >
-                <Plus className="h-4 w-4" />
-              </Button>
             </div>
-          </div>
-          <FormMessage className="ml-[33%] pl-3" />
-        </FormItem>
-      )} />
+            <FormMessage className="ml-[33%] pl-3" />
+          </FormItem>
+        )} />
+      )}
 
       {/* 4. Product Name */}
       <FormField control={control} name="name" render={({ field }) => (
@@ -356,11 +359,11 @@ export function ProductFormCascadingFields({ form, editing }: Props) {
                   value={field.value ?? ""}
                   onValueChange={(v) => field.onChange(v)}
                   placeholder="Search product name..."
-                  disabled={!brand}
+                  disabled={!isService && !brand}
                   defaultOptions={products.map((p: any) => ({ value: p.name, label: productDisplayName(p) }))}
                   fetchOptions={async (search) => {
                     const res = await apiFetch<any[]>(
-                      `/api/catalog?entity=products&search=${encodeURIComponent(search)}${brand ? `&brandId=${brand}` : ""}`
+                      `/api/catalog?entity=products&search=${encodeURIComponent(search)}${!isService && brand ? `&brandId=${brand}` : ""}`
                     );
                     return res.map((p: any) => ({ value: p.name, label: productDisplayName(p) }));
                   }}
@@ -369,7 +372,7 @@ export function ProductFormCascadingFields({ form, editing }: Props) {
               <Button
                 type="button" size="icon" variant="outline" className="h-10 w-10 shrink-0"
                 onClick={() => openQuickCreate("products")}
-                disabled={!brand}
+                disabled={!isService && !brand}
                 title="Add new product name"
               >
                 <Plus className="h-4 w-4" />
@@ -381,43 +384,45 @@ export function ProductFormCascadingFields({ form, editing }: Props) {
       )} />
 
       {/* 5. Model */}
-      <FormField control={control} name="model" render={({ field }) => (
-        <FormItem className="space-y-1">
-          <div className="flex flex-row items-center gap-2">
-            <FormLabel className="w-[110px] shrink-0 text-right">Model</FormLabel>
-            <div className="flex gap-1 items-center flex-1 min-w-0">
-              <div className="flex-1 min-w-0">
-                <AsyncSuggest
-                  value={field.value ?? ""}
-                  onValueChange={(v) => field.onChange(v)}
-                  placeholder="Search model..."
-                  allowClear
+      {!isService && (
+        <FormField control={control} name="model" render={({ field }) => (
+          <FormItem className="space-y-1">
+            <div className="flex flex-row items-center gap-2">
+              <FormLabel className="w-[110px] shrink-0 text-right">Model</FormLabel>
+              <div className="flex gap-1 items-center flex-1 min-w-0">
+                <div className="flex-1 min-w-0">
+                  <AsyncSuggest
+                    value={field.value ?? ""}
+                    onValueChange={(v) => field.onChange(v)}
+                    placeholder="Search model..."
+                    allowClear
+                    disabled={!productName}
+                    defaultOptions={models.map((m: any) => ({ value: m.id, label: m.name }))}
+                    fetchOptions={async (search) => {
+                      const res = await apiFetch<any[]>(
+                        `/api/catalog?entity=models&search=${encodeURIComponent(search)}${selectedProductTypeId ? `&productTypeId=${selectedProductTypeId}` : ""}`
+                      );
+                      return res.map((m: any) => ({ value: m.id, label: m.name }));
+                    }}
+                  />
+                </div>
+                <Button
+                  type="button" size="icon" variant="outline" className="h-10 w-10 shrink-0"
+                  onClick={() => openQuickCreate("models")}
                   disabled={!productName}
-                  defaultOptions={models.map((m: any) => ({ value: m.id, label: m.name }))}
-                  fetchOptions={async (search) => {
-                    const res = await apiFetch<any[]>(
-                      `/api/catalog?entity=models&search=${encodeURIComponent(search)}${selectedProductTypeId ? `&productTypeId=${selectedProductTypeId}` : ""}`
-                    );
-                    return res.map((m: any) => ({ value: m.id, label: m.name }));
-                  }}
-                />
+                  title="Add new model"
+                >
+                  <Plus className="h-4 w-4" />
+                </Button>
               </div>
-              <Button
-                type="button" size="icon" variant="outline" className="h-10 w-10 shrink-0"
-                onClick={() => openQuickCreate("models")}
-                disabled={!productName}
-                title="Add new model"
-              >
-                <Plus className="h-4 w-4" />
-              </Button>
             </div>
-          </div>
-          <FormMessage className="ml-[33%] pl-3" />
-        </FormItem>
-      )} />
+            <FormMessage className="ml-[33%] pl-3" />
+          </FormItem>
+        )} />
+      )}
 
       {/* 5b. Compatible Models — visible only when a model is selected */}
-      {model && (
+      {!isService && model && (
         <div className="space-y-1 sm:col-span-1">
           <div className="flex flex-row items-start gap-2">
             <label className="w-[110px] shrink-0 text-right text-sm font-medium leading-none pt-2.5 text-muted-foreground flex items-center justify-end gap-1">
@@ -471,40 +476,42 @@ export function ProductFormCascadingFields({ form, editing }: Props) {
       )}
 
       {/* 6. Series */}
-      <FormField control={control} name="series" render={({ field }) => (
-        <FormItem className="space-y-1">
-          <div className="flex flex-row items-center gap-2">
-            <FormLabel className="w-[110px] shrink-0 text-right">Series</FormLabel>
-            <div className="flex gap-1 items-center flex-1 min-w-0">
-              <div className="flex-1 min-w-0">
-                <AsyncSuggest
-                  value={field.value ?? ""}
-                  onValueChange={(v) => field.onChange(v)}
-                  placeholder="Search series..."
-                  allowClear
+      {!isService && (
+        <FormField control={control} name="series" render={({ field }) => (
+          <FormItem className="space-y-1">
+            <div className="flex flex-row items-center gap-2">
+              <FormLabel className="w-[110px] shrink-0 text-right">Series</FormLabel>
+              <div className="flex gap-1 items-center flex-1 min-w-0">
+                <div className="flex-1 min-w-0">
+                  <AsyncSuggest
+                    value={field.value ?? ""}
+                    onValueChange={(v) => field.onChange(v)}
+                    placeholder="Search series..."
+                    allowClear
+                    disabled={!model}
+                    defaultOptions={seriesList.map((s: any) => ({ value: s.id, label: s.name }))}
+                    fetchOptions={async (search) => {
+                      const res = await apiFetch<any[]>(
+                        `/api/catalog?entity=series&search=${encodeURIComponent(search)}${model ? `&modelId=${model}` : ""}`
+                      );
+                      return res.map((s: any) => ({ value: s.id, label: s.name }));
+                    }}
+                  />
+                </div>
+                <Button
+                  type="button" size="icon" variant="outline" className="h-10 w-10 shrink-0"
+                  onClick={() => openQuickCreate("series")}
                   disabled={!model}
-                  defaultOptions={seriesList.map((s: any) => ({ value: s.id, label: s.name }))}
-                  fetchOptions={async (search) => {
-                    const res = await apiFetch<any[]>(
-                      `/api/catalog?entity=series&search=${encodeURIComponent(search)}${model ? `&modelId=${model}` : ""}`
-                    );
-                    return res.map((s: any) => ({ value: s.id, label: s.name }));
-                  }}
-                />
+                  title="Add new series"
+                >
+                  <Plus className="h-4 w-4" />
+                </Button>
               </div>
-              <Button
-                type="button" size="icon" variant="outline" className="h-10 w-10 shrink-0"
-                onClick={() => openQuickCreate("series")}
-                disabled={!model}
-                title="Add new series"
-              >
-                <Plus className="h-4 w-4" />
-              </Button>
             </div>
-          </div>
-          <FormMessage className="ml-[33%] pl-3" />
-        </FormItem>
-      )} />
+            <FormMessage className="ml-[33%] pl-3" />
+          </FormItem>
+        )} />
+      )}
 
       <Dialog
         open={quickCreateOpen}

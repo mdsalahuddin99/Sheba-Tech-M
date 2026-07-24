@@ -70,6 +70,7 @@ export function serialiseOne(p: any) {
     })),
     warehouseStocks: p.warehouseStocks,
     searchTags: p.searchTags ?? [],
+    isService: p.isService ?? false,
   };
 }
 

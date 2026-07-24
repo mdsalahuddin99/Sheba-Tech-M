@@ -117,6 +117,7 @@ export function ProductFormDialog({
         minStock: rest.minStock ?? defaults.minStock,
         unit: rest.unit ?? defaults.unit,
         active: rest.active ?? defaults.active,
+        isService: (rest as any).isService ?? defaults.isService,
         description: (rest as any).description ?? "",
         shortDescription: (rest as any).shortDescription ?? "",
         emoji: rest.emoji ?? defaults.emoji,
@@ -194,6 +195,7 @@ export function ProductFormDialog({
       minStock: values.minStock,
       unit: values.unit,
       active: values.active,
+      isService: values.isService,
       description: values.description?.trim() || undefined,
       shortDescription: values.shortDescription?.trim() || undefined,
       emoji: values.emoji,
@@ -323,6 +325,20 @@ function FormFields({
             <FormLabel className="text-sm font-medium">Serial / Barcode tracked</FormLabel>
             <p className="text-xs text-muted-foreground">
               On হলে Purchase-এ প্রতিটা unit scan করতে হবে। Off করলে শুধু quantity লিখলেই চলবে (cable, accessory ইত্যাদির জন্য)।
+            </p>
+          </div>
+          <FormControl>
+            <Switch checked={field.value} onCheckedChange={field.onChange} />
+          </FormControl>
+        </FormItem>
+      )} />
+
+      <FormField control={control} name="isService" render={({ field }) => (
+        <FormItem className="sm:col-span-2 flex items-center justify-between p-3 rounded-md bg-secondary/50 space-y-0 mt-2">
+          <div>
+            <FormLabel className="text-sm font-medium">This is a Service (No Inventory)</FormLabel>
+            <p className="text-xs text-muted-foreground">
+              On করলে এটি সার্ভিস হিসেবে গণ্য হবে, ফলে সেল করার সময় সিস্টেম কোনো স্টক বা সিরিয়াল নাম্বার চেক করবে না।
             </p>
           </div>
           <FormControl>

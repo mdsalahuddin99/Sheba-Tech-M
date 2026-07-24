@@ -13,6 +13,7 @@ import { salesApi } from '@/shared/api-client/sales';
 import { apiFetch } from '@/shared/api-client/fetch';
 import { saleCreateSchema } from '@/shared/validators/sale';
 import { useAccountsByType } from '@/features/accounts/hooks';
+import { useCustomersQuery } from '@/features/customers/hooks';
 
 export function useCreateSale() {
 
@@ -36,9 +37,29 @@ export function useCreateSale() {
     }
   }, [warehouses, selectedWarehouseId]);
 
+  // Fetch all customers for auto-selecting Walking Customer
+  const { data: customersData } = useCustomersQuery();
+  const allCustomers = useMemo(() => {
+    return customersData ? (Array.isArray(customersData) ? customersData : (customersData as any).items) : [];
+  }, [customersData]);
+
   // ── Form state ──────────────────────────────────────────────────────────
   const [voucherRows, setVoucherRows] = useState<VoucherRow[]>([]);
   const [voucherCustomerId, setVoucherCustomerId] = useState<string | null>(null);
+
+  // Auto-select Walking Customer
+  useEffect(() => {
+    if (!voucherCustomerId && !editingSaleId && allCustomers?.length > 0) {
+      const walkIn = allCustomers.find((c: any) => 
+        c.name.toLowerCase().includes("walking") || 
+        c.name.toLowerCase().includes("walk-in") || 
+        c.name.toLowerCase() === "walk in customer"
+      );
+      if (walkIn) {
+        setVoucherCustomerId(walkIn.id);
+      }
+    }
+  }, [allCustomers, voucherCustomerId, editingSaleId]);
   const [voucherCategory, setVoucherCategory] = useState("all");
   const [voucherSubcategory, setVoucherSubcategory] = useState("all");
   const [voucherSearchQuery, setVoucherSearchQuery] = useState("");
@@ -224,7 +245,7 @@ export function useCreateSale() {
       const existing = voucherRows.find((r) => r.productId === productId);
       const currentQty = existing ? existing.qty : 0;
       const avail = (product.stock ?? 0) - currentQty;
-      if (avail <= 0) {
+      if (avail <= 0 && !product.isService) {
         toast.error("Out of stock");
         return;
       }
@@ -359,6 +380,12 @@ export function useCreateSale() {
     );
   }, []);
 
+  const changePrice = useCallback((rowId: string, price: number) => {
+    setVoucherRows((rows) =>
+      rows.map((r) => (r.id === rowId ? { ...r, price } : r)),
+    );
+  }, []);
+
   const removeRow = useCallback((rowId: string) => {
     setVoucherRows((rows) => rows.filter((r) => r.id !== rowId));
     voucherRowRefs.current.delete(rowId);
@@ -366,7 +393,12 @@ export function useCreateSale() {
 
   const clearVoucher = useCallback(() => {
     setVoucherRows([]);
-    setVoucherCustomerId(null);
+    const walkIn = allCustomers.find((c: any) => 
+      c.name.toLowerCase().includes("walking") || 
+      c.name.toLowerCase().includes("walk-in") || 
+      c.name.toLowerCase() === "walk in customer"
+    );
+    setVoucherCustomerId(walkIn ? walkIn.id : null);
     setPayments([]);
     setWalletAutoApplied(true);
     voucherRowRefs.current.clear();
@@ -383,7 +415,7 @@ export function useCreateSale() {
     setPendingMethod("Cash");
     setPendingAmount("");
     setPendingAccountId(null);
-  }, [session]);
+  }, [session, allCustomers]);
 
   // ── Context event listeners for global Command Palette ────────────────────
   useEffect(() => {
@@ -667,7 +699,7 @@ export function useCreateSale() {
     heldSales, refetchHeldSales, currentCustomer, customers,
     loadDraftId, subtotal, invoiceTotal, addProductToVoucher,
     handleBarcodeEnter, changeQty, changeSerials, changeWarranty,
-    changeDiscount, removeRow, clearVoucher, holdCurrentSale,
+    changePrice, changeDiscount, removeRow, clearVoucher, holdCurrentSale,
     resumeHeldSale, deleteHeldSale, handleCheckout, handleCameraBarcode,
     pendingMethod, setPendingMethod,
     pendingAmount, setPendingAmount,

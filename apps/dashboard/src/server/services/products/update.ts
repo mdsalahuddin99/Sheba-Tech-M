@@ -39,6 +39,7 @@ export async function update(ctx: Ctx, id: string, input: ProductUpdateInput) {
   if (input.isPublished !== undefined) data.isPublished = input.isPublished;
   if (input.isTrending !== undefined) data.isTrending = input.isTrending;
   if (input.isFlashDeal !== undefined) data.isFlashDeal = input.isFlashDeal;
+  if (input.isService !== undefined) data.isService = input.isService;
   if (input.barcode !== undefined) data.barcode = input.barcode;
   if (input.onlinePrice !== undefined) data.onlinePrice = input.onlinePrice;
   if (input.compareAtPrice !== undefined) data.compareAtPrice = input.compareAtPrice;

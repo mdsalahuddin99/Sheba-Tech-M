@@ -291,6 +291,7 @@ model Product {
   images        ProductImage[]
   variants      ProductVariant[]
   reviews       ProductReview[]
+  isService     Boolean          @default(false)
   isPublished   Boolean          @default(false)
   isTrending    Boolean          @default(false)
   isFlashDeal   Boolean          @default(false)

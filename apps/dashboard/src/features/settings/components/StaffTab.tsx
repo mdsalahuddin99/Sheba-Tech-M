@@ -71,10 +71,12 @@ export default function StaffTab() {
   const [confirmDel, setConfirmDel] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
 
-  // Edit role dialog
+  // Edit user dialog
   const [editTarget, setEditTarget] = useState<StaffUser | null>(null);
   const [editingRole, setEditingRole] = useState<"CASHIER" | "ADMIN">("CASHIER");
-  const [editingPermissions, setEditingPermissions] = useState<string[]>([]);
+  const [editingName, setEditingName] = useState("");
+  const [editingEmail, setEditingEmail] = useState("");
+  const [editingPassword, setEditingPassword] = useState("");
   const [editSaving, setEditSaving] = useState(false);
 
   const fetchUsers = async () => {
@@ -142,19 +144,33 @@ export default function StaffTab() {
 
   const handleEditRole = async () => {
     if (!editTarget) return;
+
+    if (editingPassword && editingPassword.length < 8) {
+      toast.error("Password must be at least 8 characters long");
+      return;
+    }
+
     setEditSaving(true);
     try {
+      const payload: any = { role: editingRole };
+      if (editingName !== editTarget.name) payload.name = editingName;
+      if (editingEmail !== editTarget.email) payload.email = trimEmail(editingEmail);
+      if (editingPassword) payload.password = editingPassword;
+
       const res = await fetch(`/api/users?id=${editTarget.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ role: editingRole, permissions: editingPermissions }),
+        body: JSON.stringify(payload),
       });
-      if (!res.ok) throw new Error("Failed to update");
-      toast.success(`Permissions updated`);
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.message ?? "Failed to update");
+      }
+      toast.success(`Staff member updated`);
       setEditTarget(null);
       fetchUsers();
-    } catch {
-      toast.error("Could not update role");
+    } catch (e: any) {
+      toast.error(e.message ?? "Could not update staff member");
     } finally {
       setEditSaving(false);
     }
@@ -224,7 +240,9 @@ export default function StaffTab() {
                             onClick={() => { 
                               setEditTarget(u); 
                               setEditingRole(u.role as any); 
-                              setEditingPermissions(u.permissions ?? []);
+                              setEditingName(u.name ?? "");
+                              setEditingEmail(u.email);
+                              setEditingPassword("");
                             }}
                           >
                             <MoreHorizontal className="h-4 w-4" />
@@ -285,16 +303,28 @@ export default function StaffTab() {
         </DialogContent>
       </Dialog>
 
-      {/* ── Edit Role Dialog ── */}
+      {/* ── Edit Staff Dialog ── */}
       <Dialog open={!!editTarget} onOpenChange={(o) => { if (!o) setEditTarget(null); }}>
         <DialogContent className="sm:max-w-sm">
           <DialogHeader>
-            <DialogTitle>Change Role</DialogTitle>
+            <DialogTitle>Edit Staff</DialogTitle>
             <DialogDescription>
-              Update permissions for {editTarget?.name ?? editTarget?.email}
+              Update profile and role for {editTarget?.name ?? editTarget?.email}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
+            <div>
+              <label className="text-sm font-medium mb-1 block">Full Name</label>
+              <Input value={editingName} onChange={(e) => setEditingName(e.target.value)} required />
+            </div>
+            <div>
+              <label className="text-sm font-medium mb-1 block">Username / Email</label>
+              <Input type="email" value={editingEmail} onChange={(e) => setEditingEmail(e.target.value)} required />
+            </div>
+            <div>
+              <label className="text-sm font-medium mb-1 block">New Password <span className="text-muted-foreground font-normal">(Leave empty to keep current)</span></label>
+              <Input type="password" value={editingPassword} onChange={(e) => setEditingPassword(e.target.value)} minLength={8} placeholder="Enter new password" />
+            </div>
             <div>
               <label className="text-sm font-medium mb-1 block">Role</label>
               <select
@@ -308,32 +338,13 @@ export default function StaffTab() {
             </div>
             
             {editingRole !== "ADMIN" && (
-              <div>
-                <label className="text-sm font-medium mb-2 block">Granular Permissions</label>
-                <div className="space-y-2 border rounded-md p-3 max-h-[200px] overflow-y-auto">
-                  {AVAILABLE_PERMISSIONS.map((perm) => (
-                    <label key={perm.id} className="flex items-center gap-2 text-sm">
-                      <input
-                        type="checkbox"
-                        checked={editingPermissions.includes(perm.id)}
-                        onChange={(e) => {
-                          if (e.target.checked) {
-                            setEditingPermissions([...editingPermissions, perm.id]);
-                          } else {
-                            setEditingPermissions(editingPermissions.filter(p => p !== perm.id));
-                          }
-                        }}
-                        className="rounded border-input"
-                      />
-                      {perm.label}
-                    </label>
-                  ))}
-                </div>
-              </div>
+              <p className="text-xs text-muted-foreground mt-2 bg-indigo-50/50 p-2 rounded border border-indigo-100">
+                <strong>Note:</strong> Detailed permissions for Cashiers can now be configured from the <strong>Roles & Permissions</strong> page.
+              </p>
             )}
 
             <LoadingButton onClick={handleEditRole} loading={editSaving} className="w-full">
-              Update Role
+              Save Changes
             </LoadingButton>
           </div>
         </DialogContent>

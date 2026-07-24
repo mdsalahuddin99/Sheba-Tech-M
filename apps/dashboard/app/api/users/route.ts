@@ -18,6 +18,8 @@ const createUserSchema = z.object({
 const updateUserSchema = z.object({
   role: z.enum(["CASHIER", "ADMIN", "USER"]).optional(),
   name: z.string().trim().min(2).max(100).optional(),
+  email: z.string().trim().email().max(255).optional(),
+  password: z.string().min(8).max(128).optional(),
   permissions: z.array(z.string()).optional(),
 });
 
@@ -80,7 +82,7 @@ export const POST = apiHandler(async (ctx: Ctx, req: Request) => {
   return { success: true, user };
 }, "users:create", ["ADMIN"]);
 
-// ─── PATCH: Update user role ───────────────────────────────────────────────
+// ─── PATCH: Update user role, profile or password ───────────────────────────
 
 export const PATCH = apiHandler(async (ctx: Ctx, req: Request) => {
   const url = new URL(req.url);
@@ -89,10 +91,23 @@ export const PATCH = apiHandler(async (ctx: Ctx, req: Request) => {
 
   const body = await req.json();
   const parsed = updateUserSchema.parse(body);
+  const updateData: any = { ...parsed };
+
+  if (parsed.email) {
+    const existing = await prisma.user.findUnique({ where: { email: parsed.email } });
+    if (existing && existing.id !== userId) {
+      throw new (await import("@/server/lib/errors")).ServiceError("CONFLICT", "Email already in use", 409);
+    }
+  }
+
+  if (parsed.password) {
+    updateData.passwordHash = hashPassword(parsed.password);
+    delete updateData.password;
+  }
 
   const result = await prisma.user.updateMany({
     where: { id: userId },
-    data: parsed,
+    data: updateData,
   });
 
   if (result.count === 0) {
