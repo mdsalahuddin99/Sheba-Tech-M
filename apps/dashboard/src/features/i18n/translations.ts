@@ -69,6 +69,7 @@ export const translations = {
   "nav.rolesAndPermissions": { en: "Roles & Permissions", bn: "রোলস ও পারমিশন" },
   "nav.help": { en: "Help & Support", bn: "হেল্প ও সাপোর্ট" },
   "nav.billing": { en: "Billing", bn: "বিলিং" },
+  "nav.trash": { en: "Trash / Recycle Bin", bn: "ট্রাস / রিসাইকেল বিন" },
 
   // Header
   "header.newSale": { en: "New Sale", bn: "নতুন বিক্রয়" },
