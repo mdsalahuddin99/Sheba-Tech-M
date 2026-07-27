@@ -82,9 +82,20 @@ export async function refund(ctx: Ctx, id: string, input: RefundInput) {
       await salesAccounting.recordCustomerSpent(tx, sale.customerId, refundAmount, true);
     }
 
+    const saleData = (sale.data as Record<string, any>) || {};
     const updatedSale = await tx.sale.update({
       where: { id },
-      data: { status: "REFUNDED", notes: `REFUND: ${input.reason}` },
+      data: { 
+        status: "REFUNDED", 
+        notes: `REFUND: ${input.reason}`,
+        data: {
+          ...saleData,
+          refundAmount,
+          refundMethod: input.refundMethod,
+          reason: input.reason,
+          returnNo: `RET-${id.slice(0, 8).toUpperCase()}`,
+        }
+      },
     });
     return updatedSale;
   }, { timeout: 30000 });

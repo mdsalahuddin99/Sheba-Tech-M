@@ -196,7 +196,12 @@ export function serializeSale(raw: PrismaSale): Sale {
       amount: toNumber(t.amount),
       accountId: t.accountId,
     })),
-  };
+    // For SaleReturn type compatibility
+    returnNo: d.returnNo ?? (raw.status === "REFUNDED" || raw.status === "VOIDED" ? `RET-${raw.id.slice(0, 8).toUpperCase()}` : undefined),
+    refundAmount: d.refundAmount ?? (raw.status === "REFUNDED" ? total : 0),
+    refundMethod: d.refundMethod ?? "Cash",
+    reason: d.reason ?? (raw.notes?.startsWith("REFUND: ") ? raw.notes.replace("REFUND: ", "") : raw.notes ?? ""),
+  } as any;
 }
 
 

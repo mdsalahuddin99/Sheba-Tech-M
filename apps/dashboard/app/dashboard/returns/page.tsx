@@ -19,7 +19,7 @@ export default async function ReturnsPage() {
   return (
     <ReturnsClient
       initialSales={salesRes.items}
-      initialReturns={returnsRes.items}
+      initialReturns={returnsRes.items as any}
       initialAccounts={[]}
       initialLedger={[]}
     />

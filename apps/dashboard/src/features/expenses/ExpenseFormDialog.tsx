@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
@@ -41,6 +41,15 @@ export function ExpenseFormDialog({ open, onOpenChange, editing }: Props) {
     ?? accounts[0]?.id
     ?? "";
 
+  const [method, setMethod] = useState<string>("");
+
+  useEffect(() => {
+    if (accounts.length > 0 && !method) {
+      const initialType = accounts.find(a => a.id === defaultAccountId)?.type || "cash";
+      setMethod(initialType);
+    }
+  }, [accounts, defaultAccountId, method]);
+
   const form = useForm<ExpenseFormValues, unknown, ExpenseFormValues>({
     resolver: zodResolver(expenseSchema),
     defaultValues: {
@@ -62,6 +71,8 @@ export function ExpenseFormDialog({ open, onOpenChange, editing }: Props) {
         description: editing.description,
         accountId: editing.accountId ?? defaultAccountId,
       });
+      const act = accounts.find((a) => a.id === (editing.accountId ?? defaultAccountId));
+      if (act) setMethod(act.type);
     } else {
       form.reset({
         date: new Date().toISOString().slice(0, 10),
@@ -70,8 +81,10 @@ export function ExpenseFormDialog({ open, onOpenChange, editing }: Props) {
         description: "",
         accountId: defaultAccountId,
       });
+      const act = accounts.find((a) => a.id === defaultAccountId);
+      if (act) setMethod(act.type);
     }
-  }, [open, editing, form, defaultAccountId]);
+  }, [open, editing, form, defaultAccountId, accounts]);
 
   const onSubmit = async (values: ExpenseFormValues) => {
     const payload = {
@@ -127,28 +140,49 @@ export function ExpenseFormDialog({ open, onOpenChange, editing }: Props) {
                 <FormMessage />
               </FormItem>
             )} />
-            <FormField control={form.control} name="accountId" render={({ field }) => (
-              <FormItem>
-                <FormLabel>Paid From Account</FormLabel>
-                {accounts.length === 0 ? (
-                  <p className="text-xs text-destructive border border-destructive/30 bg-destructive/5 rounded-md p-2">
-                    No active account. Add one on the Accounts page first.
-                  </p>
-                ) : (
-                  <Select value={field.value} onValueChange={field.onChange}>
-                    <FormControl><SelectTrigger><SelectValue placeholder="Select account" /></SelectTrigger></FormControl>
-                    <SelectContent>
-                      {accounts.map((a) => (
-                        <SelectItem key={a.id} value={a.id}>
-                          {a.name} · {ACCOUNT_TYPE_LABEL[a.type]} · {formatCurrency(balances[a.id] ?? 0)}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                )}
-                <FormMessage />
-              </FormItem>
-            )} />
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <FormLabel>Account Type</FormLabel>
+                <Select
+                  value={method}
+                  onValueChange={(v) => {
+                    setMethod(v);
+                    const firstAcc = accounts.find((a) => a.type === v);
+                    if (firstAcc) form.setValue("accountId", firstAcc.id);
+                  }}
+                >
+                  <SelectTrigger><SelectValue placeholder="Select type" /></SelectTrigger>
+                  <SelectContent>
+                    {Object.entries(ACCOUNT_TYPE_LABEL).map(([key, label]) => (
+                      <SelectItem key={key} value={key}>{label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <FormField control={form.control} name="accountId" render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Paid From Ledger</FormLabel>
+                  {accounts.length === 0 ? (
+                    <p className="text-xs text-destructive border border-destructive/30 bg-destructive/5 rounded-md p-2">
+                      No active account.
+                    </p>
+                  ) : (
+                    <Select value={field.value} onValueChange={field.onChange}>
+                      <FormControl><SelectTrigger><SelectValue placeholder="Select ledger" /></SelectTrigger></FormControl>
+                      <SelectContent>
+                        {accounts.filter(a => a.type === method).map((a) => (
+                          <SelectItem key={a.id} value={a.id}>
+                            {a.name} · {formatCurrency(balances[a.id] ?? 0)}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
+                  <FormMessage />
+                </FormItem>
+              )} />
+            </div>
             <FormField control={form.control} name="description" render={({ field }) => (
               <FormItem>
                 <FormLabel>Description</FormLabel>

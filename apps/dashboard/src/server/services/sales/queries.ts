@@ -110,9 +110,23 @@ export async function byCustomer(ctx: Ctx, customerId: string) {
 
 /** List returns (stubbed for now). */
 export async function listReturns(ctx: Ctx, params?: PaginationParams) {
+  const where = {
+    OR: [
+      { status: "REFUNDED" },
+      { status: "VOIDED" },
+    ]
+  };
+
+  const raw = await paginate(
+    prisma.sale,
+    { where, include: { items: true, tenders: true, customer: true, editedBy: true, user: true } } as any,
+    params,
+    { orderBy: { createdAt: "desc" } },
+  );
+
   return {
-    items: [],
-    nextCursor: null,
-    hasMore: false,
+    items: raw.items.map(serializeSale),
+    nextCursor: raw.nextCursor,
+    hasMore: raw.hasMore,
   };
 }

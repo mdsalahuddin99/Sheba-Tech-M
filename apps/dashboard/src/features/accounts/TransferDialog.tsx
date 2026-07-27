@@ -24,6 +24,8 @@ export function TransferDialog({ open, onOpenChange, defaultMode = "transfer" }:
   const { recordTransfer, recordDepositOrWithdraw } = useAccountActions();
 
   const [mode, setMode] = useState<"transfer" | "deposit" | "withdraw">(defaultMode);
+  const [fromMethod, setFromMethod] = useState<string>("");
+  const [toMethod, setToMethod] = useState<string>("");
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
   const [amount, setAmount] = useState("");
@@ -32,6 +34,12 @@ export function TransferDialog({ open, onOpenChange, defaultMode = "transfer" }:
   useEffect(() => {
     if (!open) return;
     setMode(defaultMode);
+    
+    const initialFromType = accounts[0]?.type ?? "";
+    const initialToType = accounts.length > 1 ? accounts[1]?.type : initialFromType;
+    setFromMethod(initialFromType);
+    setToMethod(initialToType);
+    
     setFrom(accounts[0]?.id ?? "");
     setTo(accounts[1]?.id ?? "");
     setAmount("");
@@ -79,17 +87,34 @@ export function TransferDialog({ open, onOpenChange, defaultMode = "transfer" }:
 
         <div className="space-y-4 px-2 sm:px-8 mt-4">
           {(mode === "transfer" || mode === "withdraw") && (
-            <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3">
-              <label className="w-full sm:w-[120px] sm:text-left shrink-0 font-medium">
-                {mode === "transfer" ? "From account" : "Account"}
-              </label>
-              <div className="flex-1 min-w-0">
+            <div className="grid grid-cols-2 gap-2">
+              <div className="flex flex-col gap-1">
+                <label className="text-sm font-medium text-muted-foreground">
+                  {mode === "transfer" ? "From Type" : "Type"}
+                </label>
+                <Select value={fromMethod} onValueChange={(v) => {
+                  setFromMethod(v);
+                  const firstAcc = accounts.find((a) => a.type === v);
+                  if (firstAcc) setFrom(firstAcc.id);
+                }}>
+                  <SelectTrigger><SelectValue placeholder="Type" /></SelectTrigger>
+                  <SelectContent>
+                    {Object.entries(ACCOUNT_TYPE_LABEL).map(([key, label]) => (
+                      <SelectItem key={key} value={key}>{label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="flex flex-col gap-1">
+                <label className="text-sm font-medium text-muted-foreground">
+                  {mode === "transfer" ? "From Ledger" : "Account Ledger"}
+                </label>
                 <Select value={from} onValueChange={setFrom}>
                   <SelectTrigger><SelectValue placeholder="Choose account" /></SelectTrigger>
                   <SelectContent>
-                    {accounts.map((a) => (
+                    {accounts.filter(a => a.type === fromMethod).map((a) => (
                       <SelectItem key={a.id} value={a.id}>
-                        {a.name} · {ACCOUNT_TYPE_LABEL[a.type]}
+                        {a.name}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -98,17 +123,34 @@ export function TransferDialog({ open, onOpenChange, defaultMode = "transfer" }:
             </div>
           )}
           {(mode === "transfer" || mode === "deposit") && (
-            <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3">
-              <label className="w-full sm:w-[120px] sm:text-left shrink-0 font-medium">
-                {mode === "transfer" ? "To account" : "Account"}
-              </label>
-              <div className="flex-1 min-w-0">
+            <div className="grid grid-cols-2 gap-2 mt-3">
+              <div className="flex flex-col gap-1">
+                <label className="text-sm font-medium text-muted-foreground">
+                  {mode === "transfer" ? "To Type" : "Type"}
+                </label>
+                <Select value={toMethod} onValueChange={(v) => {
+                  setToMethod(v);
+                  const firstAcc = accounts.find((a) => a.type === v);
+                  if (firstAcc) setTo(firstAcc.id);
+                }}>
+                  <SelectTrigger><SelectValue placeholder="Type" /></SelectTrigger>
+                  <SelectContent>
+                    {Object.entries(ACCOUNT_TYPE_LABEL).map(([key, label]) => (
+                      <SelectItem key={key} value={key}>{label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="flex flex-col gap-1">
+                <label className="text-sm font-medium text-muted-foreground">
+                  {mode === "transfer" ? "To Ledger" : "Account Ledger"}
+                </label>
                 <Select value={to} onValueChange={setTo}>
                   <SelectTrigger><SelectValue placeholder="Choose account" /></SelectTrigger>
                   <SelectContent>
-                    {accounts.map((a) => (
+                    {accounts.filter(a => a.type === toMethod && a.id !== from).map((a) => (
                       <SelectItem key={a.id} value={a.id}>
-                        {a.name} · {ACCOUNT_TYPE_LABEL[a.type]}
+                        {a.name}
                       </SelectItem>
                     ))}
                   </SelectContent>

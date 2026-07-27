@@ -52,6 +52,7 @@ export interface RefundInput {
   }>;
   reason: string;
   notes?: string;
+  refundMethod: string;
 }
 
 export type { StorefrontOrderCreateInput, StorefrontOrderStatus };

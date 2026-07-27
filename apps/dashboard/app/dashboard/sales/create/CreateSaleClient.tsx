@@ -241,51 +241,55 @@ export function CreateSaleClient() {
         <div className="flex-1 space-y-6 min-w-0 pb-20 relative">
           {/* Invoice card */}
           <div className="bg-card rounded-2xl border border-border/50 shadow-lg p-4 md:p-6 space-y-5 transition-shadow hover:shadow-xl">
-            {warehouses?.length > 1 && (
-              <>
-                <InvoiceHeader
-                  warehouses={warehouses}
-                  selectedWarehouseId={selectedWarehouseId}
-                  onWarehouseChange={(id) => {
-                    setSelectedWarehouseId(id);
-                    clearVoucher();
-                  }}
-                  editMode={!!editingSaleId}
-                />
-                <div className="border-t border-border" />
-              </>
-            )}
+            <div className="flex flex-col md:flex-row md:items-end gap-4">
+              {warehouses?.length > 1 && (
+                <div className="w-full md:w-64 shrink-0">
+                  <InvoiceHeader
+                    warehouses={warehouses}
+                    selectedWarehouseId={selectedWarehouseId}
+                    onWarehouseChange={(id) => {
+                      setSelectedWarehouseId(id);
+                      clearVoucher();
+                    }}
+                    editMode={!!editingSaleId}
+                  />
+                </div>
+              )}
 
-            {/* Product search + filter bar */}
-            {!selectedWarehouseId ? (
-              <div className="text-center py-6 text-sm text-slate-400">
-                {isLoading ? "Loading POS data..." : "No warehouse selected"}
+              <div className="flex-1 min-w-0">
+                {!selectedWarehouseId ? (
+                  <div className="flex h-9 sm:h-10 items-center justify-center text-sm text-slate-400 border border-dashed rounded-[4px]">
+                    {isLoading ? "Loading POS data..." : "Select warehouse first"}
+                  </div>
+                ) : (
+                  <ProductFilterBar
+                    categories={categories}
+                    warehouseId={selectedWarehouseId}
+                    invoiceRows={voucherRows}
+                    category={voucherCategory}
+                    subcategory={voucherSubcategory}
+                    searchQuery={voucherSearchQuery}
+                    showSuggestions={showSuggestions}
+                    hasRows={voucherRows.length > 0}
+                    onCategoryChange={setVoucherCategory}
+                    onSubcategoryChange={setVoucherSubcategory}
+                    onSearchChange={(v, show) => {
+                      setVoucherSearchQuery(v);
+                      setShowSuggestions(show);
+                    }}
+                    onShowSuggestions={setShowSuggestions}
+                    onAddProduct={addProductToVoucher}
+                    onBarcodeEnter={handleBarcodeEnter}
+                    onClear={clearVoucher}
+                    onOpenCamera={() => setCameraOpen(true)}
+                    searchInputRef={vSearchRef}
+                  />
+                )}
               </div>
-            ) : (
-              <>
-                <ProductFilterBar
-                  categories={categories}
-                  warehouseId={selectedWarehouseId}
-                  invoiceRows={voucherRows}
-                  category={voucherCategory}
-                  subcategory={voucherSubcategory}
-                  searchQuery={voucherSearchQuery}
-                  showSuggestions={showSuggestions}
-                  hasRows={voucherRows.length > 0}
-                  onCategoryChange={setVoucherCategory}
-                  onSubcategoryChange={setVoucherSubcategory}
-                  onSearchChange={(v, show) => {
-                    setVoucherSearchQuery(v);
-                    setShowSuggestions(show);
-                  }}
-                  onShowSuggestions={setShowSuggestions}
-                  onAddProduct={addProductToVoucher}
-                  onBarcodeEnter={handleBarcodeEnter}
-                  onClear={clearVoucher}
-                  onOpenCamera={() => setCameraOpen(true)}
-                  searchInputRef={vSearchRef}
-                />
+            </div>
 
+            {selectedWarehouseId && (
+              <>
                 <div className="border-t border-border" />
 
                 {/* Line items table */}

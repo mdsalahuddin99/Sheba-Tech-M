@@ -43,6 +43,7 @@ export const refundCreateSchema = z.object({
   items: z.array(refundItemSchema).min(1, "At least one item is required"),
   reason: z.string().min(1, "Reason is required"),
   notes: z.string().optional(),
+  refundMethod: z.string(),
 });
 
 export const voidSaleSchema = z.object({

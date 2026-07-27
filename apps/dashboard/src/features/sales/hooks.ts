@@ -95,7 +95,7 @@ export function useReturnsQuery(initialData?: SaleReturn[]) {
   const { session, status } = useAuth();
   return useQuery({
     queryKey: returnKeys.list(),
-    queryFn: async () => [] as SaleReturn[],
+    queryFn: () => salesService.listReturns(),
     initialData,
     enabled: status !== "loading" && !!session,
     ...QueryTier.TRANSACTION,
