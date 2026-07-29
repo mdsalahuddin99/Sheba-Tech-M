@@ -12,7 +12,7 @@ import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/shared/ui/alert-dialog";
-import { Settings as SettingsIcon, Save, RefreshCw, Download, Upload, Store, Receipt, Award, FileSpreadsheet, Languages, Building2, Trash2, FileText, Users } from "lucide-react";
+import { Settings as SettingsIcon, Save, RefreshCw, Download, Upload, Store, Receipt, Award, FileSpreadsheet, Languages, Building2, Trash2, FileText, Users, UserSquare, Plus, Pencil } from "lucide-react";
 import { Textarea } from "@/shared/ui/textarea";
 import { toast } from "sonner";
 import { PaymentMethod } from "@/shared/lib/types";
@@ -23,6 +23,99 @@ import { useT, LANGS, useLanguageStore } from "@/features/i18n";
 import StaffTab from "@/features/settings/components/StaffTab";
 import WarehousesTab from "@/features/settings/components/WarehousesTab";
 import { FEATURES } from "@/config/featureFlags";
+
+function SalesmanManager({ value, onChange, onSave, saving }: { value: string[]; onChange: (v: string[]) => void; onSave: () => void; saving: boolean }) {
+  const [newName, setNewName] = useState("");
+  const [editingIndex, setEditingIndex] = useState<number | null>(null);
+  const [editValue, setEditValue] = useState("");
+
+  const handleAdd = (e: React.FormEvent) => {
+    e.preventDefault();
+    const name = newName.trim();
+    if (!name) return;
+    onChange([...value, name]);
+    setNewName("");
+  };
+
+  const handleDelete = (index: number) => {
+    if (!window.confirm("Are you sure you want to delete this salesman?")) return;
+    const next = [...value];
+    next.splice(index, 1);
+    onChange(next);
+  };
+
+  const handleEditSubmit = (index: number) => {
+    const next = [...value];
+    next[index] = editValue.trim() || next[index];
+    onChange(next);
+    setEditingIndex(null);
+  };
+
+  return (
+    <Card className="p-6 space-y-4">
+      <div className="flex items-center gap-2 mb-4">
+        <UserSquare className="h-5 w-5 text-primary" />
+        <h3 className="font-semibold text-lg">Manage Salesmen</h3>
+      </div>
+      
+      <form onSubmit={handleAdd} className="flex gap-2">
+        <Input 
+          value={newName} 
+          onChange={(e) => setNewName(e.target.value)} 
+          placeholder="Enter salesman name..." 
+          className="flex-1"
+        />
+        <Button type="submit" variant="secondary">
+          <Plus className="h-4 w-4 mr-2" /> Add
+        </Button>
+      </form>
+
+      <div className="border rounded-md divide-y">
+        {value.length === 0 && <p className="p-4 text-center text-sm text-muted-foreground">No salesman added yet.</p>}
+        {value.map((name, i) => (
+          <div key={i} className="flex items-center justify-between p-3">
+            {editingIndex === i ? (
+              <div className="flex items-center gap-2 flex-1">
+                <Input value={editValue} onChange={(e) => setEditValue(e.target.value)} className="h-8" autoFocus />
+                <Button size="sm" onClick={() => handleEditSubmit(i)}>Save</Button>
+                <Button size="sm" variant="ghost" onClick={() => setEditingIndex(null)}>Cancel</Button>
+              </div>
+            ) : (
+              <>
+                <p className="font-medium">{name}</p>
+                <div className="flex items-center gap-1">
+                  <Button size="icon" variant="ghost" onClick={() => { setEditingIndex(i); setEditValue(name); }}>
+                    <Pencil className="h-4 w-4 text-muted-foreground" />
+                  </Button>
+                  <Button size="icon" variant="ghost" onClick={() => handleDelete(i)}>
+                    <Trash2 className="h-4 w-4 text-destructive" />
+                  </Button>
+                </div>
+              </>
+            )}
+          </div>
+        ))}
+      </div>
+
+      <div className="pt-2">
+        <LoadingButton onClick={() => {
+          if (newName.trim()) {
+            const updated = [...value, newName.trim()];
+            onChange(updated);
+            setNewName("");
+            // We need to wait for the parent to update state before saving.
+            // A simple timeout will let the React render cycle complete.
+            setTimeout(onSave, 0);
+          } else {
+            onSave();
+          }
+        }} className="bg-primary text-primary-foreground hover:bg-primary/90" loading={saving}>
+          <Save className="h-4 w-4 mr-2" />Save Changes
+        </LoadingButton>
+      </div>
+    </Card>
+  );
+}
 import { wipeAllCloudData, exportFullJson } from "@/services/backupService";
 import { productsApi } from "@/shared/api-client/products";
 import { customersApi } from "@/shared/api-client/customers";
@@ -114,6 +207,7 @@ export function SettingsClient() {
             <TabsTrigger value="payments"><SettingsIcon className="h-3.5 w-3.5 mr-1" />{t("settings.tab.payments")}</TabsTrigger>
             <TabsTrigger value="loyalty"><Award className="h-3.5 w-3.5 mr-1" />{t("settings.tab.loyalty")}</TabsTrigger>
             <TabsTrigger value="warehouses"><Building2 className="h-3.5 w-3.5 mr-1" />Warehouses</TabsTrigger>
+            <TabsTrigger value="salesman"><UserSquare className="h-3.5 w-3.5 mr-1" />Salesman</TabsTrigger>
             <TabsTrigger value="data"><RefreshCw className="h-3.5 w-3.5 mr-1" />{t("settings.tab.data")}</TabsTrigger>
           </TabsList>
         </div>
@@ -182,6 +276,11 @@ export function SettingsClient() {
         {/* Warehouses */}
         <TabsContent value="warehouses" className="mt-4">
           <WarehousesTab />
+        </TabsContent>
+
+        {/* Salesman */}
+        <TabsContent value="salesman" className="mt-4">
+          <SalesmanManager value={form.salesPersons ?? []} onChange={(v) => setForm({ ...form, salesPersons: v })} onSave={save} saving={saving} />
         </TabsContent>
 
         {/* Receipt */}

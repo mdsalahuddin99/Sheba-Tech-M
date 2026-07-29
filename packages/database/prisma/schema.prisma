@@ -113,6 +113,7 @@ model Category {
   isPublished Boolean       @default(false)
   showInMenu  Boolean       @default(true)
   menuOrder   Int           @default(0)
+  deletedAt   DateTime?
   createdAt   DateTime      @default(now())
   updatedAt   DateTime      @updatedAt
 }
@@ -301,6 +302,7 @@ model Product {
   serialNumbers SerialNumber[]
   warehouseStocks WarehouseStock[]
   warrantyClaims  WarrantyClaim[]
+  deletedAt     DateTime?
   createdAt     DateTime         @default(now())
   updatedAt     DateTime         @updatedAt
 
@@ -374,6 +376,7 @@ model Customer {
   heldSales      HeldSale[]
   transactions   CustomerTransaction[]
   warrantyClaims WarrantyClaim[]
+  deletedAt      DateTime?
   createdAt      DateTime              @default(now())
 
   @@index([name])
@@ -433,6 +436,7 @@ model Supplier {
   payments      SupplierPayment[]
   transactions  SupplierTransaction[]
   warrantyClaims WarrantyClaim[]
+  deletedAt     DateTime?
   createdAt     DateTime              @default(now())
 
   @@index([name])
@@ -499,6 +503,7 @@ model Sale {
   data        Json                  @default("{}")
   customerTransactions CustomerTransaction[]
   warrantyClaims WarrantyClaim[]
+  deletedAt   DateTime?
   createdAt   DateTime              @default(now())
 
   @@index([channel, createdAt])

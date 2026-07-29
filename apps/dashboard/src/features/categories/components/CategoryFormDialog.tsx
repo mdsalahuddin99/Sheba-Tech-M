@@ -120,6 +120,21 @@ export function CategoryFormDialog({
     }
 
     // Main mode
+    if (parentId) {
+      const trimmedSub = subName.trim();
+      if (!trimmedSub) return toast.error("Sub-category name is required");
+      
+      const duplicate = categories.some((c: any) => c.parentId === parentId && c.name === trimmedSub);
+      if (duplicate) return toast.error("Sub-category already exists");
+      
+      await createMut.mutateAsync({ name: trimmedSub, parentId, imageUrl });
+      queryClient.invalidateQueries({ queryKey: ["categories"] });
+      toast.success(`Sub-category "${trimmedSub}" created`);
+      onCreated?.(trimmedSub);
+      onOpenChange(false);
+      return;
+    }
+
     const trimmedMain = mainName.trim();
     if (!trimmedMain) return toast.error("Category name is required");
     const created = await createMut.mutateAsync({ name: trimmedMain, imageUrl });

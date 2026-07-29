@@ -28,23 +28,19 @@ const DEFAULT_SHOP_SETTINGS: Partial<ShopSettings> = {
 export const settingsService = {
   /** Get settings for the current shop. Returns defaults merged with stored values. */
   async get(ctx: Ctx): Promise<ShopSettings> {
-    return cache.fetch(
-      cacheKeys.shop.config(),
-      TTL.SHOP_CONFIG,
-      async () => {
-        const shop = await prisma.shop.findFirst({
-          select: {
-            id: true,
-            name: true,
-            slug: true,
-            logoUrl: true,
-            currency: true,
-            settings: true,
-          },
-        });
-        if (!shop) throw new ServiceError("NOT_FOUND", "Shop not found", 404);
+    const shop = await prisma.shop.findFirst({
+      select: {
+        id: true,
+        name: true,
+        slug: true,
+        logoUrl: true,
+        currency: true,
+        settings: true,
+      },
+    });
+    if (!shop) throw new ServiceError("NOT_FOUND", "Shop not found", 404);
 
-        const stored = (shop.settings ?? {}) as Record<string, unknown>;
+    const stored = (shop.settings ?? {}) as Record<string, unknown>;
 
         return {
           shopName: shop.name,
@@ -78,9 +74,8 @@ export const settingsService = {
           invoiceNumberStartSeq: (stored.invoiceNumberStartSeq as number) ?? 500,
           defaultReceiptMode: (stored.defaultReceiptMode as "ask" | "thermal" | "invoice") ?? "ask",
           hapticFeedback: (stored.hapticFeedback as boolean) ?? true,
+          salesPersons: (stored.salesPersons as string[]) ?? [],
         };
-      },
-    );
   },
 
   /** Update settings for the current shop. */
@@ -102,7 +97,7 @@ export const settingsService = {
       "invoiceTitleLabel", "invoiceHeaderRightLogoUrl",
       "invoiceFooterText", "invoiceFooterBrandLogos",
       "invoiceNumberPrefix", "invoiceNumberStartSeq",
-      "defaultReceiptMode", "hapticFeedback",
+      "defaultReceiptMode", "hapticFeedback", "salesPersons",
     ];
 
     for (const key of settingsKeys) {

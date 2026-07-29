@@ -40,8 +40,8 @@ export function CustomerSidebar({
   return (
     <div className="bg-card rounded-[4px] border border-border flex flex-col h-full sticky top-4">
       {/* Header */}
-      <div className="p-4 border-b border-border bg-secondary/15 rounded-t-[4px]">
-        <h3 className="text-xs font-bold uppercase tracking-wider text-slate-700 mb-3">
+      <div className="p-2 border-b border-border bg-secondary/15 rounded-t-[2px]">
+        <h3 className="text-[10px] font-bold uppercase tracking-wider text-slate-700 mb-1.5">
           Customer Info
         </h3>
         <CustomerSearch
@@ -53,74 +53,74 @@ export function CustomerSidebar({
 
       {/* Customer Details */}
       {customer && (
-        <div className="p-4 space-y-5 flex-1">
+        <div className="p-2 space-y-3 flex-1">
           {/* Avatar & Basic Info */}
-          <div className="flex items-start gap-3">
-            <div className="h-12 w-12 rounded-[4px] bg-secondary/35 border border-border flex items-center justify-center shrink-0">
-              <User className="h-6 w-6 text-slate-400" />
+          <div className="flex items-start gap-2">
+            <div className="h-8 w-8 rounded-[2px] bg-secondary/35 border border-border flex items-center justify-center shrink-0">
+              <User className="h-4 w-4 text-slate-400" />
             </div>
             <div className="min-w-0">
-              <h4 className="text-sm font-bold text-slate-800 truncate">
+              <h4 className="text-[11px] font-bold text-slate-800 truncate">
                 {customer.name}
               </h4>
-              <p className="text-xs text-slate-500 truncate mt-0.5">
+              <p className="text-[9px] text-slate-500 truncate">
                 {customer.group ? `Group: ${customer.group}` : "Retail Customer"}
               </p>
             </div>
           </div>
 
-          <div className="space-y-2.5">
+          <div className="space-y-1">
             {customer.phone && (
-              <div className="flex items-center gap-2.5 text-sm text-slate-600">
-                <Phone className="h-4 w-4 text-slate-400 shrink-0" />
+              <div className="flex items-center gap-1.5 text-[11px] text-slate-600">
+                <Phone className="h-3 w-3 text-slate-400 shrink-0" />
                 <span className="truncate">{customer.phone}</span>
               </div>
             )}
             {customer.email && (
-              <div className="flex items-center gap-2.5 text-sm text-slate-600">
-                <Mail className="h-4 w-4 text-slate-400 shrink-0" />
+              <div className="flex items-center gap-1.5 text-[11px] text-slate-600">
+                <Mail className="h-3 w-3 text-slate-400 shrink-0" />
                 <span className="truncate">{customer.email}</span>
               </div>
             )}
           </div>
 
-          <div className="border-t border-border pt-5 space-y-4">
-            <h4 className="text-xs font-bold uppercase tracking-wider text-slate-700">
+          <div className="border-t border-border pt-2 space-y-2">
+            <h4 className="text-[10px] font-bold uppercase tracking-wider text-slate-700">
               Outstanding Dues
             </h4>
             
-            <div className="space-y-3">
+            <div className="space-y-1">
               <div className="flex justify-between items-end">
-                <span className="text-sm font-medium text-slate-600">Total Due</span>
-                <span className="text-lg font-bold text-orange-600 tabular-nums">
+                <span className="text-[10px] font-semibold text-slate-600">Total Due</span>
+                <span className="text-[11px] font-bold text-orange-600 tabular-nums">
                   {formatCurrency(dueBalance)}
                 </span>
               </div>
               <div className="flex justify-between items-end">
-                <span className="text-sm font-medium text-slate-600">Wallet / Advance</span>
-                <span className="text-md font-bold text-emerald-600 tabular-nums">
+                <span className="text-[10px] font-semibold text-slate-600">Wallet / Advance</span>
+                <span className="text-[11px] font-bold text-emerald-600 tabular-nums">
                   {formatCurrency(walletBalance)}
                 </span>
               </div>
             </div>
           </div>
 
-          <div className="border-t border-border pt-5">
-             <h4 className="text-xs font-bold uppercase tracking-wider text-slate-700 mb-3">
+          <div className="border-t border-border pt-2">
+             <h4 className="text-[10px] font-bold uppercase tracking-wider text-slate-700 mb-1.5">
               Recent Invoices
             </h4>
             
             {historyLoading ? (
-              <div className="text-xs text-slate-400">Loading history...</div>
+              <div className="text-[10px] text-slate-400">Loading history...</div>
             ) : history.length === 0 ? (
-              <div className="text-xs text-slate-400">No previous sales found.</div>
+              <div className="text-[10px] text-slate-400">No previous sales found.</div>
             ) : (
-              <ul className="space-y-2">
+              <ul className="space-y-1">
                 {history.slice(0, 3).map((h: any) => (
-                  <li key={h.id} className="flex justify-between items-center bg-secondary/15 border border-border rounded-[4px] p-2.5">
+                  <li key={h.id} className="flex justify-between items-center bg-secondary/15 border border-border rounded-[2px] p-1.5">
                     <div>
-                      <p className="text-xs font-semibold text-slate-700">{h.invoiceNo}</p>
-                      <p className="text-[10px] text-slate-400">
+                      <p className="text-[11px] font-semibold text-slate-700">{h.invoiceNo}</p>
+                      <p className="text-[9px] text-slate-400">
                         {new Date(h.date).toLocaleDateString("en-GB", {
                           day: "2-digit",
                           month: "short",
@@ -129,10 +129,10 @@ export function CustomerSidebar({
                       </p>
                     </div>
                     <div className="text-right">
-                       <span className={`text-[10px] px-1.5 py-0.5 rounded-[4px] font-medium ${h.dueAmount > 0 ? "bg-orange-50 text-orange-600" : "bg-emerald-50 text-emerald-600"}`}>
+                       <span className={`text-[9px] px-1 py-0.5 rounded-[2px] font-bold ${h.dueAmount > 0 ? "bg-orange-50 text-orange-600" : "bg-emerald-50 text-emerald-600"}`}>
                         {h.dueAmount > 0 ? "Due" : "Paid"}
                       </span>
-                      <p className="text-xs font-bold text-slate-700 mt-1">
+                      <p className="text-[11px] font-bold text-slate-700 mt-0.5">
                         {formatCurrency(h.total)}
                       </p>
                     </div>
@@ -144,7 +144,7 @@ export function CustomerSidebar({
             {history.length > 0 && (
               <Popover>
                 <PopoverTrigger asChild>
-                  <Button variant="outline" className="w-full mt-3 h-8 text-xs font-medium bg-card border-border rounded-[4px]">
+                  <Button variant="outline" className="w-full mt-2 h-6 text-[10px] font-semibold bg-card border-border rounded-[2px]">
                     View All Invoices
                   </Button>
                 </PopoverTrigger>
@@ -181,10 +181,10 @@ export function CustomerSidebar({
       )}
 
       {!customer && (
-        <div className="p-8 text-center text-slate-400 flex flex-col items-center justify-center flex-1">
-          <User className="h-10 w-10 mb-2 opacity-20" />
-          <p className="text-sm">No customer selected</p>
-          <p className="text-xs mt-1">Select a customer to view details</p>
+        <div className="p-4 text-center text-slate-400 flex flex-col items-center justify-center flex-1">
+          <User className="h-8 w-8 mb-1 opacity-20" />
+          <p className="text-[11px] font-medium">No customer selected</p>
+          <p className="text-[9px] mt-0.5">Select a customer to view details</p>
         </div>
       )}
     </div>

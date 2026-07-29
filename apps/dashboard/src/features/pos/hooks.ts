@@ -21,7 +21,7 @@ const fetchPosInit = (warehouseId?: string | null) => {
       warehouses: any[];
       categories: any[];
       users: any[];
-      settings: { shopName: string; currencySymbol: string };
+      settings: Partial<ShopSettings>;
     }>;
   });
 };
@@ -43,7 +43,7 @@ const fetchPosCore = () => {
       warehouses: any[];
       categories: any[];
       users: any[];
-      settings: { shopName: string; currencySymbol: string };
+      settings: Partial<ShopSettings>;
       products?: any;
       customers?: any;
     }>;
@@ -159,6 +159,7 @@ export function usePosScreenData(warehouseId?: string | null) {
     loyaltyPointsPerCurrency: 1,
     loyaltyRedeemRate: 1,
     paymentMethodsEnabled: { Cash: true, Card: true, "Mobile Banking": true, Due: true, Wallet: true },
+    salesPersons: data?.settings?.salesPersons ?? [],
   };
   return { products, customers, warehouses, categories, users, settings, isLoading };
 }
@@ -189,6 +190,7 @@ export function usePosCoreData() {
     loyaltyPointsPerCurrency: 1,
     loyaltyRedeemRate: 1,
     paymentMethodsEnabled: { Cash: true, Card: true, "Mobile Banking": true, Due: true, Wallet: true },
+    salesPersons: data?.settings?.salesPersons ?? [],
   };
   return { warehouses, categories, users, settings, isLoading };
 }

@@ -39,5 +39,7 @@ export interface ShopSettings {
   /** Invoice numbering configuration */
   invoiceNumberPrefix?: string;
   invoiceNumberStartSeq?: number;
+  /** List of sales persons for the POS dropdown */
+  salesPersons?: string[];
 }
 

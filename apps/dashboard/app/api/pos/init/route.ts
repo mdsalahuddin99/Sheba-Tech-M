@@ -27,6 +27,7 @@ export const GET = apiHandler(async (ctx: Ctx, req: Request) => {
         prisma.product.findMany({
           where: {
             isPublished: true,
+            warehouseStocks: { some: { warehouseId, qty: { gt: 0 } } },
           },
           select: {
             id: true,
@@ -64,6 +65,7 @@ export const GET = apiHandler(async (ctx: Ctx, req: Request) => {
               },
             },
             stock: true,
+            searchTags: true,
           },
           orderBy: { name: "asc" },
           take: 500,
@@ -72,6 +74,7 @@ export const GET = apiHandler(async (ctx: Ctx, req: Request) => {
         prisma.product.findMany({
           where: {
             isPublished: true,
+            stock: { gt: 0 },
           },
           select: {
             id: true,
@@ -106,6 +109,7 @@ export const GET = apiHandler(async (ctx: Ctx, req: Request) => {
               },
             },
             stock: true,
+            searchTags: true,
           },
           orderBy: { name: "asc" },
           take: 500,
@@ -131,7 +135,7 @@ export const GET = apiHandler(async (ctx: Ctx, req: Request) => {
       orderBy: { name: "asc" },
     }),
     prisma.shop.findFirst({
-      select: { name: true },
+      select: { name: true, settings: true },
     }),
     prisma.category.findMany({
       orderBy: { createdAt: "asc" },
@@ -177,6 +181,7 @@ export const GET = apiHandler(async (ctx: Ctx, req: Request) => {
       warrantyStartDate: p.warrantyStartDate ?? p.purchaseItems?.[0]?.warrantyStartDate ?? undefined,
       warrantyMonths: p.warrantyMonths ?? p.purchaseItems?.[0]?.warrantyMonths ?? undefined,
       type: "simple" as const,
+      searchTags: p.searchTags || [],
       serials: (p.serialNumbers || []).map((s: any) => ({
         serialNumber: s.serial,
         status: "in_stock" as const,
@@ -211,6 +216,7 @@ export const GET = apiHandler(async (ctx: Ctx, req: Request) => {
     settings: {
       shopName: shop?.name ?? "",
       currencySymbol: "৳",
+      salesPersons: (shop?.settings as any)?.salesPersons ?? [],
     },
   };
 }, "pos:init");

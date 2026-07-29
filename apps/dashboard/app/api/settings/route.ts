@@ -39,4 +39,5 @@ const zSettingsInput = z.object({
   invoiceFooterBrandLogos: z.array(z.string()).optional(),
   defaultReceiptMode: z.enum(["ask", "thermal", "invoice"]).optional(),
   hapticFeedback: z.boolean().optional(),
+  salesPersons: z.array(z.string()).optional(),
 });

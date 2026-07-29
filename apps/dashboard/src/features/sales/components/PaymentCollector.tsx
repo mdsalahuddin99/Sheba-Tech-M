@@ -175,9 +175,9 @@ export function PaymentCollector({
   const needsQuickCust = dueNum > 0 && (!customerId || customerId === "c1");
 
   return (
-    <Collapsible defaultOpen className="rounded-[4px] border border-border bg-card overflow-hidden">
+    <Collapsible defaultOpen className="rounded-[2px] border border-border bg-card overflow-hidden">
       {/* Header */}
-      <CollapsibleTrigger className="flex w-full items-center justify-between px-3 py-2.5 hover:bg-secondary/40 transition-colors">
+      <CollapsibleTrigger className="flex w-full items-center justify-between px-2 py-1.5 hover:bg-secondary/40 transition-colors">
         <div className="flex items-center gap-2 text-xs flex-wrap">
           <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">
             Payment
@@ -207,7 +207,7 @@ export function PaymentCollector({
       </CollapsibleTrigger>
 
       <CollapsibleContent className="border-t border-border">
-        <div className="px-3 py-3 space-y-3">
+        <div className="px-2 py-2 space-y-2">
 
           {/* Subtotal + Total */}
           <div className="grid grid-cols-2 gap-2">
@@ -215,7 +215,7 @@ export function PaymentCollector({
               <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500">
                 Subtotal
               </label>
-              <div className="h-7 flex items-center px-2 rounded-[4px] bg-secondary/40 border border-border text-xs font-semibold text-slate-700 tabular-nums">
+              <div className="h-6 flex items-center px-2 rounded-[2px] bg-secondary/40 border border-border text-[11px] font-semibold text-slate-700 tabular-nums">
                 {formatCurrency(subtotal)}
               </div>
             </div>
@@ -223,7 +223,7 @@ export function PaymentCollector({
               <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500">
                 Total
               </label>
-              <div className="h-7 flex items-center justify-end px-2 rounded-[4px] bg-primary/10 border border-primary/20 text-xs font-extrabold text-primary tabular-nums">
+              <div className="h-6 flex items-center justify-end px-2 rounded-[2px] bg-primary/10 border border-primary/20 text-[11px] font-bold text-primary tabular-nums">
                 {formatCurrency(afterDiscount)}
               </div>
             </div>
@@ -242,7 +242,7 @@ export function PaymentCollector({
                   return (
                     <div
                       key={`${p.method}-${i}`}
-                      className="flex items-center justify-between p-2 bg-secondary/35 border border-border rounded-[4px]"
+                      className="flex items-center justify-between p-1.5 bg-secondary/35 border border-border rounded-[2px]"
                     >
                       <div className="min-w-0 flex-1 flex items-center gap-1.5 text-[11px]">
                         <span className="text-xs shrink-0">{METHOD_ICONS[p.method] ?? "💳"}</span>
@@ -265,7 +265,7 @@ export function PaymentCollector({
                           <button
                             type="button"
                             onClick={() => handleEditPayment(i)}
-                            className="h-5 w-5 rounded-[4px] grid place-items-center text-slate-400 hover:text-primary hover:bg-secondary transition-colors"
+                            className="h-5 w-5 rounded-[2px] grid place-items-center text-slate-400 hover:text-primary hover:bg-secondary transition-colors"
                             title="Edit"
                           >
                             <Pencil className="h-2.5 w-2.5" />
@@ -276,7 +276,7 @@ export function PaymentCollector({
                               onRemovePayment(i);
                               setPendingAmount("");
                             }}
-                            className="h-5 w-5 rounded-[4px] grid place-items-center text-slate-400 hover:text-destructive hover:bg-red-50 transition-colors"
+                            className="h-5 w-5 rounded-[2px] grid place-items-center text-slate-400 hover:text-destructive hover:bg-red-50 transition-colors"
                             title="Delete"
                           >
                             <Trash2 className="h-2.5 w-2.5" />
@@ -307,7 +307,7 @@ export function PaymentCollector({
                       setPendingAmount(defaultAmt > 0 ? defaultAmt.toString() : "");
                     }}
                   >
-                    <SelectTrigger className="h-8 border-border bg-card text-[11px] rounded-[4px]">
+                    <SelectTrigger className="h-7 border-border bg-card text-[11px] rounded-[2px]">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -326,7 +326,7 @@ export function PaymentCollector({
                   <label className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">Account</label>
                   {pendingMethod === "Wallet" ? (
                     <Select disabled value="wallet-na">
-                      <SelectTrigger className="h-8 border-border bg-secondary/35 text-slate-400 text-[11px] rounded-[4px]">
+                      <SelectTrigger className="h-7 border-border bg-secondary/35 text-slate-400 text-[11px] rounded-[2px]">
                         <SelectValue placeholder="N/A" />
                       </SelectTrigger>
                       <SelectContent>
@@ -338,7 +338,7 @@ export function PaymentCollector({
                       value={pendingAccountId ?? ""}
                       onValueChange={setPendingAccountId}
                     >
-                      <SelectTrigger className="h-8 border-border bg-card text-[11px] rounded-[4px]">
+                      <SelectTrigger className="h-7 border-border bg-card text-[11px] rounded-[2px]">
                         <SelectValue placeholder="Select…" />
                       </SelectTrigger>
                       <SelectContent>
@@ -364,7 +364,7 @@ export function PaymentCollector({
                     value={pendingAmount}
                     onChange={(e) => setPendingAmount(e.target.value)}
                     placeholder={formatCurrency(dueNum)}
-                    className="h-8 text-right border-border bg-card text-[11px] rounded-[4px]"
+                    className="h-7 text-right border-border bg-card text-[11px] rounded-[2px]"
                     onKeyDown={(e) => { if (e.key === "Enter") commitTender(); }}
                   />
                   {pendingMethod === "Wallet" && (
@@ -378,7 +378,7 @@ export function PaymentCollector({
                   <Button
                     type="button"
                     size="sm"
-                    className="h-8 bg-primary hover:bg-primary/95 text-white px-3 rounded-[4px] font-bold text-[11px]"
+                    className="h-7 bg-primary hover:bg-primary/95 text-white px-3 rounded-[2px] font-bold text-[11px]"
                     onClick={commitTender}
                   >
                     <Plus className="h-3 w-3 mr-1" /> Add

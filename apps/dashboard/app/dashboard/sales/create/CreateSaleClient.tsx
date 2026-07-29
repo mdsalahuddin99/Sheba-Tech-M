@@ -71,13 +71,9 @@ export function CreateSaleClient() {
 
   return (
     <div className="w-full max-w-[1600px] mx-auto p-0 space-y-3">
-      {/* ── Premium POS Header (Light Theme) ── */}
-      <div className="relative overflow-hidden rounded-xl bg-white/80 backdrop-blur-xl border border-slate-200/60 p-3 sm:px-4 sm:py-3 shadow-sm">
-        {/* Subtle background glow for premium feel */}
-        <div className="absolute -top-12 -right-12 h-32 w-32 bg-indigo-500/10 blur-[40px] rounded-full pointer-events-none" />
-        <div className="absolute -bottom-12 -left-12 h-32 w-32 bg-emerald-500/10 blur-[40px] rounded-full pointer-events-none" />
-        
-        <div className="relative z-10 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+      {/* ── Standard POS Header ── */}
+      <div className="border border-border bg-card p-2">
+        <div className="flex flex-col gap-2 lg:flex-row lg:items-center lg:justify-between">
           {/* Left Side: Title & Info */}
           <div className="flex items-center gap-3">
             <h1 className="text-lg font-bold text-slate-900 tracking-tight flex items-center gap-2">
@@ -227,7 +223,7 @@ export function CreateSaleClient() {
         </div>
       </div>
 
-      <div className="flex flex-col lg:flex-row gap-6">
+      <div className="flex flex-col lg:flex-row gap-2">
         {/* Tier 1: Left Sidebar */}
         <div className="w-full lg:w-72 shrink-0">
           <CustomerSidebar
@@ -238,10 +234,10 @@ export function CreateSaleClient() {
         </div>
 
         {/* Right Content Column */}
-        <div className="flex-1 space-y-6 min-w-0 pb-20 relative">
+        <div className="flex-1 space-y-2 min-w-0 pb-16 relative">
           {/* Invoice card */}
-          <div className="bg-card rounded-2xl border border-border/50 shadow-lg p-4 md:p-6 space-y-5 transition-shadow hover:shadow-xl">
-            <div className="flex flex-col md:flex-row md:items-end gap-4">
+          <div className="bg-card border border-border p-2 space-y-2">
+            <div className="flex flex-col md:flex-row md:items-end gap-2">
               {warehouses?.length > 1 && (
                 <div className="w-full md:w-64 shrink-0">
                   <InvoiceHeader
@@ -293,7 +289,7 @@ export function CreateSaleClient() {
                 <div className="border-t border-border" />
 
                 {/* Line items table */}
-                <div className="space-y-1.5 -mb-2 md:-mb-3">
+                <div className="space-y-1">
                   {/* Line items table */}
                   <InvoiceLineItems
                     rows={voucherRows}
@@ -325,26 +321,35 @@ export function CreateSaleClient() {
 
           {/* Bottom Section: Payment & Details (only when there are items in the cart) */}
           {voucherRows.length > 0 && (
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-2">
               {/* Left Sub-column: Additional Details */}
-              <div className="lg:col-span-4 space-y-4">
-                <div className="bg-secondary/20 rounded-2xl border border-border/50 p-5 space-y-4 shadow-md transition-shadow hover:shadow-lg">
-                  <h3 className="text-xs font-bold uppercase tracking-wider text-slate-700 border-b border-border pb-2">
+              <div className="lg:col-span-4 space-y-2">
+                <div className="bg-card border border-border p-2 space-y-2">
+                  <h3 className="text-[11px] font-bold uppercase tracking-wider text-slate-700 border-b border-border pb-1">
                     Additional Details
                   </h3>
-                  <div className="space-y-3.5">
-                    <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-2">
+                    <div className="grid grid-cols-2 gap-2">
                       <div className="space-y-1.5">
                         <label className="text-[11px] font-bold uppercase tracking-wider text-slate-500 block">
                           Sales Person
                         </label>
-                        <Input
-                          type="text"
-                          value={salesPerson}
-                          onChange={(e) => setSalesPerson(e.target.value)}
-                          placeholder="Write sales person name…"
-                          className="h-9 text-sm border-border bg-card rounded-[4px]"
-                        />
+                        <Select
+                          value={salesPerson || "none"}
+                          onValueChange={(val) => setSalesPerson(val === "none" ? "" : val)}
+                        >
+                          <SelectTrigger className="h-9 text-sm border-border bg-card rounded-[4px]">
+                            <SelectValue placeholder="Select sales person..." />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="none">-- Select --</SelectItem>
+                            {settings?.salesPersons?.map((name: string) => (
+                              <SelectItem key={name} value={name}>
+                                {name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
                       </div>
                       <div className="space-y-1.5">
                         <label className="text-[11px] font-bold uppercase tracking-wider text-slate-500 block">
@@ -358,7 +363,7 @@ export function CreateSaleClient() {
                         />
                       </div>
                     </div>
-                    <div className="grid grid-cols-2 gap-3">
+                    <div className="grid grid-cols-2 gap-2">
                       <div className="space-y-1.5">
                         <label className="text-[11px] font-bold uppercase tracking-wider text-slate-500 block">
                           Destination
@@ -401,7 +406,7 @@ export function CreateSaleClient() {
               </div>
 
               {/* Right Sub-column: Payment Collector */}
-              <div className="lg:col-span-8 space-y-4">
+              <div className="lg:col-span-8 space-y-2">
                 <PaymentCollector
                   subtotal={subtotal}
                   payments={payments}
@@ -432,7 +437,7 @@ export function CreateSaleClient() {
 
           {/* Checkout & Action Buttons (Sticky at bottom of viewport) */}
           {voucherRows.length > 0 && (
-            <div className="sticky bottom-0 bg-card/80 backdrop-blur-xl border-t border-x border-border/50 p-5 rounded-t-2xl shadow-[0_-10px_40px_rgba(0,0,0,0.1)] flex flex-wrap items-center justify-between gap-4 z-30 transition-all duration-300">
+            <div className="sticky bottom-0 bg-card border-t border-border p-2 flex flex-wrap items-center justify-between gap-2 z-30">
               <div className="flex items-center gap-2">
                 <Button
                   variant="outline"

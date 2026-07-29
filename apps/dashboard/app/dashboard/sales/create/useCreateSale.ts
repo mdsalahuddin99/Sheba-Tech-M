@@ -239,12 +239,17 @@ export function useCreateSale() {
 
   // ── Row manipulation ────────────────────────────────────────────────────
   const addProductToVoucher = useCallback(
-    (product: any, scannedSerial?: string) => {
+    (product: any, scannedSerial?: string, matchedTag?: string) => {
       if (!product) return;
       const productId = product.id;
       const existing = voucherRows.find((r) => r.productId === productId);
       const currentQty = existing ? existing.qty : 0;
-      const avail = (product.stock ?? 0) - currentQty;
+      let availableStock = Number(product.stock ?? 0);
+      if (selectedWarehouseId && product.warehouseStocks) {
+        const wStock = product.warehouseStocks.find((ws: any) => ws.warehouseId === selectedWarehouseId);
+        availableStock = wStock ? Number(wStock.qty ?? 0) : Number(product.stock ?? 0);
+      }
+      const avail = availableStock - currentQty;
       if (avail <= 0 && !product.isService) {
         toast.error("Out of stock");
         return;
@@ -298,7 +303,13 @@ export function useCreateSale() {
           {
             id: rowId,
             productId: product.id,
-            name: productDisplayName(product),
+            name: (() => {
+              const baseName = productDisplayName(product);
+              if (matchedTag) {
+                return `${baseName} [${matchedTag}]`;
+              }
+              return baseName;
+            })(),
             qty: product.bundleQty || 1,
             price: Number(product.price),
             serials: initialSerial ? [initialSerial] : [],

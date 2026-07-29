@@ -57,7 +57,7 @@ interface ProductFilterBarProps {
   onSubcategoryChange: (v: string) => void;
   onSearchChange: (v: string, show: boolean) => void;
   onShowSuggestions: (v: boolean) => void;
-  onAddProduct: (product: any, scannedSerial?: string) => void;
+  onAddProduct: (product: any, scannedSerial?: string, matchedTag?: string) => void;
   onBarcodeEnter: (code: string) => Promise<void>;
   onClear: () => void;
   onOpenCamera: () => void;
@@ -165,19 +165,18 @@ export function ProductFilterBar({
         e.preventDefault();
         const query = searchQuery.trim().toLowerCase();
         const firstProduct = filteredProducts[0];
-        const tagsMatches = firstProduct && Array.isArray(firstProduct.searchTags) 
-          ? firstProduct.searchTags.some((tag: string) => tag.toLowerCase().includes(query))
-          : false;
-          
+        const matchedTags = firstProduct && Array.isArray(firstProduct.searchTags) && query
+          ? firstProduct.searchTags.filter((tag: string) => tag.toLowerCase().includes(query))
+          : [];
         const isRelevant = firstProduct && query && (
           firstProduct.name?.toLowerCase().includes(query) ||
           firstProduct.sku?.toLowerCase().includes(query) ||
           firstProduct.barcode?.toLowerCase().includes(query) ||
-          tagsMatches
+          matchedTags.length > 0
         );
 
         if (showSuggestions && filteredProducts.length > 0 && isRelevant) {
-          onAddProduct(filteredProducts[0]);
+          onAddProduct(filteredProducts[0], undefined, matchedTags.length > 0 ? matchedTags[0] : undefined);
           onSearchChange("", false);
         } else {
           const code = (e.target as HTMLInputElement).value.trim();
@@ -202,7 +201,7 @@ export function ProductFilterBar({
         <Input
           ref={searchInputRef}
           placeholder="Scan barcode or search product by name, brand, SKU…"
-          className="pl-9 h-10 bg-card border-border rounded-[4px] text-sm"
+          className="pl-9 h-8 bg-card border-border rounded-[2px] text-xs"
           value={searchQuery}
           onChange={(e) => {
             onSearchChange(e.target.value, true);
@@ -216,7 +215,7 @@ export function ProductFilterBar({
 
         {/* ── Suggestion dropdown ─────────────────────────────────────────── */}
         {showSuggestions && (
-          <div className="absolute z-50 top-full left-0 right-0 mt-1 bg-card border border-border rounded-[4px] overflow-hidden shadow-md">
+          <div className="absolute z-50 top-full left-0 right-0 mt-1 bg-card border border-border rounded-[2px] overflow-hidden shadow-sm">
             {filteredProducts.length > 0 ? (
               <div className="max-h-64 overflow-y-auto divide-y divide-border">
                 {filteredProducts.slice(0, 12).map((p) => {
@@ -230,36 +229,54 @@ export function ProductFilterBar({
                   }
 
                   const available = availableStock - inInvoice;
+                  const q = searchQuery.trim().toLowerCase();
+                  const matchedTags = q && Array.isArray(p.searchTags) 
+                    ? p.searchTags.filter((t: string) => t.toLowerCase().includes(q))
+                    : [];
+
                   return (
                     <button
                       key={p.id}
                       type="button"
-                      className="w-full flex items-center justify-between px-4 py-2.5 hover:bg-secondary/20 transition-colors text-left group"
+                      className="w-full flex items-center justify-between px-2 py-1 hover:bg-secondary/20 transition-colors text-left group border-b border-border/50 last:border-0"
                       onMouseDown={(e) => {
                         e.preventDefault(); // keep focus in input
-                        onAddProduct(p);
+                        onAddProduct(p, undefined, matchedTags.length > 0 ? matchedTags[0] : undefined);
                         onSearchChange("", false);
                         setTimeout(() => searchInputRef.current?.focus(), 50);
                       }}
                     >
                       <div className="min-w-0">
-                        <p className="text-sm font-medium text-slate-700 truncate">
+                        <p className="text-xs font-semibold text-slate-700 truncate">
                           {p.name}
                         </p>
-                        <p className="text-[11px] text-slate-400">
-                          {[
-                            p.globalBrand?.name,
-                            p.globalModel?.name,
-                            typeof p.brand === "object" && p.brand ? (p.brand as any).name : p.brand,
-                            typeof p.model === "object" && p.model ? (p.model as any).name : p.model,
-                          ]
-                            .filter(Boolean)
-                            .join(" ")}{" "}
-                          &bull; SKU: {p.sku}
+                        <p className="text-[10px] text-slate-500">
+                          {(() => {
+                            const brandModelStr = Array.from(
+                              new Set(
+                                [
+                                  p.globalBrand?.name,
+                                  p.globalModel?.name,
+                                  typeof p.brand === "object" && p.brand ? (p.brand as any).name : p.brand,
+                                  typeof p.model === "object" && p.model ? (p.model as any).name : p.model,
+                                ].filter(Boolean)
+                              )
+                            ).join(" ");
+                            return brandModelStr ? `${brandModelStr} • SKU: ${p.sku}` : `SKU: ${p.sku}`;
+                          })()}
                         </p>
+                        {matchedTags.length > 0 && (
+                          <div className="flex flex-wrap gap-1 mt-1">
+                            {matchedTags.slice(0, 5).map((t: string) => (
+                              <span key={t} className="text-[9px] bg-indigo-50 text-indigo-600 px-1.5 py-0.5 rounded-[3px] border border-indigo-100 font-medium">
+                                Matches: {t}
+                              </span>
+                            ))}
+                          </div>
+                        )}
                       </div>
                       <div className="text-right shrink-0 ml-3">
-                        <p className="text-sm font-semibold text-slate-700">
+                        <p className="text-xs font-bold text-slate-700">
                           {formatCurrency(p.price)}
                         </p>
                         <p
@@ -293,7 +310,7 @@ export function ProductFilterBar({
         type="button"
         variant="outline"
         size="icon"
-        className="h-10 w-10 shrink-0 border-border rounded-[4px]"
+        className="h-8 w-8 shrink-0 border-border rounded-[2px]"
         onClick={onOpenCamera}
         title="Camera Scan"
       >
@@ -305,7 +322,7 @@ export function ProductFilterBar({
         type="button"
         variant="ghost"
         size="sm"
-        className="h-10 text-destructive hover:text-destructive hover:bg-destructive/10 rounded-[4px] shrink-0 text-xs"
+        className="h-8 text-destructive hover:text-destructive hover:bg-destructive/10 rounded-[2px] shrink-0 text-xs"
         onClick={onClear}
         disabled={!hasRows}
       >

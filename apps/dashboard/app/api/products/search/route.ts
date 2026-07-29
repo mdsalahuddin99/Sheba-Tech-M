@@ -58,6 +58,21 @@ export const GET = apiHandler(async (ctx: Ctx, req: Request) => {
     }
   }
 
+  const stockCondition = {
+    OR: [
+      { isService: true },
+      warehouseId 
+        ? { warehouseStocks: { some: { warehouseId, qty: { gt: 0 } } } }
+        : { stock: { gt: 0 } }
+    ]
+  };
+
+  if (where.AND) {
+    (where.AND as any[]).push(stockCondition);
+  } else {
+    where.AND = [stockCondition];
+  }
+
   const select = {
     id: true,
     name: true,
