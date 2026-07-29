@@ -23,6 +23,9 @@ import { toast } from "sonner";
 import { PageHeader, EmptyState } from "@/shared/components";
 import { AutoSuggest } from "@/shared/ui/auto-suggest";
 import { useWarehouses } from "@/features/warehouses/hooks";
+import { Checkbox } from "@/shared/ui/checkbox";
+import { getAvailableSerialsByWarehouseAction } from "@/server/actions/products";
+import { Loader2 } from "lucide-react";
 import {
   useFilteredTransfers,
   useCreateTransfer,
@@ -40,6 +43,8 @@ interface DraftLine {
   productId: string;
   name: string;
   qty: number;
+  serialIds?: string[];
+  serialsList?: string[];
 }
 
 export function InventoryTransfersClient() {
@@ -69,11 +74,24 @@ export function InventoryTransfersClient() {
   const [activeProductId, setActiveProductId] = useState("");
   const [qtyInput, setQtyInput] = useState("1");
 
+  const [serialSelectionOpen, setSerialSelectionOpen] = useState(false);
+  const [availableSerials, setAvailableSerials] = useState<{id: string; serial: string}[]>([]);
+  const [selectedSerialIds, setSelectedSerialIds] = useState<string[]>([]);
+  const [isFetchingSerials, setIsFetchingSerials] = useState(false);
+
   const [detailId, setDetailId] = useState<string | null>(null);
   const detail = useMemo(
     () => allTransfers.find((t) => t.id === detailId) ?? null,
     [allTransfers, detailId]
   );
+
+  const availableProducts = useMemo(() => {
+    if (!fromId) return [];
+    return products.filter((p) => {
+      const stockInfo = p.warehouseStocks?.find((w) => w.warehouseId === fromId);
+      return stockInfo && stockInfo.qty > 0;
+    });
+  }, [products, fromId]);
 
   const filtered = useFilteredTransfers({ search, status: statusFilter });
 
@@ -86,12 +104,54 @@ export function InventoryTransfersClient() {
     setQtyInput("1");
   };
 
-  const addLine = () => {
+  const addLine = async () => {
     const p = products.find((x) => x.id === activeProductId);
     if (!p) return toast.error("Product সিলেক্ট করুন");
     if (lines.some((l) => l.productId === p.id)) return toast.error("Already added");
+    
+    if (p.trackSerials) {
+      if (!fromId) return toast.error("প্রথমে From warehouse সিলেক্ট করুন");
+      setIsFetchingSerials(true);
+      try {
+        const serials = await getAvailableSerialsByWarehouseAction(p.id, fromId);
+        setAvailableSerials(serials);
+        setSelectedSerialIds([]);
+        setSerialSelectionOpen(true);
+      } catch (err) {
+        toast.error("সিরিয়াল লোড করতে ব্যর্থ হয়েছে");
+      } finally {
+        setIsFetchingSerials(false);
+      }
+      return;
+    }
+
     const qty = Math.max(1, Number(qtyInput) || 1);
     setLines((prev) => [...prev, { productId: p.id, name: p.name, qty }]);
+    setActiveProductId("");
+    setQtyInput("1");
+  };
+
+  const confirmSerialSelection = () => {
+    const p = products.find((x) => x.id === activeProductId);
+    if (!p) return;
+    if (selectedSerialIds.length === 0) return toast.error("অন্তত একটি সিরিয়াল সিলেক্ট করুন");
+    
+    const selectedSerialsText = availableSerials
+      .filter(s => selectedSerialIds.includes(s.id))
+      .map(s => s.serial);
+
+    setLines((prev) => [
+      ...prev,
+      {
+        productId: p.id,
+        name: p.name,
+        qty: selectedSerialIds.length,
+        serialIds: selectedSerialIds,
+        serialsList: selectedSerialsText
+      }
+    ]);
+    
+    setSerialSelectionOpen(false);
     setActiveProductId("");
     setQtyInput("1");
   };
@@ -109,7 +169,7 @@ export function InventoryTransfersClient() {
         toWarehouseId: toId,
         items: lines.map((l) => {
           const prod = products.find((p) => p.id === l.productId);
-          return { productId: l.productId, qty: l.qty, name: prod?.name ?? "" };
+          return { productId: l.productId, qty: l.qty, name: prod?.name ?? "", serialIds: l.serialIds };
         }),
         note: note || undefined,
       });
@@ -263,19 +323,22 @@ export function InventoryTransfersClient() {
                   <AutoSuggest
                     value={activeProductId}
                     onValueChange={setActiveProductId}
-                    options={products.filter((p) => p.active).map((p) => ({
+                    disabled={!fromId}
+                    options={availableProducts.map((p) => ({
                       value: p.id,
-                      label: p.name,
+                      label: p.model ? `${p.name} ${p.model}` : p.name,
                     }))}
-                    placeholder="Search product…"
-                    emptyMessage="No product found"
+                    placeholder={fromId ? "Search product…" : "Select source first"}
+                    emptyMessage="No product found in this warehouse"
                   />
                 </div>
                 <div>
                   <label className="text-xs text-muted-foreground">Qty</label>
                   <Input type="number" min={1} value={qtyInput} onChange={(e) => setQtyInput(e.target.value)} />
                 </div>
-                <Button onClick={addLine} variant="secondary">Add</Button>
+                <Button onClick={addLine} variant="secondary" disabled={isFetchingSerials}>
+                  {isFetchingSerials ? <Loader2 className="h-4 w-4 animate-spin" /> : "Add"}
+                </Button>
               </div>
             </Card>
 
@@ -286,6 +349,11 @@ export function InventoryTransfersClient() {
                     <div>
                       <div className="font-medium">{l.name}</div>
                       <div className="text-xs text-muted-foreground">Qty: {l.qty}</div>
+                      {l.serialsList && l.serialsList.length > 0 && (
+                        <div className="text-[10px] text-muted-foreground mt-0.5 max-w-sm truncate">
+                          Serials: {l.serialsList.join(", ")}
+                        </div>
+                      )}
                     </div>
                     <Button size="icon" variant="ghost" onClick={() => removeLine(l.productId)}>
                       <X className="h-4 w-4" />
@@ -305,6 +373,43 @@ export function InventoryTransfersClient() {
             <Button onClick={submit} className="bg-primary text-primary-foreground hover:bg-primary/90">
               Create transfer
             </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Serial Selection Dialog */}
+      <Dialog open={serialSelectionOpen} onOpenChange={setSerialSelectionOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Select Serials</DialogTitle>
+            <DialogDescription>
+              এই প্রোডাক্টটির জন্য নিচের সিরিয়ালগুলো পাওয়া গেছে। যেগুলো পাঠাতে চান, সিলেক্ট করুন।
+            </DialogDescription>
+          </DialogHeader>
+          <div className="max-h-[300px] overflow-y-auto space-y-2 border p-3 rounded-md">
+            {availableSerials.length === 0 ? (
+              <div className="text-center text-sm text-muted-foreground py-4">No serials available in source warehouse</div>
+            ) : (
+              availableSerials.map((s) => (
+                <div key={s.id} className="flex items-center space-x-2">
+                  <Checkbox
+                    id={s.id}
+                    checked={selectedSerialIds.includes(s.id)}
+                    onCheckedChange={(checked) => {
+                      if (checked) setSelectedSerialIds(prev => [...prev, s.id]);
+                      else setSelectedSerialIds(prev => prev.filter(id => id !== s.id));
+                    }}
+                  />
+                  <label htmlFor={s.id} className="text-sm font-medium leading-none cursor-pointer">
+                    {s.serial}
+                  </label>
+                </div>
+              ))
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setSerialSelectionOpen(false)}>Cancel</Button>
+            <Button onClick={confirmSerialSelection}>Confirm ({selectedSerialIds.length})</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

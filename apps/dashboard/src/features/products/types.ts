@@ -110,6 +110,9 @@ export interface Product {
 
   /** Tags used for searching. */
   searchTags?: string[];
+
+  /** Warehouse stocks mapping */
+  warehouseStocks?: Array<{ warehouseId: string; qty: number; [key: string]: any }>;
 }
 
 export type ProductInput = Omit<Product, "id">;

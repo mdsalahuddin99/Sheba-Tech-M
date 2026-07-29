@@ -19,6 +19,7 @@ export const saleTenderSchema = z.object({
 
 export const saleCreateSchema = z.object({
   customerId: z.string().optional(),
+  warehouseId: z.string().optional(),
   channel: z.enum(["POS", "STOREFRONT"]).optional(),
   discount: z.number().min(0).optional(),
   notes: z.string().optional(),

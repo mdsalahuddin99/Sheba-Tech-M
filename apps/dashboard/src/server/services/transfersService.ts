@@ -19,6 +19,7 @@ export interface TransferInput {
   items: Array<{
     productId: string;
     qty: number;
+    serialIds?: string[];
   }>;
 }
 
@@ -143,6 +144,7 @@ export const transfersService = {
             create: input.items.map((i) => ({
               productId: i.productId,
               qty: i.qty,
+              serialIds: i.serialIds || [],
             })),
           },
         },
@@ -199,19 +201,49 @@ export const transfersService = {
         }
 
         if (trackedIds.has(item.productId)) {
-          const serialCount = await tx.serialNumber.count({
-            where: {
-              productId: item.productId,
-              status: "IN_STOCK",
-              warehouseId: transfer.fromWarehouseId,
-            },
-          });
-          if (serialCount < item.qty) {
-            throw new ServiceError(
-              "VALIDATION",
-              `Insufficient serial numbers in source warehouse for product ID ${item.productId}. Expected: ${item.qty}, Found: ${serialCount}`,
-              400,
-            );
+          if (item.serialIds && item.serialIds.length > 0) {
+            if (item.serialIds.length !== item.qty) {
+              throw new ServiceError("VALIDATION", `Selected serials count (${item.serialIds.length}) does not match quantity (${item.qty}) for product ${item.productId}`, 400);
+            }
+            const foundCount = await tx.serialNumber.count({
+              where: { id: { in: item.serialIds }, warehouseId: transfer.fromWarehouseId, status: "IN_STOCK" },
+            });
+            if (foundCount !== item.qty) {
+              throw new ServiceError("VALIDATION", `One or more selected serials for product ${item.productId} are not available in source warehouse`, 400);
+            }
+            await tx.serialNumber.updateMany({
+              where: { id: { in: item.serialIds } },
+              data: { status: "IN_TRANSIT" },
+            });
+          } else {
+            // Fallback for old transfers without serialIds
+            const serials = await tx.serialNumber.findMany({
+              where: {
+                productId: item.productId,
+                status: "IN_STOCK",
+                warehouseId: transfer.fromWarehouseId,
+              },
+              orderBy: { createdAt: "asc" },
+              take: item.qty,
+              select: { id: true },
+            });
+            if (serials.length < item.qty) {
+              throw new ServiceError(
+                "VALIDATION",
+                `Insufficient serial numbers in source warehouse for product ID ${item.productId}. Expected: ${item.qty}, Found: ${serials.length}`,
+                400,
+              );
+            }
+            const sIds = serials.map((s) => s.id);
+            await tx.serialNumber.updateMany({
+              where: { id: { in: sIds } },
+              data: { status: "IN_TRANSIT" },
+            });
+            await tx.transferItem.update({
+              where: { id: item.id },
+              data: { serialIds: sIds },
+            });
+            item.serialIds = sIds;
           }
         }
 
@@ -225,7 +257,7 @@ export const transfersService = {
         where: { id },
         data: { status: "IN_TRANSIT" },
       });
-    });
+    }, { maxWait: 10000, timeout: 30000 });
   },
 
   /** Receive a transfer (sets status to COMPLETED, adds stock to destination warehouse). Requires MANAGER+. */
@@ -291,32 +323,38 @@ export const transfersService = {
       for (const item of transfer.items) {
         if (!trackedIds.has(item.productId)) continue;
 
-        // Fetch FIFO serials in the source warehouse
-        const serials = await tx.serialNumber.findMany({
-          where: {
-            productId: item.productId,
-            status: "IN_STOCK",
-            warehouseId: transfer.fromWarehouseId,
-          },
-          orderBy: { createdAt: "asc" },
-          take: item.qty,
-          select: { id: true },
-        });
+        if (item.serialIds && item.serialIds.length > 0) {
+          await tx.serialNumber.updateMany({
+            where: { id: { in: item.serialIds } },
+            data: { status: "IN_STOCK", warehouseId: transfer.toWarehouseId },
+          });
+        } else {
+          // Fallback for transfers dispatched before this feature (still IN_STOCK)
+          const serials = await tx.serialNumber.findMany({
+            where: {
+              productId: item.productId,
+              status: "IN_STOCK",
+              warehouseId: transfer.fromWarehouseId,
+            },
+            orderBy: { createdAt: "asc" },
+            take: item.qty,
+            select: { id: true },
+          });
 
-        if (serials.length < item.qty) {
-          throw new ServiceError(
-            "VALIDATION",
-            `Insufficient serial numbers in source warehouse for product ID ${item.productId}. Expected: ${item.qty}, Found: ${serials.length}`,
-            400,
-          );
+          if (serials.length < item.qty) {
+            throw new ServiceError(
+              "VALIDATION",
+              `Insufficient serial numbers in source warehouse for product ID ${item.productId}. Expected: ${item.qty}, Found: ${serials.length}`,
+              400,
+            );
+          }
+
+          const serialIds = serials.map((s) => s.id);
+          await tx.serialNumber.updateMany({
+            where: { id: { in: serialIds } },
+            data: { status: "IN_STOCK", warehouseId: transfer.toWarehouseId },
+          });
         }
-
-        // Update warehouseId to destination warehouse
-        const serialIds = serials.map((s) => s.id);
-        await tx.serialNumber.updateMany({
-          where: { id: { in: serialIds } },
-          data: { warehouseId: transfer.toWarehouseId },
-        });
 
         trackedItemProductIds.push(item.productId);
       }
@@ -337,7 +375,7 @@ export const transfersService = {
         action: "UPDATE",
         diff: { status: "COMPLETED" },
       });
-    });
+    }, { maxWait: 10000, timeout: 30000 });
   },
 
   /** Cancel a transfer (restores stock to source warehouse if it was already in transit). Requires MANAGER+. */
@@ -373,6 +411,24 @@ export const transfersService = {
             },
           });
         }
+        
+        // Revert IN_TRANSIT serials back to IN_STOCK
+        const productIds = transfer.items.map((i) => i.productId);
+        const trackedProducts = await tx.product.findMany({
+          where: { id: { in: productIds }, trackSerials: true },
+          select: { id: true },
+        });
+        const trackedIds = new Set(trackedProducts.map((p) => p.id));
+        
+        for (const item of transfer.items) {
+          if (!trackedIds.has(item.productId)) continue;
+          if (item.serialIds && item.serialIds.length > 0) {
+            await tx.serialNumber.updateMany({
+              where: { id: { in: item.serialIds } },
+              data: { status: "IN_STOCK" }, // they remain in fromWarehouseId
+            });
+          }
+        }
       }
 
       await tx.transfer.update({
@@ -386,7 +442,7 @@ export const transfersService = {
         action: "UPDATE",
         diff: { status: "CANCELLED" },
       });
-    });
+    }, { maxWait: 10000, timeout: 30000 });
   },
 
   /** Delete a transfer record. Requires OWNER. */

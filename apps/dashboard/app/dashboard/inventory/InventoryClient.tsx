@@ -37,6 +37,7 @@ import { useInventoryMetricsQuery } from "@/features/reports/hooks";
 import {
   useProducts, useCreateProduct, useUpdateProduct, useDeleteProduct,
 } from "@/features/products/hooks";
+import { useWarehouses } from "@/features/warehouses/hooks";
 import type { CategoryItem } from "@/shared/api-client/categories";
 import { listCategories, createCategory, updateCategory as updateCategoryApi, removeCategory as removeCategoryApi } from "@/shared/api-client/categories";
 import { effectiveReorderPoint } from "@/features/products/bundle";
@@ -79,7 +80,21 @@ export function InventoryClient({
   const { data: inventoryMetrics } = useInventoryMetricsQuery({ onlineOnly: filterOnlineOnly });
   const stockValue = inventoryMetrics?.stockValue ?? 0;
   const lowCount = inventoryMetrics?.lowStock.length ?? 0;
-  const outCount = products.filter(p => p.stock === 0).length; // Still doing outCount here because API returned only lowStock/deadStock
+  const warehouses = useWarehouses();
+  const [selectedWarehouseId, setSelectedWarehouseId] = useState<string>("all");
+
+  const warehouseProducts = useMemo(() => {
+    if (!selectedWarehouseId || selectedWarehouseId === "all") return products;
+    return products.map(p => {
+      const wStock = p.warehouseStocks?.find((w: any) => w.warehouseId === selectedWarehouseId);
+      return {
+        ...p,
+        stock: wStock ? Number(wStock.qty) : 0,
+      };
+    });
+  }, [products, selectedWarehouseId]);
+
+  const outCount = warehouseProducts.filter(p => p.stock === 0).length;
 
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<string>("All");
@@ -189,7 +204,7 @@ export function InventoryClient({
   };
 
   const filtered = useMemo(() => {
-    return products.filter((p) => {
+    return warehouseProducts.filter((p) => {
       const reorder = effectiveReorderPoint(p);
       const matchesFilter =
         filter === "All" ||
@@ -206,7 +221,7 @@ export function InventoryClient({
         (p.category || "").toLowerCase().includes(q);
       return matchesFilter && matchesSearch;
     });
-  }, [products, search, filter]);
+  }, [warehouseProducts, search, filter]);
 
   const isFilterEmpty = !search.trim() && filter === "All";
   const displayedProducts = isFilterEmpty ? filtered.slice(0, 5) : filtered;
@@ -333,6 +348,17 @@ export function InventoryClient({
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input placeholder="Search by name, SKU, brand, or category…" value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9 h-10" />
             </div>
+            
+            <Select value={selectedWarehouseId} onValueChange={setSelectedWarehouseId}>
+              <SelectTrigger className="sm:w-44 h-10"><SelectValue placeholder="All Warehouses" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Warehouses</SelectItem>
+                {warehouses.map(w => (
+                  <SelectItem key={w.id} value={w.id}>{w.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
             <Select value={filter} onValueChange={setFilter}>
               <SelectTrigger className="sm:w-44 h-10"><SelectValue /></SelectTrigger>
               <SelectContent>
@@ -343,16 +369,7 @@ export function InventoryClient({
                 <SelectItem value="Out">Out of stock</SelectItem>
               </SelectContent>
             </Select>
-            {!filterOnlineOnly && (
-              <>
-                <Button variant="outline" onClick={openScanForNew} title="Scan barcode to add product" className="h-10 hidden sm:inline-flex">
-                  <ScanLine className="h-4 w-4 mr-2" />Scan
-                </Button>
-                <Button variant="outline" onClick={openNew} className="h-10">
-                  <PackagePlus className="h-4 w-4 mr-2" /><span className="hidden sm:inline">Add Product</span><span className="sm:hidden">Add</span>
-                </Button>
-              </>
-            )}
+
             {!filterOnlineOnly && (
               <Button onClick={() => setAdjOpen(true)} className="bg-primary text-primary-foreground hover:bg-primary/90 h-10">
                 <Plus className="h-4 w-4 mr-2" /><span className="hidden sm:inline">New Adjustment</span><span className="sm:hidden">Adjust</span>
@@ -361,18 +378,7 @@ export function InventoryClient({
             </div>
           </Card>
 
-          {/* Mobile floating scan button */}
-          {!filterOnlineOnly && (
-            <button
-              type="button"
-              onClick={openScanForNew}
-              className="md:hidden fixed right-4 z-20 h-14 w-14 rounded-full bg-primary text-primary-foreground shadow-sm grid place-items-center active:scale-95 transition-colors"
-              style={{ bottom: "calc(5rem + env(safe-area-inset-bottom))" }}
-              aria-label="Scan barcode"
-            >
-              <ScanLine className="h-6 w-6" />
-            </button>
-          )}
+
 
           {/* Bulk action bar */}
           {selectedIds.size > 0 && (

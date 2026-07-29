@@ -56,7 +56,7 @@ export const GET = apiHandler(async (ctx: Ctx, req: Request) => {
               select: { qty: true },
             },
             serialNumbers: {
-              where: { status: "IN_STOCK" },
+              where: { status: "IN_STOCK", warehouseId },
               select: { 
                 serial: true, 
                 warrantyExpiryDate: true, 
@@ -149,16 +149,22 @@ export const GET = apiHandler(async (ctx: Ctx, req: Request) => {
 
   // Serialise products — use WarehouseStock qty if warehouseId provided, else aggregate stock
   const products = rawProducts.map((p: any) => {
-    const warehouseQty = warehouseId
-      ? (p.warehouseStocks?.[0]?.qty ?? p.stock ?? 0)
-      : p.stock;
+    // Determine actual available stock
+    let availableStock = 0;
+    if (p.trackSerials) {
+      availableStock = p.serialNumbers?.length ?? 0;
+    } else {
+      availableStock = warehouseId
+        ? (p.warehouseStocks?.[0]?.qty ?? 0)
+        : p.stock;
+    }
 
     return {
       id: p.id,
       name: p.name,
       barcode: p.barcode,
       sku: p.sku,
-      stock: warehouseQty,
+      stock: availableStock,
       price: Number(p.price),
       cost: Number(p.cost ?? 0),
       category: p.category?.name ?? "",
@@ -191,7 +197,7 @@ export const GET = apiHandler(async (ctx: Ctx, req: Request) => {
         warrantyStartDate: s.purchaseItem?.warrantyStartDate?.toISOString() || undefined,
       })),
     };
-  });
+  }).filter((p: any) => Number(p.stock) > 0); // Exclude items that are effectively out of stock
 
   const serializedCustomers = customers.map((c: any) => ({
     id: c.id,

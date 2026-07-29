@@ -80,6 +80,15 @@ export const serialService = {
     return records.map((r) => r.serial);
   },
 
+  /** List available (IN_STOCK) serial records for a product in a specific warehouse. */
+  async listAvailableByWarehouse(ctx: Ctx, productId: string, warehouseId: string) {
+    return prisma.serialNumber.findMany({
+      where: { productId, status: "IN_STOCK", warehouseId },
+      select: { id: true, serial: true },
+      orderBy: { createdAt: "asc" },
+    });
+  },
+
   /** Get serials linked to a specific sale (for invoice display). */
   async listBySaleItem(saleItemId: string): Promise<string[]> {
     const records = await prisma.serialNumber.findMany({

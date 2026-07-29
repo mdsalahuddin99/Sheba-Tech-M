@@ -39,14 +39,24 @@ export async function getSalesByCustomerAction(customerId: string) {
 }
 
 export async function createSaleAction(input: any) {
-  const ctx = await getActionCtx();
-  const valid = saleCreateSchema.parse(input);
-  return salesService.create(ctx, valid as any);
+  try {
+    const ctx = await getActionCtx();
+    const valid = saleCreateSchema.parse(input);
+    const sale = await salesService.create(ctx, valid as any);
+    return { data: sale };
+  } catch (err: any) {
+    return { __error: err.message || "An unexpected error occurred" };
+  }
 }
 
 export async function updateSaleAction(id: string, input: any) {
-  const ctx = await getActionCtx();
-  return salesService.update(ctx, id, input);
+  try {
+    const ctx = await getActionCtx();
+    const sale = await salesService.update(ctx, id, input);
+    return { data: sale };
+  } catch (err: any) {
+    return { __error: err.message || "An unexpected error occurred" };
+  }
 }
 
 export async function collectSaleDueAction(id: string, input: any) {
@@ -72,9 +82,14 @@ export async function voidSaleAction(saleId: string, reason: string) {
 }
 
 export async function refundSaleAction(saleId: string, input: any) {
-  const ctx = await getActionCtx();
-  const valid = refundCreateSchema.parse(input) as unknown as RefundInput;
-  return salesService.refund(ctx, saleId, valid);
+  try {
+    const ctx = await getActionCtx();
+    const valid = refundCreateSchema.parse(input) as unknown as RefundInput;
+    const refund = await salesService.refund(ctx, saleId, valid);
+    return { data: refund };
+  } catch (err: any) {
+    return { __error: err.message || "An unexpected error occurred" };
+  }
 }
 
 export async function deleteReturnAction(id: string) {

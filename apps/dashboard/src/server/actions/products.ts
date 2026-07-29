@@ -86,3 +86,17 @@ export async function getAvailableSerialsAction(productId: string, limit: number
   });
   return serials.map((s) => s.serial);
 }
+
+export async function getAvailableSerialsByWarehouseAction(productId: string, warehouseId: string) {
+  const ctx = await getActionCtx();
+  const serials = await prisma.serialNumber.findMany({
+    where: {
+      productId,
+      warehouseId,
+      status: "IN_STOCK",
+    },
+    select: { id: true, serial: true },
+    orderBy: { createdAt: "asc" },
+  });
+  return serials;
+}

@@ -137,6 +137,9 @@ export function useUpdateSettings() {
       saveLocal(result);
       // Update React Query cache
       queryClient.setQueryData<ShopSettings>(SETTINGS_KEY, result);
+      // Also invalidate POS keys so invoice screen gets updated settings (e.g. Sales Persons)
+      queryClient.invalidateQueries({ queryKey: ["pos", "init"] });
+      queryClient.invalidateQueries({ queryKey: ["pos", "core"] });
       // Notify other components/tabs
       window.dispatchEvent(new Event(SETTINGS_CHANGED_EVENT));
       toast.success("Settings saved");

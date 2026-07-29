@@ -109,9 +109,14 @@ export const GET = apiHandler(async (ctx: Ctx, req: Request) => {
       : {}),
     serialNumbers: {
       where: {
-        OR: [
-          { status: "IN_STOCK" as const },
-          { serial: { equals: q, mode: "insensitive" as const } }
+        AND: [
+          warehouseId ? { warehouseId } : {},
+          {
+            OR: [
+              { status: "IN_STOCK" as const },
+              { serial: { equals: q, mode: "insensitive" as const } }
+            ]
+          }
         ]
       },
       select: { 

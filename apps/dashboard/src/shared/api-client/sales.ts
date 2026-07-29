@@ -35,15 +35,17 @@ export const salesApi = {
     return getSalesByCustomerAction(customerId) as unknown as Promise<Sale[]>;
   },
 
-  create(input: Record<string, unknown>): Promise<Sale> {
-    return createSaleAction(input) as unknown as Promise<Sale>;
+  async create(input: Record<string, unknown>): Promise<Sale> {
+    const res = await createSaleAction(input) as any;
+    if (res && res.__error) throw new Error(res.__error);
+    return res.data as Sale;
   },
 
   void(saleId: string, reason: string): Promise<void> {
     return voidSaleAction(saleId, reason) as unknown as Promise<void>;
   },
 
-  refund(input: {
+  async refund(input: {
     saleId: string;
     items: Array<{ productId: string; qty: number; restock: boolean }>;
     refundMethod: string;
@@ -51,7 +53,9 @@ export const salesApi = {
     reason: string;
     note?: string;
   }): Promise<SaleReturn> {
-    return refundSaleAction(input.saleId, input) as unknown as Promise<SaleReturn>;
+    const res = await refundSaleAction(input.saleId, input) as any;
+    if (res && res.__error) throw new Error(res.__error);
+    return res.data as SaleReturn;
   },
 
   listReturns(): Promise<SaleReturn[]> {
@@ -69,8 +73,10 @@ export const salesApi = {
     return deleteSaleAction(id).then(() => undefined);
   },
 
-  update(id: string, input: Record<string, unknown>): Promise<Sale> {
-    return updateSaleAction(id, input) as unknown as Promise<Sale>;
+  async update(id: string, input: Record<string, unknown>): Promise<Sale> {
+    const res = await updateSaleAction(id, input) as any;
+    if (res && res.__error) throw new Error(res.__error);
+    return res.data as Sale;
   },
 
   collectDue(id: string, input: { amount: number; accountId: string; type: string; notes?: string }): Promise<Sale> {
