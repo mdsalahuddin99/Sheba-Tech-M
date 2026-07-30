@@ -33,13 +33,20 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) return null;
 
+        console.log("[AUTH DEBUG] authorize called for email:", credentials.email);
+        console.log("[AUTH DEBUG] password length:", (credentials.password as string)?.length);
         const user = await prisma.user.findUnique({
           where: { email: credentials.email as string },
         });
 
-        if (!user || !user.passwordHash) return null;
+        console.log("[AUTH DEBUG] user found in DB?", !!user);
+        if (!user || !user.passwordHash) {
+          console.log("[AUTH DEBUG] returning null due to missing user or passwordHash");
+          return null;
+        }
 
         const isValid = verifyPassword(credentials.password as string, user.passwordHash);
+        console.log("[AUTH DEBUG] verifyPassword result:", isValid);
         if (!isValid) return null;
 
         return {

@@ -16,15 +16,15 @@ const inter = Inter({
   preload: true,
 });
 
-const BASE = process.env.NEXT_PUBLIC_SITE_URL ?? "https://techbaria.com";
+const BASE = process.env.NEXT_PUBLIC_SITE_URL ?? "https://shebatech.com";
 
 export const metadata: Metadata = {
   title: {
-    template: "%s | Tech Baria",
-    default: "Tech Baria POS — Point of Sale & Inventory",
+    template: "%s | Sheba Tech",
+    default: "Sheba Tech POS — Point of Sale & Inventory",
   },
   description: "Modern POS terminal and inventory management for retail shops. Sales, products, customers, and reports in one place.",
-  authors: [{ name: "Tech Baria" }],
+  authors: [{ name: "Sheba Tech" }],
   icons: {
     icon: "/icon-192.svg",
     apple: "/icon-192.svg",
@@ -36,14 +36,14 @@ export const metadata: Metadata = {
     type: "website",
     locale: "en_US",
     url: BASE,
-    siteName: "Tech Baria",
-    title: "Tech Baria POS — Point of Sale & Inventory",
+    siteName: "Sheba Tech",
+    title: "Sheba Tech POS — Point of Sale & Inventory",
     description: "Modern POS terminal and inventory management for retail shops.",
     images: [{ url: `${BASE}/og-image.png`, width: 1200, height: 630 }],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Tech Baria POS — Point of Sale & Inventory",
+    title: "Sheba Tech POS — Point of Sale & Inventory",
     description: "Modern POS terminal and inventory management for retail shops.",
     images: [`${BASE}/og-image.png`],
   },
@@ -66,7 +66,7 @@ export default function RootLayout({
     // inter.variable injects --font-inter CSS variable into <html>
     // Use it in CSS/Tailwind: font-family: var(--font-inter)
     <html lang="en" className={inter.variable} data-scroll-behavior="smooth">
-      <body className={inter.className}>
+      <body className={inter.className} suppressHydrationWarning>
         <script dangerouslySetInnerHTML={{ __html: `
           if ('serviceWorker' in navigator) {
             navigator.serviceWorker.getRegistrations().then(function(registrations) {

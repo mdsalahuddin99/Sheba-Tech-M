@@ -31,7 +31,7 @@ export const BulkPaymentReceipt = forwardRef<HTMLDivElement, BulkPaymentReceiptP
             <p className="text-slate-500">Receipt No: {data.transactionId.slice(0, 8).toUpperCase()}</p>
           </div>
           <div className="text-right">
-            <h2 className="text-lg font-semibold text-slate-800">Tech Baria</h2>
+            <h2 className="text-lg font-semibold text-slate-800">Sheba Tech</h2>
             <p className="text-slate-600">Date: {formatDateTime(today)}</p>
           </div>
         </div>

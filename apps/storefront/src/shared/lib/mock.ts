@@ -172,12 +172,12 @@ export function generateMockExpenses(): Expense[] {
 }
 
 export const defaultSettings: ShopSettings = {
-  shopName: "Tech Baria Mart",
+  shopName: "Sheba Tech Mart",
   tagline: "POS & Inventory",
   logoUrl: "",
   address: "123 Main Road, Dhaka",
   phone: "01711-000000",
-  email: "shop@techbaria.com",
+  email: "shop@shebatech.com",
   website: "",
   currencySymbol: "৳",
   receiptFooter: "Thank you for shopping with us!",

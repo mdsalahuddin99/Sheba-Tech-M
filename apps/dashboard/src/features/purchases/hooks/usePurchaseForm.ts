@@ -6,7 +6,7 @@ import { productDisplayName } from "@/shared/lib/format";
 import type { AccountType } from "@/features/accounts/types";
 import type { PaymentMethod } from "@/features/sales/types";
 
-const DRAFT_KEY = "techbaria_purchase_draft";
+const DRAFT_KEY = "shebatech_purchase_draft";
 
 export interface DraftLine {
   productId: string;

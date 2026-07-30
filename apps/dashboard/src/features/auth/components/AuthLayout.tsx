@@ -30,7 +30,7 @@ export function AuthLayout({ title, description, children, footer }: AuthLayoutP
             <Store className="h-6 w-6 text-white" />
           </div>
           <h1 className="text-3xl font-bold tracking-tight text-white drop-shadow-md">
-            Tech Baria
+            Sheba Tech
           </h1>
         </div>
 
@@ -46,7 +46,7 @@ export function AuthLayout({ title, description, children, footer }: AuthLayoutP
         
         {/* Footer */}
         <div className="relative z-10 flex items-center gap-4 text-sm text-indigo-200/50 font-medium">
-          <span>© {new Date().getFullYear()} Tech Baria. All rights reserved.</span>
+          <span>© {new Date().getFullYear()} Sheba Tech. All rights reserved.</span>
         </div>
       </div>
 
@@ -59,7 +59,7 @@ export function AuthLayout({ title, description, children, footer }: AuthLayoutP
           <div className="h-14 w-14 rounded-2xl bg-indigo-600 flex items-center justify-center shadow-xl shadow-indigo-600/20 mb-5">
             <Store className="h-7 w-7 text-white" />
           </div>
-          <h1 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white">Tech Baria</h1>
+          <h1 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white">Sheba Tech</h1>
           <p className="text-sm text-slate-500 mt-2 font-medium">Point of sale for mobile & electronics shops</p>
         </div>
 

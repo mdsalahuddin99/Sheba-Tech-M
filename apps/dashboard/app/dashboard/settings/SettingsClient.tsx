@@ -146,7 +146,7 @@ export function SettingsClient() {
     setWiping(true);
     try {
       await wipeAllCloudData();
-      try { localStorage.removeItem("techbaria-pos-ui-v1"); localStorage.removeItem("techbaria-settings"); } catch (e) { console.warn(e); }
+      try { localStorage.removeItem("shebatech-pos-ui-v1"); localStorage.removeItem("shebatech-settings"); } catch (e) { console.warn(e); }
       toast.success("Database সম্পূর্ণ ক্লিয়ার হয়েছে");
       setWipeOpen(false);
       setTimeout(() => window.location.reload(), 800);

@@ -74,7 +74,7 @@ export default async function StorefrontProduct({ params }: { params: Promise<{ 
       },
       offers: {
         "@type": "Offer",
-        url: `${process.env.NEXT_PUBLIC_APP_URL || 'https://techbaria.com'}/p/${product.slug || product.id}`,
+        url: `${process.env.NEXT_PUBLIC_APP_URL || 'https://shebatech.com'}/p/${product.slug || product.id}`,
         priceCurrency: "BDT",
         price: product.price,
         itemCondition: "https://schema.org/NewCondition",

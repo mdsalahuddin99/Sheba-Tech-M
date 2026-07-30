@@ -14,7 +14,7 @@ export const useLanguageStore = create<LanguageState>()(
       lang: "en",
       setLang: (lang) => set({ lang }),
     }),
-    { name: "techbaria-lang-v1" }
+    { name: "shebatech-lang-v1" }
   )
 );
 

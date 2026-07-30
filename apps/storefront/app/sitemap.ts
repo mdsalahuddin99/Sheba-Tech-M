@@ -1,7 +1,7 @@
 import type { MetadataRoute } from "next";
 import { prisma } from "@/server/db/client";
 
-const BASE = process.env.NEXT_PUBLIC_SITE_URL ?? "https://techbaria.com";
+const BASE = process.env.NEXT_PUBLIC_SITE_URL ?? "https://shebatech.com";
 
 // ─── Static pages (always included) ──────────────────────────────────────────
 

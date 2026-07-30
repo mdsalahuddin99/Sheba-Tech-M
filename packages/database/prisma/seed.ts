@@ -31,8 +31,8 @@ async function main() {
     shop = await prisma.shop.create({
       data: {
         id: shopId,
-        name: "Tech Baria",
-        slug: "tech-baria-" + Date.now(),
+        name: "Sheba Tech",
+        slug: "sheba-tech-" + Date.now(),
         currency: "BDT",
         timezone: "Asia/Dhaka",
       },

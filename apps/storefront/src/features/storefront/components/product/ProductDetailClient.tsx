@@ -679,7 +679,7 @@ export function ProductDetailClient({ product, related = [], children, whatsappN
       {/* === Mobile Sticky Action Bar (Glassmorphism) === */}
       <div className="fixed bottom-[64px] left-0 right-0 bg-white/80 backdrop-blur-xl border-t border-slate-200/50 p-3 shadow-[0_-8px_30px_rgba(0,0,0,0.08)] md:hidden z-50 flex items-center gap-3">
         <div className="flex-1 min-w-0">
-          <div className="text-[10px] text-slate-500 truncate font-semibold uppercase tracking-wider">{product.brand || "Tech Baria"}</div>
+          <div className="text-[10px] text-slate-500 truncate font-semibold uppercase tracking-wider">{product.brand || "Sheba Tech"}</div>
           {outOfStock ? (
             <div className="font-extrabold text-lg text-rose-500">Out of Stock</div>
           ) : (

@@ -47,7 +47,7 @@ export function buildBulkReceiptHtml(data: any): string {
             <p class="subtitle">Receipt No: ${data.transactionId.slice(0, 8).toUpperCase()}</p>
           </div>
           <div>
-            <h2 class="brand">Tech Baria</h2>
+            <h2 class="brand">Sheba Tech</h2>
             <p class="subtitle">Date: ${formatDateTime(today)}</p>
           </div>
         </div>

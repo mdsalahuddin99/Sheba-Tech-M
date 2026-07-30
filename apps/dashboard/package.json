@@ -1,5 +1,5 @@
 {
-  "name": "@tech-baria/dashboard",
+  "name": "@sheba-tech/dashboard",
   "version": "0.0.1",
   "private": true,
   "scripts": {
@@ -78,7 +78,7 @@
     "vaul": "^0.9.9",
     "zod": "^3.25.76",
     "zustand": "^5.0.12",
-    "@tech-baria/database": "*"
+    "@sheba-tech/database": "*"
   },
   "devDependencies": {
     "@eslint/js": "^9.32.0",

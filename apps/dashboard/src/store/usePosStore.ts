@@ -19,7 +19,7 @@ export const usePosStore = create<PosStore>()(
       ...createUiSessionSlice(...a),
     }),
     {
-      name: "techbaria-pos-ui-v1",
+      name: "shebatech-pos-ui-v1",
       storage: createJSONStorage(() => localStorage),
       partialize: (state) => ({
         cart: state.cart,

@@ -13,7 +13,7 @@ export default function HelpClient() {
     <div className="space-y-6 max-w-5xl mx-auto pb-10">
       <PageHeader
         title="Help & Support"
-        description="Get assistance and learn more about Tech Baria POS system."
+        description="Get assistance and learn more about Sheba Tech POS system."
       />
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -121,7 +121,7 @@ export default function HelpClient() {
             <div className="space-y-3">
               <div className="flex justify-between items-center py-2 border-b border-border/50 text-sm">
                 <span className="text-muted-foreground">Software Name</span>
-                <span className="font-semibold">Tech Baria POS</span>
+                <span className="font-semibold">Sheba Tech POS</span>
               </div>
               <div className="flex justify-between items-center py-2 border-b border-border/50 text-sm">
                 <span className="text-muted-foreground">Version</span>

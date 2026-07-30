@@ -38,7 +38,7 @@ const DEFAULT_SETTINGS: ShopSettings = {
 
 // ─── localStorage helpers (backward-compat & offline fallback) ──────────────
 
-const LS_KEY = "techbaria-settings";
+const LS_KEY = "shebatech-settings";
 
 function loadLocal(): ShopSettings {
   try {
@@ -54,7 +54,7 @@ function saveLocal(settings: ShopSettings) {
   } catch { /* ignore */ }
 }
 
-export const SETTINGS_CHANGED_EVENT = "techbaria-settings-changed";
+export const SETTINGS_CHANGED_EVENT = "shebatech-settings-changed";
 
 // ─── Query key ─────────────────────────────────────────────────────────────
 

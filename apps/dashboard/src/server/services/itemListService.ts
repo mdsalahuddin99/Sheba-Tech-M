@@ -1,5 +1,5 @@
 import "server-only";
-import { prisma } from "@tech-baria/database";
+import { prisma } from "@sheba-tech/database";
 import { ServiceError } from "@/server/lib/errors";
 import { requireRole } from "@/server/auth/rbac";
 import type { Ctx } from "@/server/lib/ctx";
