@@ -145,6 +145,11 @@ export function CustomerSearch({
                         onChange(c.id);
                         setOpen(false);
                       }}
+                      onPointerDown={(e) => {
+                        e.preventDefault();
+                        onChange(c.id);
+                        setOpen(false);
+                      }}
                       className="cursor-pointer"
                     >
                       <Check

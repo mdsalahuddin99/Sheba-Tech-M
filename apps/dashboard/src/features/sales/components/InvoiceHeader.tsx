@@ -33,10 +33,7 @@ export function InvoiceHeader({
     <div className="grid grid-cols-1 gap-3">
       {/* Warehouse selector */}
       <div className="space-y-1.5">
-        <label className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-slate-500">
-          <WarehouseIcon className="h-3 w-3" />
-          Warehouse
-        </label>
+
         <Select
           value={selectedWarehouseId ?? ""}
           onValueChange={(v) => onWarehouseChange(v)}

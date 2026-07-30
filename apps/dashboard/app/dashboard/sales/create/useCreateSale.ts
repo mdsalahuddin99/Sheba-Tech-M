@@ -503,7 +503,7 @@ export function useCreateSale() {
           notes: narration || undefined,
         }),
       });
-      toast.success("Draft saved!");
+      toast.success("Quotation saved!");
       refetchHeldSales();
       clearVoucher();
     } catch (err: any) {
@@ -511,7 +511,7 @@ export function useCreateSale() {
       if (err.issues) {
         toast.error("Validation Error: " + JSON.stringify(err.issues));
       } else {
-        toast.error(err.message || "Failed to save draft");
+        toast.error(err.message || "Failed to save quotation");
       }
     }
   };
@@ -525,13 +525,9 @@ export function useCreateSale() {
     if (sale.destination) setDestination(sale.destination);
     if (sale.attention) setAttention(sale.attention);
     if (sale.notes) setNarration(sale.notes);
-    try {
-      await apiFetch(`/api/pos/held-sales?id=${id}`, { method: "DELETE" });
-      refetchHeldSales();
-      setHeldOpen(false);
-    } catch {
-      // Ignored
-    }
+    
+    // We do NOT delete the quotation automatically upon loading it anymore
+    setHeldOpen(false);
   };
 
   const deleteHeldSale = async (id: string) => {

@@ -157,35 +157,35 @@ export function InvoiceLineItems({
   }
 
   return (
-    <div className="rounded-[4px] border border-border overflow-hidden">
-      <table className="w-full text-sm">
-        <thead>
-          <tr className="bg-secondary/40 border-b border-border">
-            <th className="text-left px-2 py-1.5 text-[10px] font-bold uppercase tracking-wider text-slate-500 w-8">
+    <div className="rounded-[4px] border border-border">
+      <table className="w-full text-sm block sm:table">
+        <thead className="block sm:table-header-group">
+          <tr className="flex flex-wrap sm:table-row bg-secondary/40 border-b border-border">
+            <th className="block sm:table-cell order-1 w-8 text-left px-2 py-1.5 text-[10px] font-bold uppercase tracking-wider text-slate-500">
               #
             </th>
-            <th className="text-left px-2 py-1.5 text-[10px] font-bold uppercase tracking-wider text-slate-500 w-full">
+            <th className="block sm:table-cell order-2 flex-1 sm:w-auto min-w-[150px] text-left px-1 sm:px-2 py-1.5 text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-slate-500 truncate">
               Product
             </th>
-            <th className="text-center px-2 py-1.5 text-[10px] font-bold uppercase tracking-wider text-slate-500 w-16 whitespace-nowrap">
-              Warranty
+            <th className="block sm:table-cell order-4 sm:order-none w-12 sm:w-16 text-center px-1 sm:px-2 py-1.5 text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-slate-500 whitespace-nowrap">
+              War
             </th>
-            <th className="text-center px-2 py-1.5 text-[10px] font-bold uppercase tracking-wider text-slate-500 w-14 whitespace-nowrap">
+            <th className="block sm:table-cell order-5 sm:order-none w-16 sm:w-14 text-center px-1 sm:px-2 py-1.5 text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-slate-500 whitespace-nowrap">
               Qty
             </th>
-            <th className="text-right px-2 py-1.5 text-[10px] font-bold uppercase tracking-wider text-slate-500 w-16 whitespace-nowrap">
-              Discount
+            <th className="block sm:table-cell order-6 sm:order-none w-16 sm:w-16 text-right px-1 sm:px-2 py-1.5 text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-slate-500 whitespace-nowrap">
+              Disc
             </th>
-            <th className="text-right px-2 py-1.5 text-[10px] font-bold uppercase tracking-wider text-slate-500 w-24 whitespace-nowrap">
-              Unit Price
+            <th className="block sm:table-cell order-7 sm:order-none flex-1 sm:flex-none sm:w-24 text-right px-1 sm:px-2 py-1.5 text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-slate-500 whitespace-nowrap">
+              Price
             </th>
-            <th className="text-right px-2 py-1.5 text-[10px] font-bold uppercase tracking-wider text-slate-500 w-24 whitespace-nowrap">
+            <th className="block sm:table-cell order-8 sm:order-none flex-1 sm:flex-none sm:w-24 text-right px-1 sm:px-2 py-1.5 text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-slate-500 whitespace-nowrap">
               Total
             </th>
-            <th className="w-10 px-1" />
+            <th className="block sm:table-cell order-3 sm:order-none w-8 sm:w-10 px-0 sm:px-1" />
           </tr>
         </thead>
-        <tbody className="divide-y divide-border bg-card">
+        <tbody className="block sm:table-row-group divide-y divide-border bg-card">
           {rows.map((row, idx) => {
             const product = row.originalProduct;
             const isTracked = product?.trackSerials ?? true;
@@ -199,52 +199,113 @@ export function InvoiceLineItems({
             const allSerials = product ? getAllProductSerials(product) : [];
             const defaultWarranty = product?.warrantyMonths ?? (product as any)?.serials?.find((s: any) => s.warrantyMonths && s.warrantyMonths > 0)?.warrantyMonths ?? 0;
 
+            const MarginPopover = (
+              <Popover>
+                <PopoverTrigger asChild>
+                  <button
+                    type="button"
+                    className="h-6 w-6 rounded-[2px] grid place-items-center text-slate-400 hover:text-primary hover:bg-primary/10 transition-colors"
+                    title="Quick View Margin"
+                  >
+                    <Eye className="h-3 sm:h-3.5 w-3 sm:w-3.5" />
+                  </button>
+                </PopoverTrigger>
+                <PopoverContent align="start" sm-align="end" className="w-56 p-2 bg-card border border-border rounded-[2px] shadow-sm z-50">
+                  <div className="space-y-1.5 text-[11px]">
+                    <p className="font-bold text-slate-800 border-b border-border pb-1">Cost & Margin Info</p>
+                    <div className="flex justify-between">
+                      <span className="text-slate-500">Sell Price:</span>
+                      <span className="font-semibold text-slate-800">{formatCurrency(row.price)}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-slate-500">Purchase Cost:</span>
+                      <span className="font-semibold text-slate-800">{formatCurrency(Number(product?.cost ?? 0))}</span>
+                    </div>
+                    <div className="flex justify-between border-t border-border pt-1 font-bold">
+                      <span className="text-slate-700">Margin:</span>
+                      <span className={Number(product?.cost ?? 0) <= row.price ? "text-emerald-600" : "text-destructive"}>
+                        {formatCurrency(row.price - Number(product?.cost ?? 0))}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-slate-500">Margin %:</span>
+                      <span className={Number(product?.cost ?? 0) <= row.price ? "text-emerald-600 font-semibold" : "text-destructive font-semibold"}>
+                        {row.price > 0 ? (((row.price - Number(product?.cost ?? 0)) / row.price) * 100).toFixed(1) + "%" : "0%"}
+                      </span>
+                    </div>
+                    <div className="flex justify-between border-t border-border pt-1">
+                      <span className="text-slate-500">Vendor Warranty:</span>
+                      {(() => {
+                        const remaining = getRemainingWarranty(product, row.serials);
+                        if (remaining === "No Warranty" || remaining === "Unknown") {
+                          return <span className="font-semibold text-slate-600">No Warranty</span>;
+                        }
+                        const isExpired = remaining === "Expired";
+                        return (
+                          <span className={`font-bold ${isExpired ? "text-destructive" : "text-emerald-600"}`}>
+                            {isExpired ? "Expired" : `${remaining} left`}
+                          </span>
+                        );
+                      })()}
+                    </div>
+                  </div>
+                </PopoverContent>
+              </Popover>
+            );
+
             return (
-              <tr key={row.id} className="hover:bg-secondary/30 transition-colors border-b border-border/50 last:border-0">
+              <tr key={row.id} className="flex flex-wrap sm:table-row hover:bg-secondary/30 transition-colors border-b border-border/50 last:border-0 p-1 sm:p-0">
                 {/* Row number */}
-                <td className="px-2 py-1.5 text-[11px] text-slate-500 font-medium align-top">
+                <td className="block sm:table-cell order-1 w-8 px-2 py-1.5 text-[11px] text-slate-500 font-medium align-top">
                   {idx + 1}
                 </td>
 
                 {/* Product name & serials */}
-                <td className="px-2 py-1.5 align-top">
-                  <p className="font-semibold text-slate-800 text-[11px] leading-tight">
-                    {row.name}
-                  </p>
+                <td className="block sm:table-cell order-2 flex-1 sm:w-auto min-w-[150px] px-1 sm:px-2 sm:py-1.5 align-top">
+                  <div className="flex justify-between items-start gap-2">
+                    <div className="flex-1 min-w-0">
+                      <p className="font-semibold text-slate-800 text-[12px] sm:text-[11px] leading-tight">
+                        {row.name}
+                      </p>
 
-                  {isTracked && (
-                    <div className="mt-1.5">
-                      <div className="flex flex-wrap gap-1">
-                        {row.serials.map((serial, i) => (
-                          <span
-                            key={i}
-                            className="inline-flex items-center gap-1 bg-secondary/25 text-slate-800 text-[10px] font-semibold pl-1.5 pr-1 py-0.5 rounded-[4px] border border-border"
-                          >
-                            {serial}
-                            <button
-                              type="button"
-                              onClick={() => {
-                                const newSerials = row.serials.filter((_, idx) => idx !== i);
-                                onChangeSerials(row.id, newSerials);
-                                if (row.qty <= 1) {
-                                  onRemoveRow(row.id);
-                                } else {
-                                  onChangeQty(row.id, row.qty - 1);
-                                }
-                              }}
-                              className="text-slate-400 hover:text-red-500 transition-colors"
-                            >
-                              <X className="h-3 w-3" />
-                            </button>
-                          </span>
-                        ))}
-                      </div>
+                      {isTracked && (
+                        <div className="mt-1.5">
+                          <div className="flex flex-wrap gap-1">
+                            {row.serials.map((serial, i) => (
+                              <span
+                                key={i}
+                                className="inline-flex items-center gap-0.5 bg-secondary/25 text-slate-800 text-[9px] font-semibold pl-1 pr-0.5 py-[1px] rounded-[2px] border border-border leading-none"
+                              >
+                                {serial}
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    const newSerials = row.serials.filter((_, idx) => idx !== i);
+                                    onChangeSerials(row.id, newSerials);
+                                    if (row.qty <= 1) {
+                                      onRemoveRow(row.id);
+                                    } else {
+                                      onChangeQty(row.id, row.qty - 1);
+                                    }
+                                  }}
+                                  className="text-slate-400 hover:text-red-500 transition-colors p-0.5"
+                                >
+                                  <X className="h-2.5 w-2.5" />
+                                </button>
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      )}
                     </div>
-                  )}
+                  </div>
                 </td>
 
                 {/* Warranty months */}
-                <td className="px-2 py-1.5 align-top">
+                <td className="block sm:table-cell order-4 sm:order-none w-12 sm:w-16 px-1 py-1 sm:px-2 sm:py-1.5 align-top">
+                  <div className="flex justify-center">
+                    <div className="sm:hidden">{MarginPopover}</div>
+                  </div>
                   <Input
                     type="number"
                     min={0}
@@ -254,13 +315,13 @@ export function InvoiceLineItems({
                       const val = parseInt(e.target.value);
                       onChangeWarranty(row.id, isNaN(val) ? 0 : val);
                     }}
-                    className="w-10 h-6 text-[11px] border-border bg-card rounded-[2px] text-center px-1 mx-auto"
+                    className="w-8 sm:w-10 h-6 text-[10px] sm:text-[11px] border-border bg-card rounded-[2px] text-center px-0.5 sm:px-1 mx-auto"
                     title="Customer Warranty (Months)"
                   />
                 </td>
 
                 {/* Qty stepper */}
-                <td className="px-2 py-1.5 align-top">
+                <td className="block sm:table-cell order-5 sm:order-none w-16 sm:w-14 px-1 py-1 sm:px-2 sm:py-1.5 align-top">
                   <div className="flex items-center justify-center gap-1">
                     <Input
                       type="number"
@@ -295,7 +356,7 @@ export function InvoiceLineItems({
                 </td>
 
                 {/* Discount */}
-                <td className="px-2 py-1.5 align-top">
+                <td className="block sm:table-cell order-6 sm:order-none w-16 sm:w-16 px-1 py-1 sm:px-2 sm:py-1.5 align-top">
                   <Input
                     name="row-discount"
                     type="number"
@@ -306,12 +367,12 @@ export function InvoiceLineItems({
                       onChangeDiscount?.(row.id, isNaN(val) ? 0 : val);
                     }}
                     placeholder="0.00"
-                    className="w-14 h-6 text-[11px] border-border bg-card rounded-[2px] text-right px-1.5 ml-auto"
+                    className="w-10 sm:w-14 h-6 text-[10px] sm:text-[11px] border-border bg-card rounded-[2px] text-right px-0.5 sm:px-1.5 mx-auto"
                   />
                 </td>
 
                 {/* Unit price */}
-                <td className="px-2 py-1.5 text-right align-top">
+                <td className="block sm:table-cell order-7 sm:order-none flex-1 sm:flex-none sm:w-24 px-1 py-1 sm:px-2 sm:py-1.5 text-right align-top">
                   {onChangePrice && product?.isService ? (
                     <Input
                       type="number"
@@ -323,76 +384,25 @@ export function InvoiceLineItems({
                         onChangePrice(row.id, isNaN(val) ? 0 : val);
                       }}
                       placeholder="0.00"
-                      className="w-20 h-6 text-[11px] border-border bg-card rounded-[2px] text-right px-1.5 ml-auto font-semibold tabular-nums"
                     />
                   ) : (
-                    <span className="text-[11px] text-slate-800 font-semibold tabular-nums">
+                    <span className="text-[10px] sm:text-[11px] text-slate-800 font-semibold tabular-nums block text-right mt-1 sm:mt-0">
                       {formatCurrency(row.price)}
                     </span>
                   )}
                 </td>
 
                 {/* Line total */}
-                <td className="px-2 py-1.5 text-right align-top">
-                  <span className="font-bold text-slate-900 text-[11px] tabular-nums">
+                <td className="block sm:table-cell order-8 sm:order-none flex-1 sm:flex-none sm:w-24 px-1 py-1 sm:px-2 sm:py-1.5 text-right align-top">
+                  <span className="font-bold text-slate-900 text-[10px] sm:text-[11px] tabular-nums block text-right mt-1 sm:mt-0">
                     {formatCurrency(row.price * row.qty - (row.discount || 0))}
                   </span>
                 </td>
 
                 {/* Action column (Quick-View & Delete) */}
-                <td className="px-1 py-1.5 text-right align-top">
-                  <div className="flex items-center justify-end gap-1">
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <button
-                          type="button"
-                          className="h-6 w-6 rounded-[2px] grid place-items-center text-slate-400 hover:text-primary hover:bg-primary/10 transition-colors"
-                          title="Quick View Margin"
-                        >
-                          <Eye className="h-3 w-3" />
-                        </button>
-                      </PopoverTrigger>
-                      <PopoverContent align="end" className="w-56 p-2 bg-card border border-border rounded-[2px] shadow-sm z-50">
-                        <div className="space-y-1.5 text-[11px]">
-                          <p className="font-bold text-slate-800 border-b border-border pb-1">Cost & Margin Info</p>
-                          <div className="flex justify-between">
-                            <span className="text-slate-500">Sell Price:</span>
-                            <span className="font-semibold text-slate-800">{formatCurrency(row.price)}</span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span className="text-slate-500">Purchase Cost:</span>
-                            <span className="font-semibold text-slate-800">{formatCurrency(Number(product?.cost ?? 0))}</span>
-                          </div>
-                          <div className="flex justify-between border-t border-border pt-1 font-bold">
-                            <span className="text-slate-700">Margin:</span>
-                            <span className={Number(product?.cost ?? 0) <= row.price ? "text-emerald-600" : "text-destructive"}>
-                              {formatCurrency(row.price - Number(product?.cost ?? 0))}
-                            </span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span className="text-slate-500">Margin %:</span>
-                            <span className={Number(product?.cost ?? 0) <= row.price ? "text-emerald-600 font-semibold" : "text-destructive font-semibold"}>
-                              {row.price > 0 ? (((row.price - Number(product?.cost ?? 0)) / row.price) * 100).toFixed(1) + "%" : "0%"}
-                            </span>
-                          </div>
-                          <div className="flex justify-between border-t border-border pt-1">
-                            <span className="text-slate-500">Vendor Warranty:</span>
-                            {(() => {
-                              const remaining = getRemainingWarranty(product, row.serials);
-                              if (remaining === "No Warranty" || remaining === "Unknown") {
-                                return <span className="font-semibold text-slate-600">No Warranty</span>;
-                              }
-                              const isExpired = remaining === "Expired";
-                              return (
-                                <span className={`font-bold ${isExpired ? "text-destructive" : "text-emerald-600"}`}>
-                                  {isExpired ? "Expired" : `${remaining} left`}
-                                </span>
-                              );
-                            })()}
-                          </div>
-                        </div>
-                      </PopoverContent>
-                    </Popover>
+                <td className="block sm:table-cell order-3 sm:order-none w-8 sm:w-10 px-0 sm:px-1 py-1 sm:py-1.5 text-right align-top">
+                  <div className="flex items-center justify-end gap-0.5 sm:gap-1">
+                    <div className="hidden sm:block">{MarginPopover}</div>
 
                     <button
                       type="button"

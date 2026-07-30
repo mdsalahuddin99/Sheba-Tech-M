@@ -161,7 +161,6 @@ export function PurchasesClient({
     <div className="space-y-4">
       <PageHeader
         title="Purchase Orders"
-        description="Supplier থেকে stock যোগ করুন — প্রতিটা unit barcode/serial scan করে ইউনিক ভাবে ট্র্যাক হবে।"
       />
 
       <PurchaseList

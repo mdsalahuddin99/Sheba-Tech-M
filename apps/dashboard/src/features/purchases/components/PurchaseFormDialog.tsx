@@ -48,6 +48,7 @@ interface PurchaseFormDialogProps {
 }
 
 function SupplierSidebar({ supplierId }: { supplierId: string }) {
+  const [showHistory, setShowHistory] = useState(false);
   const { data, isLoading } = useQuery({
     queryKey: ["supplier-profile", supplierId],
     queryFn: () => suppliersService.getProfile(supplierId),
@@ -71,11 +72,11 @@ function SupplierSidebar({ supplierId }: { supplierId: string }) {
   const { supplier, recentPurchases = [], recentPayments = [] } = data;
 
   return (
-    <div className="space-y-5 text-sm">
+    <div className="space-y-3 text-sm">
       {/* Basic Info */}
-      <div className="flex items-start gap-3">
-        <div className="h-10 w-10 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center shrink-0">
-          <User className="h-5 w-5 text-slate-400" />
+      <div className="flex items-center gap-2">
+        <div className="h-8 w-8 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center shrink-0">
+          <User className="h-4 w-4 text-slate-400" />
         </div>
         <div className="min-w-0">
           <h4 className="text-xs font-bold text-slate-800 truncate">
@@ -87,41 +88,41 @@ function SupplierSidebar({ supplierId }: { supplierId: string }) {
         </div>
       </div>
 
-      <div className="space-y-2 text-xs">
+      <div className="space-y-1.5 text-[11px] sm:text-xs">
         {supplier.phone && (
           <div className="flex items-center gap-2 text-slate-600">
-            <Phone className="h-3.5 w-3.5 text-slate-400 shrink-0" />
+            <Phone className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-slate-400 shrink-0" />
             <span className="truncate">{supplier.phone}</span>
           </div>
         )}
         {supplier.email && (
           <div className="flex items-center gap-2 text-slate-600">
-            <Mail className="h-3.5 w-3.5 text-slate-400 shrink-0" />
+            <Mail className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-slate-400 shrink-0" />
             <span className="truncate">{supplier.email}</span>
           </div>
         )}
         {supplier.address && (
           <div className="flex items-start gap-2 text-slate-600">
-            <FileText className="h-3.5 w-3.5 text-slate-400 shrink-0 mt-0.5" />
+            <FileText className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-slate-400 shrink-0 mt-0.5" />
             <span className="break-words leading-relaxed">{supplier.address}</span>
           </div>
         )}
       </div>
 
-      <div className="border-t border-slate-200/60 pt-3 space-y-1.5">
-        <h5 className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+      <div className="border-t border-slate-200/60 pt-2 space-y-1">
+        <h5 className="text-[9px] font-bold uppercase tracking-wider text-slate-400">
           Account Status
         </h5>
         <div className="flex justify-between items-end">
-          <span className="text-xs font-medium text-slate-500">Payable Balance</span>
-          <span className="text-xs font-bold text-red-600 tabular-nums">
+          <span className="text-[11px] sm:text-xs font-medium text-slate-500">Payable Balance</span>
+          <span className="text-[11px] sm:text-xs font-bold text-red-600 tabular-nums">
             {formatCurrency(supplier.payableBalance)}
           </span>
         </div>
         {(supplier.advanceBalance ?? 0) > 0 && (
-          <div className="flex justify-between items-end mt-1">
-            <span className="text-xs font-medium text-slate-500">Advance Balance</span>
-            <span className="text-xs font-bold text-emerald-600 tabular-nums">
+          <div className="flex justify-between items-end mt-0.5">
+            <span className="text-[11px] sm:text-xs font-medium text-slate-500">Advance Balance</span>
+            <span className="text-[11px] sm:text-xs font-bold text-emerald-600 tabular-nums">
               {formatCurrency(supplier.advanceBalance!)}
             </span>
           </div>
@@ -129,80 +130,94 @@ function SupplierSidebar({ supplierId }: { supplierId: string }) {
       </div>
 
       {supplier.notes && (
-        <div className="border-t border-slate-200/60 pt-3 space-y-1">
-          <h5 className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+        <div className="border-t border-slate-200/60 pt-2 space-y-1">
+          <h5 className="text-[9px] font-bold uppercase tracking-wider text-slate-400">
             Notes
           </h5>
-          <p className="text-xs text-slate-600 italic bg-slate-50 p-2 rounded border border-slate-100">
+          <p className="text-[10px] sm:text-xs text-slate-600 italic bg-slate-50 p-1.5 rounded border border-slate-100">
             {supplier.notes}
           </p>
         </div>
       )}
 
-      {/* Recent Purchases */}
-      <div className="border-t border-slate-200/60 pt-3">
-        <h5 className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-2">
-          Recent Purchases
-        </h5>
-        {recentPurchases.length === 0 ? (
-          <p className="text-xs text-slate-400 italic">No purchase history</p>
-        ) : (
-          <ul className="space-y-1.5 max-h-36 overflow-y-auto">
-            {recentPurchases.map((p: any) => (
-              <li key={p.id} className="flex justify-between items-center bg-slate-50 border border-slate-150 rounded p-1.5 text-[11px]">
-                <div className="min-w-0 mr-2">
-                  <p className="font-semibold text-slate-700 truncate">{p.invoiceNo || `PO-${p.id.slice(-4)}`}</p>
-                  <p className="text-[9px] text-slate-400">
-                    {new Date(p.createdAt).toLocaleDateString("en-GB", {
-                      day: "2-digit",
-                      month: "short",
-                      year: "2-digit",
-                    })}
-                  </p>
-                </div>
-                <div className="text-right shrink-0">
-                  <p className="font-bold text-slate-700">{formatCurrency(p.total)}</p>
-                  {p.due > 0 && (
-                    <p className="text-[9px] text-red-500 font-medium">Due: {formatCurrency(p.due)}</p>
-                  )}
-                </div>
-              </li>
-            ))}
-          </ul>
-        )}
+      {/* Mobile Toggle Button */}
+      <div className="lg:hidden border-t border-slate-200/60 pt-2">
+        <Button 
+          variant="outline" 
+          size="sm" 
+          className="w-full text-[10px] sm:text-xs h-7 sm:h-8 text-slate-600" 
+          onClick={() => setShowHistory(!showHistory)}
+        >
+          {showHistory ? "Hide History" : "Show Recent Purchases"}
+        </Button>
       </div>
 
-      {/* Recent Payments */}
-      <div className="border-t border-slate-200/60 pt-3">
-        <h5 className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-2">
-          Recent Payments
-        </h5>
-        {recentPayments.length === 0 ? (
-          <p className="text-xs text-slate-400 italic">No payments recorded</p>
-        ) : (
-          <ul className="space-y-1.5 max-h-36 overflow-y-auto">
-            {recentPayments.map((pm: any) => (
-              <li key={pm.id} className="bg-slate-50 border border-slate-150 rounded p-1.5 text-[11px] space-y-0.5">
-                <div className="flex justify-between items-center">
-                  <span className="font-semibold text-emerald-600">{formatCurrency(pm.amount)}</span>
-                  <span className="text-[9px] text-slate-400">
-                    {new Date(pm.date).toLocaleDateString("en-GB", {
-                      day: "2-digit",
-                      month: "short",
-                      year: "2-digit",
-                    })}
-                  </span>
-                </div>
-                {pm.accountName && (
-                  <p className="text-[9px] text-slate-500">Account: {pm.accountName}</p>
-                )}
-                {pm.notes && (
-                  <p className="text-[9px] text-slate-400 italic truncate">{pm.notes}</p>
-                )}
-              </li>
-            ))}
-          </ul>
-        )}
+      <div className={`${showHistory ? "block" : "hidden"} lg:block space-y-5`}>
+        {/* Recent Purchases */}
+        <div className="border-t border-slate-200/60 pt-3">
+          <h5 className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-2">
+            Recent Purchases
+          </h5>
+          {recentPurchases.length === 0 ? (
+            <p className="text-xs text-slate-400 italic">No purchase history</p>
+          ) : (
+            <ul className="space-y-1.5 max-h-36 overflow-y-auto">
+              {recentPurchases.map((p: any) => (
+                <li key={p.id} className="flex justify-between items-center bg-slate-50 border border-slate-150 rounded p-1.5 text-[11px]">
+                  <div className="min-w-0 mr-2">
+                    <p className="font-semibold text-slate-700 truncate">{p.invoiceNo || `PO-${p.id.slice(-4)}`}</p>
+                    <p className="text-[9px] text-slate-400">
+                      {new Date(p.createdAt).toLocaleDateString("en-GB", {
+                        day: "2-digit",
+                        month: "short",
+                        year: "2-digit",
+                      })}
+                    </p>
+                  </div>
+                  <div className="text-right shrink-0">
+                    <p className="font-bold text-slate-700">{formatCurrency(p.total)}</p>
+                    {p.due > 0 && (
+                      <p className="text-[9px] text-red-500 font-medium">Due: {formatCurrency(p.due)}</p>
+                    )}
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+
+        {/* Recent Payments */}
+        <div className="border-t border-slate-200/60 pt-3">
+          <h5 className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-2">
+            Recent Payments
+          </h5>
+          {recentPayments.length === 0 ? (
+            <p className="text-xs text-slate-400 italic">No payments recorded</p>
+          ) : (
+            <ul className="space-y-1.5 max-h-36 overflow-y-auto">
+              {recentPayments.map((pm: any) => (
+                <li key={pm.id} className="bg-slate-50 border border-slate-150 rounded p-1.5 text-[11px] space-y-0.5">
+                  <div className="flex justify-between items-center">
+                    <span className="font-semibold text-emerald-600">{formatCurrency(pm.amount)}</span>
+                    <span className="text-[9px] text-slate-400">
+                      {new Date(pm.date).toLocaleDateString("en-GB", {
+                        day: "2-digit",
+                        month: "short",
+                        year: "2-digit",
+                      })}
+                    </span>
+                  </div>
+                  {pm.accountName && (
+                    <p className="text-[9px] text-slate-500">Account: {pm.accountName}</p>
+                  )}
+                  {pm.notes && (
+                    <p className="text-[9px] text-slate-400 italic truncate">{pm.notes}</p>
+                  )}
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
       </div>
     </div>
   );
@@ -358,9 +373,6 @@ export function PurchaseFormDialog({
         <DialogContent className="w-full h-[100dvh] max-h-[100dvh] sm:h-auto sm:max-h-[92vh] sm:max-w-[95vw] lg:max-w-5xl flex flex-col p-0 rounded-none sm:rounded-lg" onInteractOutside={(e) => e.preventDefault()}>
           <DialogHeader className="p-4 sm:p-6 pb-2 shrink-0">
             <DialogTitle>{editId ? "Edit Purchase Order" : "New Purchase Order"}</DialogTitle>
-            <DialogDescription>
-              একই Supplier থেকে একাধিক প্রোডাক্ট একসাথে পারচেজ করুন। প্রতিটি প্রোডাক্টের জন্য আলাদা কস্ট, সিরিয়াল এবং ওয়ারেন্টি সেট করতে পারবেন।
-            </DialogDescription>
           </DialogHeader>
           <div className="flex-1 overflow-y-auto px-3 sm:px-6 pb-4 sm:pb-6 space-y-4 min-h-0">
             <div className="flex flex-col lg:flex-row gap-6 items-start">
@@ -637,26 +649,27 @@ export function PurchaseFormDialog({
             </div>
 
             <Card className="p-3 space-y-3 bg-secondary/40">
-              <div className="flex items-center justify-between gap-2">
-                <div className="flex items-center gap-2">
-                  <Wallet className="h-4 w-4 text-primary" />
-                  <span className="text-sm font-semibold">Payment Tenders</span>
-                  <Badge variant="outline" className="text-xs">
-                    জমা {formatCurrency(form.totalPaid)} / {formatCurrency(form.subtotal)}
+              <div className="flex items-center justify-between gap-1 sm:gap-2">
+                <div className="flex items-center gap-1 sm:gap-2 min-w-0">
+                  <Wallet className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-primary shrink-0" />
+                  <span className="text-[10px] sm:text-sm font-semibold truncate hidden sm:inline">Payment Tenders</span>
+                  <span className="text-[10px] sm:text-sm font-semibold truncate sm:hidden">Payment</span>
+                  <Badge variant="outline" className="text-[9px] sm:text-xs whitespace-nowrap shrink-0 px-1.5">
+                    Paid {formatCurrency(form.totalPaid)} / {formatCurrency(form.subtotal)}
                   </Badge>
                 </div>
-                <Button size="sm" variant="outline" onClick={() => {
+                <Button size="sm" variant="outline" className="h-7 sm:h-8 text-[10px] sm:text-xs shrink-0 whitespace-nowrap px-2" onClick={() => {
                   const remaining = Math.max(0, form.subtotal - form.totalPaid);
                   form.addTender(remaining > 0 ? remaining : undefined);
                 }} disabled={!defaultAccountId || accounts.length === 0}>
-                  <Plus className="h-3.5 w-3.5 mr-1" /> Add tender
+                  <Plus className="h-3 w-3 sm:h-3.5 sm:w-3.5 mr-1" /> <span className="hidden sm:inline">Add tender</span><span className="sm:hidden">Add</span>
                 </Button>
               </div>
 
               {accounts.length === 0 ? (
-                <div className="text-xs text-muted-foreground border rounded-md p-2">Accounts page থেকে আগে account add করুন</div>
+                <div className="text-xs text-muted-foreground border rounded-md p-2">Please add an account from the Accounts page first</div>
               ) : form.tenders.length === 0 ? (
-                <div className="text-xs text-muted-foreground italic">Product যোগ করলে এখানে auto একটি payment বসে যাবে। একাধিক account থেকে split দিতে "Add tender" চাপুন।</div>
+                null
               ) : (
                 <div className="space-y-2">
                   {form.tenders.map((t, idx) => (

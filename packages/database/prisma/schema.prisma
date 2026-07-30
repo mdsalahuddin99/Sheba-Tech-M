@@ -689,6 +689,7 @@ model RestockItem {
 
 enum SerialStatus {
   IN_STOCK
+  IN_TRANSIT
   SOLD
   EXPIRED
   DAMAGED
@@ -834,6 +835,7 @@ model TransferItem {
   transfer   Transfer @relation(fields: [transferId], references: [id], onDelete: Cascade)
   productId  String
   qty        Int
+  serialIds  String[] @default([])
 
   @@index([transferId])
   @@index([productId])

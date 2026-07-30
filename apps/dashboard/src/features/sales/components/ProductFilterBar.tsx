@@ -323,8 +323,11 @@ export function ProductFilterBar({
         variant="ghost"
         size="sm"
         className="h-8 text-destructive hover:text-destructive hover:bg-destructive/10 rounded-[2px] shrink-0 text-xs"
-        onClick={onClear}
-        disabled={!hasRows}
+        onClick={() => {
+          onSearchChange("", false);
+          if (searchInputRef.current) searchInputRef.current.value = "";
+        }}
+        disabled={!searchQuery}
       >
         <Trash2 className="h-3.5 w-3.5 mr-1" />
         Clear

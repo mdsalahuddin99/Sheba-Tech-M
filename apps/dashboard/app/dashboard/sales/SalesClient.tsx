@@ -117,18 +117,18 @@ export function SalesClient() {
         description="Search, review and reprint past invoices."
         actions={
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-6 w-full sm:w-auto mt-2 sm:mt-0">
-            <div className="flex items-center gap-2 sm:gap-3 mr-auto sm:mr-4">
-              <div className="bg-white/15 backdrop-blur-sm border border-white/20 px-3 py-1.5 rounded-lg">
-                <p className="text-[10px] text-white/80 uppercase font-semibold tracking-wider">Transactions</p>
-                <p className="text-sm font-bold mt-0.5 text-white">{allSales.length}</p>
+            <div className="grid grid-cols-3 gap-1.5 sm:flex sm:items-center sm:gap-3 w-full sm:w-auto mr-auto sm:mr-4">
+              <div className="bg-white/15 backdrop-blur-sm border border-white/20 px-1.5 sm:px-3 py-1.5 rounded-lg flex flex-col justify-center min-w-0">
+                <p className="text-[8px] sm:text-[10px] text-white/80 uppercase font-semibold tracking-wider truncate" title="Transactions">Transactions</p>
+                <p className="text-xs sm:text-sm font-bold mt-0.5 text-white truncate">{allSales.length}</p>
               </div>
-              <div className="bg-white/15 backdrop-blur-sm border border-white/20 px-3 py-1.5 rounded-lg">
-                <p className="text-[10px] text-white/80 uppercase font-semibold tracking-wider">Revenue</p>
-                <p className="text-sm font-bold mt-0.5 text-white">{formatCurrency(total)}</p>
+              <div className="bg-white/15 backdrop-blur-sm border border-white/20 px-1.5 sm:px-3 py-1.5 rounded-lg flex flex-col justify-center min-w-0">
+                <p className="text-[8px] sm:text-[10px] text-white/80 uppercase font-semibold tracking-wider truncate" title="Revenue">Revenue</p>
+                <p className="text-xs sm:text-sm font-bold mt-0.5 text-white truncate">{formatCurrency(total)}</p>
               </div>
-              <div className="bg-white/15 backdrop-blur-sm border border-white/20 px-3 py-1.5 rounded-lg">
-                <p className="text-[10px] text-white/80 uppercase font-semibold tracking-wider">Avg Order</p>
-                <p className="text-sm font-bold mt-0.5 text-white">
+              <div className="bg-white/15 backdrop-blur-sm border border-white/20 px-1.5 sm:px-3 py-1.5 rounded-lg flex flex-col justify-center min-w-0">
+                <p className="text-[8px] sm:text-[10px] text-white/80 uppercase font-semibold tracking-wider truncate" title="Avg Order">Avg Order</p>
+                <p className="text-xs sm:text-sm font-bold mt-0.5 text-white truncate">
                   {formatCurrency(allSales.length ? total / allSales.length : 0)}
                 </p>
               </div>
@@ -179,7 +179,7 @@ export function SalesClient() {
             return (
               <div
                 key={s.id}
-                className="p-4 active:bg-secondary/40 transition-colors cursor-pointer"
+                className="p-3 active:bg-secondary/40 transition-colors cursor-pointer"
                 onClick={() => setView(s)}
                 role="button"
                 tabIndex={0}
@@ -188,14 +188,14 @@ export function SalesClient() {
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0">
                     <p className="font-semibold">{s.invoiceNo}</p>
-                    <p className="text-xs text-muted-foreground mt-0.5">{formatDateTime(s.date)}</p>
+                    <p className="text-xs text-muted-foreground">{formatDateTime(s.date)}</p>
                   </div>
                   <div className="text-right shrink-0">
                     <p className="font-bold text-sm">{formatCurrency(s.total)}</p>
-                    <Badge variant="secondary" className="text-[10px] mt-1">{s.paymentMethod}</Badge>
+                    <Badge variant="secondary" className="text-[10px]">{s.paymentMethod}</Badge>
                   </div>
                 </div>
-                <div className="flex items-center justify-between mt-2">
+                <div className="flex items-center justify-between mt-1">
                   <div className="min-w-0 flex-1">
                     <p className="text-sm truncate">{s.customerName}</p>
                     <p className="text-xs text-muted-foreground">{totalItems} item{totalItems !== 1 ? 's' : ''} · {formatCurrency(s.subtotal)} subtotal</p>
@@ -344,16 +344,19 @@ export function SalesClient() {
                     <div key={i.productId} className="flex justify-between border-b pb-1.5">
                       <div>
                         <div className="font-medium">{i.name}</div>
-                        <div className="text-xs text-muted-foreground">{formatCurrency(i.price)} × {i.qty}</div>
+                        <div className="text-xs text-muted-foreground">
+                          {formatCurrency(i.price)} × {i.qty}
+                          {i.discount ? ` (-${formatCurrency(i.discount)} Discount)` : ""}
+                        </div>
                       </div>
-                      <div className="font-semibold">{formatCurrency(i.price * i.qty)}</div>
+                      <div className="font-semibold">{formatCurrency(i.price * i.qty - (i.discount || 0))}</div>
                     </div>
                   ))}
                 </div>
               </div>
               <div className="space-y-1.5 bg-muted/40 p-3 rounded-lg">
-                <Row label="Subtotal" value={formatCurrency(view.subtotal)} />
-                <Row label="Discount" value={`- ${formatCurrency(view.discount)}`} />
+                <Row label="Subtotal" value={formatCurrency(view.items.reduce((sum, i) => sum + i.price * i.qty, 0))} />
+                <Row label="Discount" value={`- ${formatCurrency(view.items.reduce((sum, i) => sum + (i.discount || 0), 0) + view.discount)}`} />
                 <div className="flex justify-between font-bold text-base pt-1.5 border-t">
                   <span>Total</span><span className="text-primary">{formatCurrency(view.total)}</span>
                 </div>

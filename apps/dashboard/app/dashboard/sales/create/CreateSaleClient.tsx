@@ -70,10 +70,10 @@ export function CreateSaleClient() {
   } = useCreateSale();
 
   return (
-    <div className="w-full max-w-[1600px] mx-auto p-0 space-y-3">
+    <div className="w-full max-w-[1600px] mx-auto p-0 flex flex-col min-h-[calc(100vh-100px)] gap-2">
       {/* ── Standard POS Header ── */}
-      <div className="border border-border bg-card p-2">
-        <div className="flex flex-col gap-2 lg:flex-row lg:items-center lg:justify-between">
+      <div className="border border-border bg-card px-2 py-1.5">
+        <div className="flex flex-col gap-1.5 lg:flex-row lg:items-center lg:justify-between">
           {/* Left Side: Title & Info */}
           <div className="flex items-center gap-3">
             <h1 className="text-lg font-bold text-slate-900 tracking-tight flex items-center gap-2">
@@ -91,139 +91,130 @@ export function CreateSaleClient() {
           </div>
 
           {/* Right Side: Actions & Search */}
-          <div className="flex flex-wrap items-center gap-2 w-full lg:w-auto">
-            <Button
-              variant="outline"
-              onClick={() => router.push("/dashboard/sales")}
-              className="h-9 px-3 border-slate-200 bg-white text-xs font-semibold rounded-lg hover:bg-slate-50 text-slate-700 flex items-center gap-1.5 shadow-sm transition-colors"
-            >
-              <Search className="h-3.5 w-3.5 text-slate-400" />
-              Invoice Search
-            </Button>
-
-            <Popover open={heldOpen} onOpenChange={setHeldOpen}>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  className="h-9 px-3 border-slate-200 bg-white text-xs font-semibold rounded-lg hover:bg-slate-50 text-slate-700 relative flex items-center gap-1.5 shadow-sm transition-colors"
-                >
-                  <FileText className="h-3.5 w-3.5 text-slate-400" />
-                  Draft Invoices
-                  {heldSales.length > 0 && (
-                    <span className="absolute -top-1.5 -right-1.5 bg-indigo-600 text-white text-[9px] h-4 w-4 flex items-center justify-center rounded-full font-bold shadow-sm">
-                      {heldSales.length}
-                    </span>
-                  )}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent align="end" className="w-96 p-0 z-50">
-                <div className="px-3 py-2.5 border-b bg-muted/40">
-                  <h3 className="text-xs font-bold uppercase tracking-wider text-slate-600">Draft Invoices / Quotations</h3>
-                </div>
-                {heldSales.length === 0 ? (
-                  <div className="p-6 text-center">
-                    <FileText className="h-8 w-8 mx-auto text-muted-foreground/40 mb-2" />
-                    <p className="text-sm text-muted-foreground">No draft invoices</p>
-                    <p className="text-[11px] text-muted-foreground/60 mt-1">Hold a sale to create a draft</p>
-                  </div>
-                ) : (
-                  <ul className="max-h-80 overflow-y-auto divide-y divide-border">
-                    {heldSales.map((h: any) => {
-                      const cartItems = (h.cart || []).filter((i: any) => !i._meta);
-                      const draftTotal = round2(
-                        cartItems.reduce((s: number, i: any) => s + i.price * i.qty - (i.discount || 0), 0)
-                      );
-                      const itemCount = cartItems.reduce((s: number, i: any) => s + i.qty, 0);
-                      const heldDate = new Date(h.heldAt);
-                      return (
-                        <li key={h.id} className="p-2.5 hover:bg-secondary/50 transition-colors">
-                          <div className="flex items-start gap-2">
-                            <button
-                              type="button"
-                              className="flex-1 min-w-0 text-left"
-                              onClick={() => resumeHeldSale(h.id)}
-                              title="Resume this draft"
-                            >
-                              <p className="text-sm font-semibold truncate text-slate-800">
-                                {h.customerName || h.customer?.name || "No Customer"}
-                              </p>
-                              <div className="flex items-center gap-2 mt-0.5">
-                                <span className="text-xs font-bold text-primary tabular-nums">
-                                  {formatCurrency(draftTotal)}
-                                </span>
-                                <span className="text-[10px] text-muted-foreground">·</span>
-                                <span className="text-[11px] text-muted-foreground">
-                                  {itemCount} item{itemCount !== 1 ? "s" : ""}
-                                </span>
-                              </div>
-                              <div className="flex items-center gap-1 mt-1">
-                                <Clock className="h-3 w-3 text-muted-foreground/60" />
-                                <span className="text-[10px] text-muted-foreground">
-                                  {heldDate.toLocaleDateString("en-GB", { day: "2-digit", month: "short" })}{" "}
-                                  {heldDate.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", hour12: true })}
-                                </span>
-                              </div>
-                            </button>
-                            <div className="flex items-center gap-1 shrink-0">
-                              <Button
-                                size="icon"
-                                variant="ghost"
-                                className="h-8 w-8 text-slate-500 hover:text-primary"
-                                onClick={() => {
-                                  setDraftPreview(h);
-                                  setHeldOpen(false);
-                                }}
-                                title="Print Quotation"
-                              >
-                                <Printer className="h-3.5 w-3.5" />
-                              </Button>
-                              <Button
-                                size="icon"
-                                variant="ghost"
-                                className="h-8 w-8 text-destructive/70 hover:text-destructive"
-                                onClick={() => deleteHeldSale(h.id)}
-                                title="Discard"
-                              >
-                                <Trash2 className="h-3.5 w-3.5" />
-                              </Button>
-                            </div>
-                          </div>
-                        </li>
-                      );
-                    })}
-                  </ul>
-                )}
-              </PopoverContent>
-            </Popover>
-
-            {voucherRows.length > 0 && (
+          <div className="flex flex-col sm:flex-row items-center gap-2 w-full lg:w-auto">
+            <div className="flex items-center gap-1.5 sm:gap-2 w-full justify-start overflow-x-auto pb-1 sm:pb-0 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
               <Button
-                variant="ghost"
-                onClick={clearVoucher}
-                className="h-9 px-3 text-xs font-semibold rounded-lg text-red-600 hover:bg-red-50 hover:text-red-700 flex items-center gap-1.5 transition-colors"
+                variant="outline"
+                onClick={() => router.push("/dashboard/sales")}
+                className="h-8 sm:h-9 px-2.5 sm:px-3 border-slate-200 bg-white text-[10px] sm:text-xs font-semibold rounded-lg hover:bg-slate-50 text-slate-700 flex items-center gap-1.5 shadow-sm transition-colors whitespace-nowrap shrink-0"
               >
-                <Trash2 className="h-3.5 w-3.5" />
-                Clear Cart
+                <Search className="h-3 sm:h-3.5 w-3 sm:w-3.5 text-slate-400" />
+                Invoice Search
               </Button>
-            )}
 
-            {/* Global Search trigger bar inside the page */}
-            <div className="w-full sm:w-56 relative">
-              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400 pointer-events-none" />
-              <Input
-                placeholder="Search products, customers..."
-                onClick={() => {
-                  window.dispatchEvent(new CustomEvent("cmd:open-palette"));
-                }}
-                className="pl-8 h-9 bg-white border-slate-200 text-xs text-slate-700 placeholder-slate-400 rounded-lg cursor-pointer w-full focus:ring-2 focus:ring-indigo-500/20 hover:border-slate-300 transition-colors shadow-sm"
-                readOnly
-              />
+              <Popover open={heldOpen} onOpenChange={setHeldOpen}>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className="h-8 sm:h-9 px-2.5 sm:px-3 border-slate-200 bg-white text-[10px] sm:text-xs font-semibold rounded-lg hover:bg-slate-50 text-slate-700 relative flex items-center gap-1.5 shadow-sm transition-colors whitespace-nowrap shrink-0"
+                  >
+                    <FileText className="h-3 sm:h-3.5 w-3 sm:w-3.5 text-slate-400" />
+                    Quotations
+                    {heldSales.length > 0 && (
+                      <span className="absolute -top-1.5 -right-1.5 bg-indigo-600 text-white text-[9px] h-4 w-4 flex items-center justify-center rounded-full font-bold shadow-sm">
+                        {heldSales.length}
+                      </span>
+                    )}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent align="end" className="w-96 p-0 z-50 max-w-[calc(100vw-1rem)]">
+                  <div className="px-3 py-2.5 border-b bg-muted/40">
+                    <h3 className="text-xs font-bold uppercase tracking-wider text-slate-600">Quotations</h3>
+                  </div>
+                  {heldSales.length === 0 ? (
+                    <div className="p-6 text-center">
+                      <FileText className="h-8 w-8 mx-auto text-muted-foreground/40 mb-2" />
+                      <p className="text-sm text-muted-foreground">No quotations found</p>
+                      <p className="text-[11px] text-muted-foreground/60 mt-1">Save a quotation to view it here</p>
+                    </div>
+                  ) : (
+                    <ul className="max-h-80 overflow-y-auto divide-y divide-border">
+                      {heldSales.map((h: any) => {
+                        const cartItems = (h.cart || []).filter((i: any) => !i._meta);
+                        const draftTotal = round2(
+                          cartItems.reduce((s: number, i: any) => s + i.price * i.qty - (i.discount || 0), 0)
+                        );
+                        const itemCount = cartItems.reduce((s: number, i: any) => s + i.qty, 0);
+                        const heldDate = new Date(h.heldAt);
+                        return (
+                          <li key={h.id} className="p-2.5 hover:bg-secondary/50 transition-colors">
+                            <div className="flex items-start gap-2">
+                              <button
+                                type="button"
+                                className="flex-1 min-w-0 text-left"
+                                onClick={() => resumeHeldSale(h.id)}
+                                title="Resume this quotation"
+                              >
+                                <p className="text-sm font-semibold truncate text-slate-800">
+                                  {h.customerName || h.customer?.name || "No Customer"}
+                                </p>
+                                <div className="flex items-center gap-2 mt-0.5">
+                                  <span className="text-xs font-bold text-primary tabular-nums">
+                                    {formatCurrency(draftTotal)}
+                                  </span>
+                                  <span className="text-[10px] text-muted-foreground">·</span>
+                                  <span className="text-[11px] text-muted-foreground">
+                                    {itemCount} item{itemCount !== 1 ? "s" : ""}
+                                  </span>
+                                </div>
+                                <div className="flex items-center gap-1 mt-1">
+                                  <Clock className="h-3 w-3 text-muted-foreground/60" />
+                                  <span className="text-[10px] text-muted-foreground">
+                                    {heldDate.toLocaleDateString("en-GB", { day: "2-digit", month: "short" })}{" "}
+                                    {heldDate.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", hour12: true })}
+                                  </span>
+                                </div>
+                              </button>
+                              <div className="flex items-center gap-1 shrink-0">
+                                <Button
+                                  size="icon"
+                                  variant="ghost"
+                                  className="h-8 w-8 text-slate-500 hover:text-primary"
+                                  onClick={() => {
+                                    setDraftPreview(h);
+                                    setHeldOpen(false);
+                                  }}
+                                  title="Print Quotation"
+                                >
+                                  <Printer className="h-3.5 w-3.5" />
+                                </Button>
+                                <Button
+                                  size="icon"
+                                  variant="ghost"
+                                  className="h-8 w-8 text-destructive/70 hover:text-destructive"
+                                  onClick={() => deleteHeldSale(h.id)}
+                                  title="Discard"
+                                >
+                                  <Trash2 className="h-3.5 w-3.5" />
+                                </Button>
+                              </div>
+                            </div>
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  )}
+                </PopoverContent>
+              </Popover>
+
+              {voucherRows.length > 0 && (
+                <Button
+                  variant="ghost"
+                  onClick={clearVoucher}
+                  className="h-8 sm:h-9 px-2.5 sm:px-3 text-[10px] sm:text-xs font-semibold rounded-lg text-red-600 hover:bg-red-50 hover:text-red-700 flex items-center gap-1.5 transition-colors whitespace-nowrap shrink-0"
+                >
+                  <Trash2 className="h-3 sm:h-3.5 w-3 sm:w-3.5" />
+                  Clear Cart
+                </Button>
+              )}
             </div>
+
+
           </div>
         </div>
       </div>
 
-      <div className="flex flex-col lg:flex-row gap-2">
+      <div className="flex flex-col lg:flex-row gap-2 flex-1">
         {/* Tier 1: Left Sidebar */}
         <div className="w-full lg:w-72 shrink-0">
           <CustomerSidebar
@@ -234,7 +225,7 @@ export function CreateSaleClient() {
         </div>
 
         {/* Right Content Column */}
-        <div className="flex-1 space-y-2 min-w-0 pb-16 relative">
+        <div className="flex-1 flex flex-col space-y-2 min-w-0 relative">
           {/* Invoice card */}
           <div className="bg-card border border-border p-2 space-y-2">
             <div className="flex flex-col md:flex-row md:items-end gap-2">
@@ -325,20 +316,20 @@ export function CreateSaleClient() {
               {/* Left Sub-column: Additional Details */}
               <div className="lg:col-span-4 space-y-2">
                 <div className="bg-card border border-border p-2 space-y-2">
-                  <h3 className="text-[11px] font-bold uppercase tracking-wider text-slate-700 border-b border-border pb-1">
+                  <h3 className="text-[10px] font-bold uppercase tracking-wider text-slate-700 border-b border-border pb-1">
                     Additional Details
                   </h3>
-                  <div className="space-y-2">
-                    <div className="grid grid-cols-2 gap-2">
-                      <div className="space-y-1.5">
-                        <label className="text-[11px] font-bold uppercase tracking-wider text-slate-500 block">
+                  <div className="space-y-1.5">
+                    <div className="grid grid-cols-2 gap-1.5">
+                      <div className="space-y-1">
+                        <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500 block">
                           Sales Person
                         </label>
                         <Select
                           value={salesPerson || "none"}
                           onValueChange={(val) => setSalesPerson(val === "none" ? "" : val)}
                         >
-                          <SelectTrigger className="h-9 text-sm border-border bg-card rounded-[4px]">
+                          <SelectTrigger className="h-8 text-xs border-border bg-card rounded-[4px]">
                             <SelectValue placeholder="Select sales person..." />
                           </SelectTrigger>
                           <SelectContent>
@@ -351,21 +342,21 @@ export function CreateSaleClient() {
                           </SelectContent>
                         </Select>
                       </div>
-                      <div className="space-y-1.5">
-                        <label className="text-[11px] font-bold uppercase tracking-wider text-slate-500 block">
+                      <div className="space-y-1">
+                        <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500 block">
                           Invoice Date
                         </label>
                         <Input
                           type="date"
                           value={invoiceDate}
                           onChange={(e) => setInvoiceDate(e.target.value)}
-                          className="h-9 text-sm border-border bg-card rounded-[4px]"
+                          className="h-8 text-xs border-border bg-card rounded-[4px]"
                         />
                       </div>
                     </div>
-                    <div className="grid grid-cols-2 gap-2">
-                      <div className="space-y-1.5">
-                        <label className="text-[11px] font-bold uppercase tracking-wider text-slate-500 block">
+                    <div className="grid grid-cols-2 gap-1.5">
+                      <div className="space-y-1">
+                        <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500 block">
                           Destination
                         </label>
                         <Input
@@ -373,11 +364,11 @@ export function CreateSaleClient() {
                           value={destination}
                           onChange={(e) => setDestination(e.target.value)}
                           placeholder="Destination…"
-                          className="h-9 text-sm border-border bg-card rounded-[4px]"
+                          className="h-8 text-xs border-border bg-card rounded-[4px]"
                         />
                       </div>
-                      <div className="space-y-1.5">
-                        <label className="text-[11px] font-bold uppercase tracking-wider text-slate-500 block">
+                      <div className="space-y-1">
+                        <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500 block">
                           Attention
                         </label>
                         <Input
@@ -385,22 +376,11 @@ export function CreateSaleClient() {
                           value={attention}
                           onChange={(e) => setAttention(e.target.value)}
                           placeholder="Attention…"
-                          className="h-9 text-sm border-border bg-card rounded-[4px]"
+                          className="h-8 text-xs border-border bg-card rounded-[4px]"
                         />
                       </div>
                     </div>
-                    <div className="space-y-1.5">
-                      <label className="text-[11px] font-bold uppercase tracking-wider text-slate-500 block">
-                        Invoice Notes / Narration
-                      </label>
-                      <textarea
-                        value={narration}
-                        onChange={(e) => setNarration(e.target.value)}
-                        placeholder="Write invoice notes or narration here..."
-                        rows={3}
-                        className="w-full text-sm border border-border bg-card rounded-[4px] p-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                      />
-                    </div>
+
                   </div>
                 </div>
               </div>
@@ -437,61 +417,61 @@ export function CreateSaleClient() {
 
           {/* Checkout & Action Buttons (Sticky at bottom of viewport) */}
           {voucherRows.length > 0 && (
-            <div className="sticky bottom-0 bg-card border-t border-border p-2 flex flex-wrap items-center justify-between gap-2 z-30">
-              <div className="flex items-center gap-2">
+            <div className="sticky bottom-0 mt-auto bg-card border-t border-border p-2 flex flex-nowrap sm:flex-wrap items-center justify-between gap-1.5 sm:gap-2 z-30">
+              <div className="flex items-center gap-1.5 sm:gap-2 w-full sm:w-auto flex-1 sm:flex-none">
                 <Button
                   variant="outline"
-                  className="border-border text-slate-600 h-10 rounded-[4px] font-semibold hover:bg-secondary text-xs"
+                  className="border-border text-slate-600 h-8 sm:h-10 rounded-[4px] font-semibold hover:bg-secondary text-[10px] sm:text-xs px-2 sm:px-4 flex-1 sm:flex-none"
                   onClick={() => router.push("/dashboard/sales")}
                 >
                   Cancel
                 </Button>
 
                 {voucherRows.length > 0 && !editingSaleId && (
-                  <Button variant="outline" className="h-10 rounded-[4px] font-semibold hover:bg-secondary text-xs" onClick={holdCurrentSale}>
-                    <FileText className="h-4 w-4 mr-1.5" /> Save Draft
+                  <Button variant="outline" className="border-border text-slate-600 h-8 sm:h-10 rounded-[4px] font-semibold hover:bg-secondary text-[10px] sm:text-xs px-2 sm:px-4 flex-1 sm:flex-none whitespace-nowrap" onClick={holdCurrentSale}>
+                    <FileText className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-1.5" /> <span className="hidden sm:inline">Save</span> Quotation
                   </Button>
                 )}
               </div>
 
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1.5 sm:gap-2 w-full sm:w-auto flex-1 sm:flex-none">
                 {receipt && (
                   <>
                     <Button
                       variant="outline"
-                      className="border-border h-10 text-xs rounded-[4px] font-semibold hover:bg-secondary"
+                      className="border-border h-8 sm:h-10 text-[10px] sm:text-xs rounded-[4px] font-semibold hover:bg-secondary px-2 sm:px-4 flex-1 sm:flex-none"
                       onClick={() => setReceiptView("thermal")}
                     >
-                      <Printer className="h-4 w-4 mr-1.5" /> Thermal
+                      <Printer className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-1.5" /> Thermal
                     </Button>
                     <Button
                       variant="outline"
-                      className="border-border h-10 text-xs rounded-[4px] font-semibold hover:bg-secondary"
+                      className="border-border h-8 sm:h-10 text-[10px] sm:text-xs rounded-[4px] font-semibold hover:bg-secondary px-2 sm:px-4 flex-1 sm:flex-none"
                       onClick={() => setReceiptView("invoice")}
                     >
-                      <Printer className="h-4 w-4 mr-1.5" /> A4
+                      <Printer className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-1.5" /> A4
                     </Button>
                     <Button
                       variant="outline"
-                      className="border-border h-10 text-xs rounded-[4px] font-semibold hover:bg-secondary"
+                      className="border-border h-8 sm:h-10 text-[10px] sm:text-xs rounded-[4px] font-semibold hover:bg-secondary px-2 sm:px-4 flex-1 sm:flex-none"
                       onClick={() => {
                         clearVoucher();
                         setReceipt(null);
                         setReceiptView(null);
                       }}
                     >
-                      <Plus className="h-4 w-4 mr-1.5" /> New Invoice
+                      <Plus className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-1.5" /> <span className="hidden sm:inline">New Invoice</span>
                     </Button>
                   </>
                 )}
                 <LoadingButton
                   loading={isCheckingOut || saleLoading}
                   disabled={voucherRows.length === 0 || !selectedWarehouseId}
-                  className="h-10 bg-primary text-primary-foreground shadow-none hover:bg-primary/95 min-w-32 rounded-[4px] font-bold text-xs"
+                  className="h-8 sm:h-10 bg-primary text-primary-foreground shadow-none hover:bg-primary/95 min-w-0 sm:min-w-32 rounded-[4px] font-bold text-[10px] sm:text-xs px-2 sm:px-4 flex-1 sm:flex-none whitespace-nowrap"
                   onClick={handleCheckout}
                 >
-                  <CheckCircle2 className="h-4 w-4 mr-1.5" />
-                  {editingSaleId ? "Update Invoice" : "Save Invoice"}
+                  <CheckCircle2 className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-1.5 hidden sm:inline" />
+                  {editingSaleId ? "Update" : "Save Invoice"}
                 </LoadingButton>
               </div>
             </div>

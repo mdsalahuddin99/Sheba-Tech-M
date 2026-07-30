@@ -303,12 +303,12 @@ export function InventoryClient({
   };
 
   const renderTabsList = () => (
-    <TabsList className="bg-gray-50/50 border border-gray-100 p-1 h-auto flex-wrap justify-start">
-      <TabsTrigger value="overview" className="px-4 py-1.5 text-sm">Overview</TabsTrigger>
+    <TabsList className="bg-gray-50/50 border border-gray-100 p-1 h-auto flex w-full justify-between sm:justify-start sm:w-auto">
+      <TabsTrigger value="overview" className="flex-1 sm:flex-none px-2 sm:px-4 py-1.5 text-[11px] sm:text-sm">Overview</TabsTrigger>
       {!filterOnlineOnly && (
         <>
-          <TabsTrigger value="categories" className="px-4 py-1.5 text-sm"><Tag className="h-3.5 w-3.5 mr-1" />Categories</TabsTrigger>
-          <TabsTrigger value="adjustments" className="px-4 py-1.5 text-sm"><History className="h-3.5 w-3.5 mr-1" />Adjustments</TabsTrigger>
+          <TabsTrigger value="categories" className="flex-1 sm:flex-none px-2 sm:px-4 py-1.5 text-[11px] sm:text-sm"><Tag className="hidden sm:inline-block h-3.5 w-3.5 mr-1" />Categories</TabsTrigger>
+          <TabsTrigger value="adjustments" className="flex-1 sm:flex-none px-2 sm:px-4 py-1.5 text-[11px] sm:text-sm"><History className="hidden sm:inline-block h-3.5 w-3.5 mr-1" />Adjustments</TabsTrigger>
         </>
       )}
     </TabsList>
@@ -345,36 +345,38 @@ export function InventoryClient({
             <div className="h-4 w-px bg-border hidden xl:block" />
             <div className="flex-1 flex flex-col sm:flex-row w-full gap-2 sm:gap-3">
               <div className="relative flex-1 min-w-[200px]">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input placeholder="Search by name, SKU, brand, or category…" value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9 h-10" />
-            </div>
-            
-            <Select value={selectedWarehouseId} onValueChange={setSelectedWarehouseId}>
-              <SelectTrigger className="sm:w-44 h-10"><SelectValue placeholder="All Warehouses" /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Warehouses</SelectItem>
-                {warehouses.map(w => (
-                  <SelectItem key={w.id} value={w.id}>{w.name}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input placeholder="Search by name, SKU, brand, or category…" value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9 h-9 sm:h-10 text-sm" />
+              </div>
+              
+              <div className="flex items-center gap-2 w-full sm:w-auto">
+                <Select value={selectedWarehouseId} onValueChange={setSelectedWarehouseId}>
+                  <SelectTrigger className="flex-1 sm:flex-none sm:w-44 h-9 sm:h-10 text-xs sm:text-sm"><SelectValue placeholder="All Warehouses" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Warehouses</SelectItem>
+                    {warehouses.map(w => (
+                      <SelectItem key={w.id} value={w.id}>{w.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
 
-            <Select value={filter} onValueChange={setFilter}>
-              <SelectTrigger className="sm:w-44 h-10"><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="All">All stock</SelectItem>
-                <SelectItem value="OK">Healthy</SelectItem>
-                <SelectItem value="Low">Low stock</SelectItem>
-                <SelectItem value="Reorder">Needs reorder</SelectItem>
-                <SelectItem value="Out">Out of stock</SelectItem>
-              </SelectContent>
-            </Select>
+                <Select value={filter} onValueChange={setFilter}>
+                  <SelectTrigger className="flex-1 sm:flex-none sm:w-44 h-9 sm:h-10 text-xs sm:text-sm"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="All">All stock</SelectItem>
+                    <SelectItem value="OK">Healthy</SelectItem>
+                    <SelectItem value="Low">Low stock</SelectItem>
+                    <SelectItem value="Reorder">Needs reorder</SelectItem>
+                    <SelectItem value="Out">Out of stock</SelectItem>
+                  </SelectContent>
+                </Select>
 
-            {!filterOnlineOnly && (
-              <Button onClick={() => setAdjOpen(true)} className="bg-primary text-primary-foreground hover:bg-primary/90 h-10">
-                <Plus className="h-4 w-4 mr-2" /><span className="hidden sm:inline">New Adjustment</span><span className="sm:hidden">Adjust</span>
-              </Button>
-              )}
+                {!filterOnlineOnly && (
+                  <Button onClick={() => setAdjOpen(true)} className="bg-primary text-primary-foreground hover:bg-primary/90 h-9 sm:h-10 px-3 sm:px-4 shrink-0">
+                    <Plus className="h-4 w-4 sm:mr-2" /><span className="hidden sm:inline">New Adjustment</span>
+                  </Button>
+                )}
+              </div>
             </div>
           </Card>
 
