@@ -421,59 +421,6 @@ export function ProductFormCascadingFields({ form, editing }: Props) {
         )} />
       )}
 
-      {/* 5b. Compatible Models — visible only when a model is selected */}
-      {!isService && model && (
-        <div className="space-y-1 sm:col-span-1">
-          <div className="flex flex-row items-start gap-2">
-            <label className="w-[110px] shrink-0 text-right text-sm font-medium leading-none pt-2.5 text-muted-foreground flex items-center justify-end gap-1">
-              <Tag className="h-3 w-3" />
-              Compatible
-            </label>
-            <div className="flex-1 min-w-0 space-y-2">
-              {/* Tag chips */}
-              {searchTags.length > 0 && (
-                <div className="flex flex-wrap gap-1.5">
-                  {searchTags.map((tag) => (
-                    <span
-                      key={tag}
-                      className="inline-flex items-center gap-1 rounded-md bg-secondary px-2 py-0.5 text-xs font-medium text-secondary-foreground"
-                    >
-                      {tag}
-                      <button
-                        type="button"
-                        onClick={() => removeTag(tag)}
-                        className="hover:text-destructive transition-colors"
-                      >
-                        <X className="h-3 w-3" />
-                      </button>
-                    </span>
-                  ))}
-                </div>
-              )}
-              {/* Input */}
-              <input
-                type="text"
-                className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-                placeholder="e.g. Note 10, OPPO A10 — Enter or comma to add"
-                value={tagInput}
-                onChange={(e) => setTagInput(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" || e.key === ",") {
-                    e.preventDefault();
-                    if (tagInput.trim()) addTag(tagInput);
-                  } else if (e.key === "Backspace" && !tagInput && searchTags.length > 0) {
-                    removeTag(searchTags[searchTags.length - 1]);
-                  }
-                }}
-                onBlur={() => { if (tagInput.trim()) addTag(tagInput); }}
-              />
-              <p className="text-[11px] text-muted-foreground">
-                🔍 POS search-এ ধরা পড়বে — display-এ দেখাবে না
-              </p>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* 6. Series */}
       {!isService && (

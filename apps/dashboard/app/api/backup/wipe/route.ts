@@ -15,13 +15,19 @@ const respond = apiHandler(async (ctx: Ctx) => {
     prisma.transfer.deleteMany(),
     prisma.purchaseTender.deleteMany(),
     prisma.serialNumber.deleteMany(),
+    prisma.warrantyClaim.deleteMany(), // ADDED
     prisma.purchaseItem.deleteMany(),
+    prisma.expense.deleteMany(),
+    prisma.supplierTransaction.deleteMany(), // ADDED
     prisma.purchase.deleteMany(),
     prisma.saleTender.deleteMany(),
     prisma.saleItem.deleteMany(),
+    prisma.customerTransaction.deleteMany(), // ADDED
     prisma.sale.deleteMany(),
+    prisma.heldSale.deleteMany(), // ADDED
+    prisma.restockItem.deleteMany(), // ADDED
+    prisma.restockOrder.deleteMany(), // ADDED
     prisma.accountTransfer.deleteMany(),
-    prisma.expense.deleteMany(),
     prisma.cashShift.deleteMany(),
     prisma.supplierPayment.deleteMany(),
     prisma.productImage.deleteMany(),
@@ -29,6 +35,10 @@ const respond = apiHandler(async (ctx: Ctx) => {
     prisma.warehouseStock.deleteMany(),
     prisma.product.deleteMany(),
     prisma.itemList.deleteMany(),
+    prisma.seriesModel.deleteMany(), // ADDED (Cascade should handle, but to be safe)
+    prisma.modelProductType.deleteMany(), // ADDED
+    prisma.productTypeBrand.deleteMany(), // ADDED
+    prisma.brandSubcategory.deleteMany(), // ADDED
     prisma.series.deleteMany(),
     prisma.model.deleteMany(),
     prisma.productType.deleteMany(),

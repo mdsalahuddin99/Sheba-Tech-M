@@ -22,6 +22,7 @@ import { Download, BarChart3, Boxes, Receipt, Calculator, TrendingUp, TrendingDo
 import { toast } from "sonner";
 import { useReportsMetricsQuery, useInventoryMetricsQuery, useDuesMetricsQuery, useExpensesDetailedQuery } from "@/features/reports/hooks";
 import { cn } from "@/shared/lib/utils";
+import { PageHeader } from "@/shared/components";
 // We no longer import heavy client side aggregations! All calculation is safely managed backend.
 
 const COLORS = ["#6366f1", "#8b5cf6", "#f59e0b", "#ec4899", "#10b981"];
@@ -401,26 +402,11 @@ export function ReportsClient({
         <p className="text-sm font-semibold text-slate-600 mt-1">Date Range: {from} to {to}</p>
       </div>
 
-      {/* ── Page Header (Premium Gradient Banner) ── */}
-      <div className="relative overflow-hidden bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white rounded-3xl p-6 md:p-8 shadow-xl shadow-slate-200/40 border border-slate-800/80 mb-6 print:hidden">
-        {/* Glow effects */}
-        <div className="absolute top-0 right-0 w-80 h-80 rounded-full blur-3xl bg-indigo-500/10 -mr-20 -mt-20 -z-10" />
-        <div className="absolute bottom-0 left-1/3 w-60 h-60 rounded-full blur-3xl bg-violet-500/10 -mb-20 -z-10" />
-        
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
-          <div className="space-y-2">
-            <div className="flex items-center gap-2 bg-indigo-500/15 border border-indigo-500/30 text-indigo-300 w-fit px-3 py-1 rounded-full text-xs font-semibold tracking-wider uppercase">
-              <BarChart3 className="h-3 w-3" /> Shop Analytics
-            </div>
-            <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight bg-gradient-to-r from-white via-slate-100 to-slate-300 bg-clip-text text-transparent">
-              Business Performance Reports
-            </h1>
-            <p className="text-xs md:text-sm text-slate-400 max-w-xl leading-relaxed">
-              Track sales, profits, expenses, outstanding dues, and inventory value with server-verified aggregates.
-            </p>
-          </div>
-        </div>
-      </div>
+      <PageHeader 
+        title="Business Performance Reports" 
+        description="Track sales, profits, expenses, outstanding dues, and inventory value."
+        className="print:hidden mb-6"
+      />
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         

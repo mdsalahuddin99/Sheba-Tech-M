@@ -42,7 +42,6 @@ import type { CategoryItem } from "@/shared/api-client/categories";
 import { listCategories, createCategory, updateCategory as updateCategoryApi, removeCategory as removeCategoryApi } from "@/shared/api-client/categories";
 import { effectiveReorderPoint } from "@/features/products/bundle";
 import {
-  InventoryStatsCards,
   InventoryProductTable,
   InventoryProductMobileList,
   AdjustmentsHistory,
@@ -306,37 +305,35 @@ export function InventoryClient({
     <TabsList className="bg-gray-50/50 border border-gray-100 p-1 h-auto flex w-full justify-between sm:justify-start sm:w-auto">
       <TabsTrigger value="overview" className="flex-1 sm:flex-none px-2 sm:px-4 py-1.5 text-[11px] sm:text-sm">Overview</TabsTrigger>
       {!filterOnlineOnly && (
-        <>
-          <TabsTrigger value="categories" className="flex-1 sm:flex-none px-2 sm:px-4 py-1.5 text-[11px] sm:text-sm"><Tag className="hidden sm:inline-block h-3.5 w-3.5 mr-1" />Categories</TabsTrigger>
-          <TabsTrigger value="adjustments" className="flex-1 sm:flex-none px-2 sm:px-4 py-1.5 text-[11px] sm:text-sm"><History className="hidden sm:inline-block h-3.5 w-3.5 mr-1" />Adjustments</TabsTrigger>
-        </>
+        <TabsTrigger value="adjustments" className="flex-1 sm:flex-none px-2 sm:px-4 py-1.5 text-[11px] sm:text-sm"><History className="hidden sm:inline-block h-3.5 w-3.5 mr-1" />Adjustments</TabsTrigger>
       )}
     </TabsList>
   );
 
   return (
     <div className="space-y-6">
-      <div className="grid grid-cols-1 xl:grid-cols-4 gap-3 sm:gap-4">
-        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-indigo-900 via-slate-800 to-indigo-950 p-4 sm:p-5 shadow-xl xl:col-span-1 flex flex-col justify-center">
-          <div className="absolute inset-0 bg-[url('/noise.svg')] opacity-10 mix-blend-overlay" />
-          <div className="absolute -top-10 -right-10 h-40 w-40 bg-indigo-500/20 blur-[60px] rounded-full" />
-          <div className="relative z-10">
-            <h1 className="text-lg sm:text-xl font-bold tracking-tight text-white mb-2 relative z-10 flex items-center gap-2">
-              <Layers className="h-5 w-5 text-indigo-300" />
-              {filterOnlineOnly ? "E-commerce Catalog" : "Inventory Command Center"}
-            </h1>
-            <p className="text-xs sm:text-sm text-indigo-100/90 relative z-10 leading-relaxed font-medium">
-              {filterOnlineOnly 
-                ? "Manage published products and track availability."
-                : "Track stock value, categories, and audit adjustments."}
-            </p>
+      <PageHeader
+        title={filterOnlineOnly ? "E-commerce Catalog" : "Inventory Command Center"}
+        description={filterOnlineOnly 
+          ? "Manage published products and track availability." 
+          : "Track stock value, categories, and audit adjustments."}
+        actions={
+          <div className="flex items-center gap-1.5 sm:gap-3 w-full sm:w-auto">
+            <div className="bg-white/15 backdrop-blur-sm border border-white/20 px-1.5 sm:px-3 py-1.5 rounded-lg flex flex-col justify-center min-w-0 flex-1 sm:flex-none">
+              <p className="text-[8px] sm:text-[10px] text-white/80 uppercase font-semibold tracking-wider truncate" title="Stock Value">Stock Value</p>
+              <p className="text-xs sm:text-sm font-bold mt-0.5 text-white truncate">{formatCurrency(stockValue)}</p>
+            </div>
+            <div className="bg-white/15 backdrop-blur-sm border border-white/20 px-1.5 sm:px-3 py-1.5 rounded-lg flex flex-col justify-center min-w-0 flex-1 sm:flex-none">
+              <p className="text-[8px] sm:text-[10px] text-white/80 uppercase font-semibold tracking-wider truncate" title="Low Stock">Low Stock</p>
+              <p className="text-xs sm:text-sm font-bold mt-0.5 text-white truncate">{lowCount} items</p>
+            </div>
+            <div className="bg-white/15 backdrop-blur-sm border border-white/20 px-1.5 sm:px-3 py-1.5 rounded-lg flex flex-col justify-center min-w-0 flex-1 sm:flex-none">
+              <p className="text-[8px] sm:text-[10px] text-white/80 uppercase font-semibold tracking-wider truncate" title="Out of Stock">Out of Stock</p>
+              <p className="text-xs sm:text-sm font-bold mt-0.5 text-white truncate">{outCount} items</p>
+            </div>
           </div>
-        </div>
-
-        <div className="xl:col-span-3">
-          <InventoryStatsCards stockValue={stockValue} lowCount={lowCount} outCount={outCount} />
-        </div>
-      </div>
+        }
+      />
 
       <Tabs defaultValue="overview">
         <TabsContent value="overview" className="space-y-4 m-0">
@@ -437,141 +434,7 @@ export function InventoryClient({
 
         </TabsContent>
 
-        <TabsContent value="categories" className="space-y-4 m-0">
-          <Card className="p-2 sm:p-3 flex flex-col xl:flex-row gap-2 sm:gap-3 items-start xl:items-center">
-            {renderTabsList()}
-            <div className="h-4 w-px bg-border hidden xl:block" />
-            <div className="flex-1 flex flex-col sm:flex-row w-full gap-2">
-              <Select value={newSubParentId || "__root__"} onValueChange={(v) => setNewSubParentId(v === "__root__" ? "" : v)}>
-                <SelectTrigger className="sm:w-56"><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="__root__">+ New main category</SelectItem>
-                  {parentCats.map((p) => (
-                    <SelectItem key={p.id} value={p.id}>Sub of: {p.name}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <Input
-                placeholder={newSubParentId ? "New sub-category name…" : "New category name…"}
-                value={newCatName}
-                onChange={(e) => setNewCatName(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && handleAddCategory()}
-                className="flex-1"
-              />
-              <Button onClick={handleAddCategory} className="bg-primary text-primary-foreground hover:bg-primary/90">
-                <Plus className="h-4 w-4 mr-2" />Add
-              </Button>
-            </div>
-          </Card>
 
-          <Card>
-            <div className="divide-y">
-              {parentCats.map((c) => {
-                const kids = subCatsOf(c.id);
-                const isOpen = expandedCats[c.id] ?? false;
-                const count = products.filter((p) => p.category === c.name).length;
-                const isActive = true;
-                const isRenaming = renameId === c.id;
-                return (
-                  <Collapsible
-                    key={c.id}
-                    open={isOpen}
-                    onOpenChange={(o) => setExpandedCats((s) => ({ ...s, [c.id]: o }))}
-                  >
-                    <div className="flex items-center gap-2 p-3 sm:p-4 hover:bg-secondary/40">
-                      <CollapsibleTrigger asChild>
-                        <Button size="icon" variant="ghost" className="h-7 w-7" disabled={kids.length === 0}>
-                          <ChevronRight className={`h-4 w-4 transition-transform ${isOpen ? "rotate-90" : ""} ${kids.length === 0 ? "opacity-30" : ""}`} />
-                        </Button>
-                      </CollapsibleTrigger>
-                      <Tag className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-                      <div className="flex-1 min-w-0">
-                        {isRenaming ? (
-                          <Input
-                            autoFocus
-                            value={renameValue}
-                            onChange={(e) => setRenameValue(e.target.value)}
-                            onKeyDown={(e) => {
-                              if (e.key === "Enter") handleRename(c.id);
-                              if (e.key === "Escape") { setRenameId(null); setRenameValue(""); }
-                            }}
-                            className="max-w-xs h-8"
-                          />
-                        ) : (
-                          <>
-                            <p className="font-medium truncate">{c.name}</p>
-                            <p className="text-xs text-muted-foreground">{kids.length} sub · {count} products</p>
-                          </>
-                        )}
-                      </div>
-                      <div className="flex items-center gap-2">
-                        {/* Status is now automated based on product publication */}
-                        <span className="text-xs text-muted-foreground hidden sm:inline">Auto-Published</span>
-                      </div>
-                      {isRenaming ? (
-                        <>
-                          <Button size="icon" variant="ghost" onClick={() => handleRename(c.id)}><Check className="h-4 w-4" /></Button>
-                          <Button size="icon" variant="ghost" onClick={() => { setRenameId(null); setRenameValue(""); }}><X className="h-4 w-4" /></Button>
-                        </>
-                      ) : (
-                        <>
-                          <Button size="icon" variant="ghost" onClick={() => { setRenameId(c.id); setRenameValue(c.name); }}><Pencil className="h-4 w-4" /></Button>
-                          <Button size="icon" variant="ghost" className="text-destructive" onClick={() => removeCategory(c.id)}><Trash2 className="h-4 w-4" /></Button>
-                        </>
-                      )}
-                    </div>
-                    <CollapsibleContent>
-                      {kids.length > 0 && (
-                        <div className="bg-muted/30">
-                          {kids.map((s) => {
-                            const sCount = products.filter((p) => p.subcategory === s.name || p.category === s.name).length;
-                            const sActive = true;
-                            const sRenaming = renameId === s.id;
-                            return (
-                              <div key={s.id} className="flex items-center gap-2 pl-10 pr-3 sm:pr-4 py-2 border-t">
-                                <CornerDownRight className="h-3.5 w-3.5 text-muted-foreground" />
-                                <div className="flex-1 min-w-0">
-                                  {sRenaming ? (
-                                    <Input
-                                      autoFocus
-                                      value={renameValue}
-                                      onChange={(e) => setRenameValue(e.target.value)}
-                                      onKeyDown={(e) => {
-                                        if (e.key === "Enter") handleRename(s.id);
-                                        if (e.key === "Escape") { setRenameId(null); setRenameValue(""); }
-                                      }}
-                                      className="h-7 max-w-xs"
-                                    />
-                                  ) : (
-                                    <p className="text-sm truncate">{s.name} <span className="text-xs text-muted-foreground">({sCount})</span></p>
-                                  )}
-                                </div>
-                                {sRenaming ? (
-                                  <>
-                                    <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => handleRename(s.id)}><Check className="h-3.5 w-3.5" /></Button>
-                                    <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => { setRenameId(null); setRenameValue(""); }}><X className="h-3.5 w-3.5" /></Button>
-                                  </>
-                                ) : (
-                                  <>
-                                    <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => { setRenameId(s.id); setRenameValue(s.name); }}><Pencil className="h-3.5 w-3.5" /></Button>
-                                    <Button size="icon" variant="ghost" className="h-7 w-7 text-destructive" onClick={() => removeCategory(s.id)}><Trash2 className="h-3.5 w-3.5" /></Button>
-                                  </>
-                                )}
-                              </div>
-                            );
-                          })}
-                        </div>
-                      )}
-                    </CollapsibleContent>
-                  </Collapsible>
-                );
-              })}
-              {parentCats.length === 0 && (
-                <div className="text-center py-10 text-muted-foreground">No categories yet.</div>
-              )}
-            </div>
-          </Card>
-        </TabsContent>
 
         <TabsContent value="adjustments" className="space-y-4 m-0">
           <Card className="p-2 sm:p-3 flex flex-col xl:flex-row gap-2 sm:gap-3 items-start xl:items-center">

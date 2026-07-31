@@ -40,7 +40,7 @@ export async function listBrands(ctx: Ctx, subcategory?: string, search?: string
 }
 
 export async function createBrand(ctx: Ctx, name: string, subcategories?: string[]): Promise<BrandOutput> {
-  requireRole(ctx, "ADMIN");
+  requireRole(ctx, "CASHIER");
   const existing = await prisma.brand.findFirst({
     where: { name: { equals: name, mode: "insensitive" } },
     include: { subcategories: true },
@@ -146,7 +146,7 @@ export async function listProductNames(ctx: Ctx, brandId?: string, search?: stri
 }
 
 export async function createProductName(ctx: Ctx, name: string, brands?: string[]): Promise<ProductNameOutput> {
-  requireRole(ctx, "ADMIN");
+  requireRole(ctx, "CASHIER");
   const existing = await prisma.productType.findFirst({
     where: { name: { equals: name, mode: "insensitive" } },
     include: { brands: true },
@@ -251,7 +251,7 @@ export async function listModels(ctx: Ctx, productTypeId?: string, search?: stri
 }
 
 export async function createModel(ctx: Ctx, name: string, productTypes?: string[]): Promise<ModelOutput> {
-  requireRole(ctx, "ADMIN");
+  requireRole(ctx, "CASHIER");
   const existing = await prisma.model.findFirst({
     where: { name: { equals: name, mode: "insensitive" } },
     include: { productTypes: true },
@@ -356,7 +356,7 @@ export async function listSeries(ctx: Ctx, modelId?: string, search?: string): P
 }
 
 export async function createSeries(ctx: Ctx, name: string, models?: string[]): Promise<SeriesOutput> {
-  requireRole(ctx, "ADMIN");
+  requireRole(ctx, "CASHIER");
   const existing = await prisma.series.findFirst({
     where: { name: { equals: name, mode: "insensitive" } },
     include: { models: true },
