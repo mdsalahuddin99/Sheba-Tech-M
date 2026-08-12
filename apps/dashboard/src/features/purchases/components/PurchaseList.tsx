@@ -1,4 +1,5 @@
 "use client";
+import { useState, useMemo } from "react";
 
 import { Card } from "@/shared/ui/card";
 import { Input } from "@/shared/ui/input";
@@ -11,7 +12,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/shared/ui/select";
 import { formatCurrency, formatDate } from "@/shared/lib/format";
-import { Search, Plus, Trash2, Eye, Pencil, Printer, ClipboardList } from "lucide-react";
+import { Search, Plus, Trash2, Eye, Pencil, Printer, ClipboardList, ArrowUpDown } from "lucide-react";
 import { EmptyState } from "@/shared/components";
 import type { PurchaseStatus } from "@/features/purchases/types";
 
@@ -19,11 +20,11 @@ const STATUSES: PurchaseStatus[] = ["Draft", "Ordered", "Received", "Partial"];
 
 export const statusBadge = (s: PurchaseStatus) => {
   const cls =
-    s === "Received" ? "border-accent text-accent" :
-    s === "Partial" ? "border-warning text-warning" :
-    s === "Ordered" ? "border-primary text-primary" :
-    "border-muted-foreground text-muted-foreground";
-  return <Badge variant="outline" className={cls}>{s}</Badge>;
+    s === "Received" ? "text-accent" :
+    s === "Partial" ? "text-warning" :
+    s === "Ordered" ? "text-primary" :
+    "text-muted-foreground";
+  return <span className={`font-medium ${cls}`}>{s}</span>;
 };
 
 interface PurchaseListProps {
@@ -48,6 +49,44 @@ export function PurchaseList({
   onNew, onView, onEdit, onPrint, onDelete,
   fetchNextPage, hasNextPage, isFetchingNextPage
 }: PurchaseListProps) {
+  const [sortConfig, setSortConfig] = useState<{ key: string, direction: 'asc' | 'desc' } | null>(null);
+
+  const sortedData = useMemo(() => {
+    if (!sortConfig) return filtered;
+    
+    return [...filtered].sort((a, b) => {
+      let aVal = a[sortConfig.key];
+      let bVal = b[sortConfig.key];
+      
+      // Handle special cases
+      if (sortConfig.key === 'total') {
+        aVal = a.subtotal - a.discount;
+        bVal = b.subtotal - b.discount;
+      }
+      
+      if (aVal < bVal) return sortConfig.direction === 'asc' ? -1 : 1;
+      if (aVal > bVal) return sortConfig.direction === 'asc' ? 1 : -1;
+      return 0;
+    });
+  }, [filtered, sortConfig]);
+
+  const requestSort = (key: string) => {
+    let direction: 'asc' | 'desc' = 'asc';
+    if (sortConfig && sortConfig.key === key && sortConfig.direction === 'asc') {
+      direction = 'desc';
+    }
+    setSortConfig({ key, direction });
+  };
+
+  const SortableHead = ({ label, sortKey, alignRight }: { label: string, sortKey: string, alignRight?: boolean }) => (
+    <TableHead className={`cursor-pointer hover:bg-secondary/50 transition-colors group ${alignRight ? 'text-right' : ''}`} onClick={() => requestSort(sortKey)}>
+      <div className={`flex items-center gap-1 ${alignRight ? 'justify-end' : ''}`}>
+        {label}
+        <ArrowUpDown className={`h-3 w-3 transition-colors ${sortConfig?.key === sortKey ? 'text-primary opacity-100' : 'opacity-30 group-hover:opacity-100'}`} />
+      </div>
+    </TableHead>
+  );
+
   return (
     <>
       <Card className="p-3">
@@ -92,7 +131,7 @@ export function PurchaseList({
       <Card>
         {/* Mobile: card list */}
         <div className="sm:hidden divide-y">
-          {filtered.map((po) => {
+          {sortedData.map((po) => {
             const units = po.items.reduce((s: number, i: any) => s + i.qty, 0);
             return (
               <div
@@ -137,18 +176,18 @@ export function PurchaseList({
           <Table className="whitespace-nowrap">
             <TableHeader>
               <TableRow>
-                <TableHead>PO #</TableHead>
-                <TableHead>Date</TableHead>
-                <TableHead>Supplier</TableHead>
+                <SortableHead label="PO #" sortKey="poNumber" />
+                <SortableHead label="Date" sortKey="createdAt" />
+                <SortableHead label="Supplier" sortKey="supplierName" />
                 <TableHead className="text-right">Items</TableHead>
                 <TableHead className="text-right">Units</TableHead>
-                <TableHead className="text-right">Total</TableHead>
-                <TableHead>Status</TableHead>
+                <SortableHead label="Total" sortKey="total" alignRight />
+                <SortableHead label="Status" sortKey="status" />
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filtered.map((po) => {
+              {sortedData.map((po) => {
                 const units = po.items.reduce((s: number, i: any) => s + i.qty, 0);
                 return (
                   <TableRow key={po.id} className="cursor-pointer" onClick={() => onView(po.id)}>
@@ -161,24 +200,24 @@ export function PurchaseList({
                     <TableCell>{statusBadge(po.status)}</TableCell>
                     <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
                       <div className="flex justify-end gap-0.5">
-                        <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => onView(po.id)} title="View">
-                          <Eye className="h-3.5 w-3.5" />
+                        <Button size="icon" variant="ghost" className="h-5 w-5" onClick={() => onView(po.id)} title="View">
+                          <Eye className="h-3 w-3" />
                         </Button>
-                        <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => onEdit(po.id)} title="Edit">
-                          <Pencil className="h-3.5 w-3.5" />
+                        <Button size="icon" variant="ghost" className="h-5 w-5" onClick={() => onEdit(po.id)} title="Edit">
+                          <Pencil className="h-3 w-3" />
                         </Button>
-                        <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => onPrint(po.id)} title="Print Invoice">
-                          <Printer className="h-3.5 w-3.5" />
+                        <Button size="icon" variant="ghost" className="h-5 w-5" onClick={() => onPrint(po.id)} title="Print Invoice">
+                          <Printer className="h-3 w-3" />
                         </Button>
-                        <Button size="icon" variant="ghost" className="h-8 w-8 text-destructive" onClick={() => onDelete(po.id)} title="Delete">
-                          <Trash2 className="h-3.5 w-3.5" />
+                        <Button size="icon" variant="ghost" className="h-5 w-5 text-destructive" onClick={() => onDelete(po.id)} title="Delete">
+                          <Trash2 className="h-3 w-3" />
                         </Button>
                       </div>
                     </TableCell>
                   </TableRow>
                 );
               })}
-              {filtered.length === 0 && (
+              {sortedData.length === 0 && (
                 <TableRow>
                   <TableCell colSpan={8} className="p-0">
                     <EmptyState

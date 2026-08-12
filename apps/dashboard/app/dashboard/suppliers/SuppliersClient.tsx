@@ -358,31 +358,31 @@ export function SuppliersClient({
                       <TableCell className="text-right">{formatCurrency(s.totalPurchased)}</TableCell>
                       <TableCell className="text-right">
                         {s.payableBalance > 0 ? (
-                          <Badge variant="outline" className="border-warning text-warning">
+                          <span className="text-warning font-medium">
                             {formatCurrency(s.payableBalance)}
-                          </Badge>
+                          </span>
                         ) : (
-                          <Badge variant="outline" className="border-muted-foreground text-muted-foreground">0.00</Badge>
+                          <span className="text-muted-foreground">0.00</span>
                         )}
                       </TableCell>
                       <TableCell className="text-right">
                         {(s.advanceBalance || 0) > 0 ? (
-                          <Badge variant="outline" className="border-accent text-accent">
+                          <span className="text-accent font-medium">
                             {formatCurrency(s.advanceBalance || 0)}
-                          </Badge>
+                          </span>
                         ) : (
-                          <Badge variant="outline" className="border-muted-foreground text-muted-foreground">0.00</Badge>
+                          <span className="text-muted-foreground">0.00</span>
                         )}
                       </TableCell>
-                      <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
-                        <Button size="sm" variant="outline" onClick={() => { setWalletAction("deposit"); setPayOpen(s); }} title="Wallet Deposit/Withdraw">
-                          <Wallet className="h-3.5 w-3.5 mr-1" />Wallet
+                      <TableCell className="text-right flex items-center justify-end gap-1" onClick={(e) => e.stopPropagation()}>
+                        <Button variant="outline" className="h-5 text-[9px] px-1.5 py-0" onClick={() => { setWalletAction("deposit"); setPayOpen(s); }} title="Wallet Deposit/Withdraw">
+                          <Wallet className="h-2.5 w-2.5 mr-1" />Wallet
                         </Button>
-                        <Button size="icon" variant="ghost" onClick={() => openEdit(s)} aria-label={`Edit ${s.name}`}>
-                          <Pencil className="h-4 w-4" />
+                        <Button size="icon" variant="ghost" className="h-5 w-5" onClick={() => openEdit(s)} aria-label={`Edit ${s.name}`}>
+                          <Pencil className="h-3 w-3" />
                         </Button>
-                        <Button size="icon" variant="ghost" className="text-destructive" onClick={() => setDeleteId(s.id)} aria-label={`Delete ${s.name}`}>
-                          <Trash2 className="h-4 w-4" />
+                        <Button size="icon" variant="ghost" className="h-5 w-5 text-destructive" onClick={() => setDeleteId(s.id)} aria-label={`Delete ${s.name}`}>
+                          <Trash2 className="h-3 w-3" />
                         </Button>
                       </TableCell>
                     </TableRow>

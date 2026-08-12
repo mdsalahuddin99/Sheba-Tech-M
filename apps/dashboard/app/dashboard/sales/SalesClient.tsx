@@ -48,7 +48,16 @@ export function SalesClient() {
   const [view, setView] = useState<Sale | null>(null);
   const [invoice, setInvoice] = useState<Sale | null>(null);
   const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [localSort, setLocalSort] = useState<{ key: string, direction: 'asc' | 'desc' } | null>(null);
   const { delete: deleteSale } = useSaleMutations();
+
+  const requestSort = (key: string) => {
+    let direction: 'asc' | 'desc' = 'asc';
+    if (localSort && localSort.key === key && localSort.direction === 'asc') {
+      direction = 'desc';
+    }
+    setLocalSort({ key, direction });
+  };
 
   useEffect(() => {
     const timer = setTimeout(() => setDebouncedSearch(search), 300);
@@ -105,8 +114,24 @@ export function SalesClient() {
       );
     }
 
+    if (localSort) {
+      result.sort((a, b) => {
+        let aVal: any = a[localSort.key as keyof Sale];
+        let bVal: any = b[localSort.key as keyof Sale];
+        
+        if (localSort.key === 'items') {
+          aVal = a.items.reduce((sum, i) => sum + i.qty, 0);
+          bVal = b.items.reduce((sum, i) => sum + i.qty, 0);
+        }
+        
+        if (aVal < bVal) return localSort.direction === 'asc' ? -1 : 1;
+        if (aVal > bVal) return localSort.direction === 'asc' ? 1 : -1;
+        return 0;
+      });
+    }
+
     return result;
-  }, [data, search]);
+  }, [data, search, localSort]);
 
   const total = allSales.reduce((s, x) => s + x.total, 0);
 
@@ -240,13 +265,27 @@ export function SalesClient() {
           <Table variant="premium">
             <TableHeader>
               <TableRow>
-                <TableHead>Invoice</TableHead>
-                <TableHead>Date</TableHead>
-                <TableHead>Customer</TableHead>
-                <TableHead className="text-right">Items</TableHead>
-                <TableHead className="text-right">Subtotal</TableHead>
-                <TableHead className="text-right">Total</TableHead>
-                <TableHead>Method</TableHead>
+                <TableHead className="cursor-pointer hover:bg-secondary/50 group" onClick={() => requestSort("invoiceNo")}>
+                  <div className="flex items-center gap-1">Invoice <ArrowUpDown className={`h-3 w-3 transition-colors ${localSort?.key === "invoiceNo" ? 'text-primary opacity-100' : 'opacity-30 group-hover:opacity-100'}`} /></div>
+                </TableHead>
+                <TableHead className="cursor-pointer hover:bg-secondary/50 group" onClick={() => requestSort("date")}>
+                  <div className="flex items-center gap-1">Date <ArrowUpDown className={`h-3 w-3 transition-colors ${localSort?.key === "date" ? 'text-primary opacity-100' : 'opacity-30 group-hover:opacity-100'}`} /></div>
+                </TableHead>
+                <TableHead className="cursor-pointer hover:bg-secondary/50 group" onClick={() => requestSort("customerName")}>
+                  <div className="flex items-center gap-1">Customer <ArrowUpDown className={`h-3 w-3 transition-colors ${localSort?.key === "customerName" ? 'text-primary opacity-100' : 'opacity-30 group-hover:opacity-100'}`} /></div>
+                </TableHead>
+                <TableHead className="cursor-pointer hover:bg-secondary/50 group text-right" onClick={() => requestSort("items")}>
+                  <div className="flex items-center justify-end gap-1">Items <ArrowUpDown className={`h-3 w-3 transition-colors ${localSort?.key === "items" ? 'text-primary opacity-100' : 'opacity-30 group-hover:opacity-100'}`} /></div>
+                </TableHead>
+                <TableHead className="cursor-pointer hover:bg-secondary/50 group text-right" onClick={() => requestSort("subtotal")}>
+                  <div className="flex items-center justify-end gap-1">Subtotal <ArrowUpDown className={`h-3 w-3 transition-colors ${localSort?.key === "subtotal" ? 'text-primary opacity-100' : 'opacity-30 group-hover:opacity-100'}`} /></div>
+                </TableHead>
+                <TableHead className="cursor-pointer hover:bg-secondary/50 group text-right" onClick={() => requestSort("total")}>
+                  <div className="flex items-center justify-end gap-1">Total <ArrowUpDown className={`h-3 w-3 transition-colors ${localSort?.key === "total" ? 'text-primary opacity-100' : 'opacity-30 group-hover:opacity-100'}`} /></div>
+                </TableHead>
+                <TableHead className="cursor-pointer hover:bg-secondary/50 group" onClick={() => requestSort("paymentMethod")}>
+                  <div className="flex items-center gap-1">Method <ArrowUpDown className={`h-3 w-3 transition-colors ${localSort?.key === "paymentMethod" ? 'text-primary opacity-100' : 'opacity-30 group-hover:opacity-100'}`} /></div>
+                </TableHead>
                 <TableHead></TableHead>
               </TableRow>
             </TableHeader>
@@ -259,22 +298,22 @@ export function SalesClient() {
                   <TableCell className="text-right">{s.items.reduce((a, i) => a + i.qty, 0)}</TableCell>
                   <TableCell className="text-right">{formatCurrency(s.subtotal)}</TableCell>
                   <TableCell className="text-right font-semibold">{formatCurrency(s.total)}</TableCell>
-                  <TableCell><Badge variant="secondary">{s.paymentMethod}</Badge></TableCell>
+                  <TableCell><Badge variant="secondary" className="text-[10px] px-1.5 py-0">{s.paymentMethod}</Badge></TableCell>
                   <TableCell onClick={(e) => e.stopPropagation()}>
                     <div className="flex items-center gap-1">
-                      <Button size="icon" variant="ghost" onClick={() => setView(s)} title="Quick view">
-                        <Eye className="h-4 w-4" />
+                      <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => setView(s)} title="Quick view">
+                        <Eye className="h-3.5 w-3.5" />
                       </Button>
-                      <Button size="icon" variant="ghost" onClick={() => setInvoice(s)} title="Open invoice">
-                        <FileText className="h-4 w-4" />
+                      <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => setInvoice(s)} title="Open invoice">
+                        <FileText className="h-3.5 w-3.5" />
                       </Button>
-                      <Button size="icon" variant="ghost" onClick={() => router.push(`/dashboard/sales/create?saleId=${s.id}`)} title="Edit sale">
-                        <Pencil className="h-4 w-4" />
+                      <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => router.push(`/dashboard/sales/create?saleId=${s.id}`)} title="Edit sale">
+                        <Pencil className="h-3.5 w-3.5" />
                       </Button>
                       <AlertDialog>
                         <AlertDialogTrigger asChild>
-                          <Button size="icon" variant="ghost" title="Delete">
-                            <Trash2 className="h-4 w-4 text-destructive" />
+                          <Button size="icon" variant="ghost" className="h-6 w-6" title="Delete">
+                            <Trash2 className="h-3.5 w-3.5 text-destructive" />
                           </Button>
                         </AlertDialogTrigger>
                         <AlertDialogContent>

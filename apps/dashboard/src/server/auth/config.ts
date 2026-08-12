@@ -19,7 +19,7 @@ import { verifyPassword } from "@/server/lib/password";
 // No Accelerate extension means no incompatibility with PrismaAdapter internals.
 export const { handlers, auth, signIn, signOut } = NextAuth({
   adapter: PrismaAdapter(prisma),
-  session: { strategy: "jwt" },
+  session: { strategy: "jwt", maxAge: 5 * 60 }, // 5 minutes
   trustHost: true,
   basePath: "/api/auth",
   providers: [

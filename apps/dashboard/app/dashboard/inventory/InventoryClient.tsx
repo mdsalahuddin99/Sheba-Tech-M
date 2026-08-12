@@ -311,8 +311,9 @@ export function InventoryClient({
   );
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-0">
       <PageHeader
+        className="!mb-0"
         title={filterOnlineOnly ? "E-commerce Catalog" : "Inventory Command Center"}
         description={filterOnlineOnly 
           ? "Manage published products and track availability." 
@@ -336,8 +337,8 @@ export function InventoryClient({
       />
 
       <Tabs defaultValue="overview">
-        <TabsContent value="overview" className="space-y-4 m-0">
-          <Card className="p-2 sm:p-3 flex flex-col xl:flex-row gap-2 sm:gap-3 items-start xl:items-center">
+        <TabsContent value="overview" className="space-y-0 m-0">
+          <Card className="p-2 sm:p-3 flex flex-col xl:flex-row gap-2 sm:gap-3 items-start xl:items-center rounded-t-none border-t-0 shadow-sm">
             {renderTabsList()}
             <div className="h-4 w-px bg-border hidden xl:block" />
             <div className="flex-1 flex flex-col sm:flex-row w-full gap-2 sm:gap-3">

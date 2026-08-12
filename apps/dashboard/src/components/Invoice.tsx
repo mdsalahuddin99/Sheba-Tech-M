@@ -4,7 +4,8 @@ import { useState, useRef } from "react";
 import { Sale, ShopSettings } from "@/shared/lib/types";
 import { Button } from "@/shared/ui/button";
 import { Dialog, DialogContent, DialogTitle } from "@/shared/ui/dialog";
-import { Printer, Download, X, Receipt } from "lucide-react";
+import { Printer, Download, X, Receipt, FileImage, Share2, MessageCircle } from "lucide-react";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/shared/ui/dropdown-menu";
 import ThermalReceipt from "@/components/ThermalReceipt";
 import { ScaledIframe } from "@/components/ScaledIframe";
 import { canPrint, printHtml, downloadHtml } from "@/shared/lib/print";
@@ -31,7 +32,7 @@ export default function Invoice({ sale, settings, open, onClose }: Props) {
   const totalDueAmount = previousDue + sale.total;
   const currentDueAmount = Math.max(0, totalDueAmount - Math.min(sale.amountPaid, sale.total));
 
-  const handleDownload = async () => {
+  const handleDownload = async (format: "pdf" | "jpg") => {
     if (isDownloading.current) return;
     isDownloading.current = true;
     const html = buildStandaloneInvoice(sale, settings, previousDue, totalDueAmount, currentDueAmount);
@@ -65,23 +66,115 @@ export default function Invoice({ sale, settings, open, onClose }: Props) {
     }
 
     try {
-      const mod = await import("html2pdf.js");
-      const html2pdf = (mod as { default: unknown }).default as (
-        el: HTMLElement
-      ) => { set: (opts: Record<string, unknown>) => { save: () => Promise<void> } };
-      await html2pdf(node ?? host)
-        .set({
-          margin: 0,
-          filename: `${sale.invoiceNo}.pdf`,
-          image: { type: "jpeg", quality: 0.98 },
-          html2canvas: { scale: 2, useCORS: true, backgroundColor: "#ffffff" },
-          jsPDF: { unit: "pt", format: "a4", orientation: "portrait" },
-        })
-        .save();
+      if (format === "pdf") {
+        const mod = await import("html2pdf.js");
+        const html2pdf = (mod as { default: unknown }).default as (
+          el: HTMLElement
+        ) => { set: (opts: Record<string, unknown>) => { save: () => Promise<void> } };
+        await html2pdf(node ?? host)
+          .set({
+            margin: 0,
+            filename: `${sale.invoiceNo}.pdf`,
+            image: { type: "jpeg", quality: 0.98 },
+            html2canvas: { scale: 2, useCORS: true, backgroundColor: "#ffffff" },
+            jsPDF: { unit: "pt", format: "a4", orientation: "portrait" },
+          })
+          .save();
+      } else if (format === "jpg") {
+        const { toJpeg } = await import("html-to-image");
+        const dataUrl = await toJpeg(node ?? host, {
+          quality: 0.95,
+          backgroundColor: "#ffffff",
+          pixelRatio: 2,
+        });
+        const link = document.createElement("a");
+        link.download = `${sale.invoiceNo}.jpg`;
+        link.href = dataUrl;
+        link.click();
+      }
     } catch (err) {
-      console.error("PDF generation failed", err);
-      toast.error("Could not generate PDF — downloading HTML instead");
+      console.error(`${format.toUpperCase()} generation failed`, err);
+      toast.error(`Could not generate ${format.toUpperCase()} — downloading HTML instead`);
       downloadHtml(html, sale.invoiceNo);
+    } finally {
+      host.remove();
+      isDownloading.current = false;
+    }
+  };
+
+  const handleShare = async (platform: "whatsapp" | "imo") => {
+    if (isDownloading.current) return;
+    isDownloading.current = true;
+    const toastId = toast.loading(`Preparing invoice to share on ${platform === "whatsapp" ? "WhatsApp" : "Imo"}...`);
+    const html = buildStandaloneInvoice(sale, settings, previousDue, totalDueAmount, currentDueAmount);
+    const host = document.createElement("div");
+    host.style.position = "fixed";
+    host.style.left = "-10000px";
+    host.style.top = "0";
+    host.innerHTML = html;
+    document.body.appendChild(host);
+    const node = host.querySelector(".page") as HTMLElement | null;
+    
+    // Ensure all images are loaded before capturing
+    const images = Array.from(host.querySelectorAll("img"));
+    await Promise.all(images.map((img) => {
+      if (img.complete) return Promise.resolve();
+      return new Promise((resolve) => {
+        img.onload = resolve;
+        img.onerror = resolve;
+      });
+    }));
+
+    // Fix dimensions and styles to prevent second blank page spill
+    if (node) {
+      node.style.margin = "0";
+      node.style.boxShadow = "none";
+      node.style.height = "29.6cm";
+      node.style.minHeight = "29.6cm";
+      node.style.overflow = "hidden";
+      node.style.transform = "none"; // reset any mobile scaling
+      node.setAttribute('data-pdf-mode', 'true');
+    }
+
+    try {
+      const { toBlob } = await import("html-to-image");
+      const blob = await toBlob(node ?? host, {
+        quality: 0.95,
+        backgroundColor: "#ffffff",
+        pixelRatio: 2,
+      });
+      
+      if (!blob) throw new Error("Could not generate image blob");
+
+      const file = new File([blob], `${sale.invoiceNo}.jpg`, { type: "image/jpeg" });
+      
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        await navigator.share({
+          files: [file],
+          title: `Invoice ${sale.invoiceNo}`,
+          text: `Invoice ${sale.invoiceNo} from ${settings.shopName}`,
+        });
+        toast.success("Shared successfully", { id: toastId });
+      } else {
+        // Fallback for unsupported browsers/devices
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.download = `${sale.invoiceNo}.jpg`;
+        link.href = url;
+        link.click();
+        URL.revokeObjectURL(url);
+        
+        const message = encodeURIComponent(`Here is the invoice ${sale.invoiceNo} from ${settings.shopName}. (Please attach the downloaded image)`);
+        if (platform === "whatsapp") {
+          window.open(`https://web.whatsapp.com/send?text=${message}`, "_blank");
+          toast.dismiss(toastId);
+        } else {
+          toast.info("Image downloaded. Please open Imo and attach the downloaded image.", { id: toastId });
+        }
+      }
+    } catch (err) {
+      console.error("Share failed", err);
+      toast.error("Share cancelled or failed", { id: toastId });
     } finally {
       host.remove();
       isDownloading.current = false;
@@ -118,9 +211,31 @@ export default function Invoice({ sale, settings, open, onClose }: Props) {
             <Button size="sm" variant="outline" onClick={() => setThermalOpen(true)} className="h-8 px-2 sm:px-3">
               <Receipt className="h-4 w-4 sm:mr-1.5" /> <span className="hidden sm:inline">Thermal</span>
             </Button>
-            <Button size="sm" variant="outline" onClick={handleDownload} className="h-8 px-2 sm:px-3">
-              <Download className="h-4 w-4 sm:mr-1.5" /> <span className="hidden sm:inline">Download</span>
-            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button size="sm" variant="outline" className="h-8 px-2 sm:px-3">
+                  <Download className="h-4 w-4 sm:mr-1.5" /> <span className="hidden sm:inline">Download</span>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-48">
+                <DropdownMenuItem onClick={() => handleDownload("pdf")}>
+                  <Download className="mr-2 h-4 w-4" />
+                  <span>Download PDF</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleDownload("jpg")}>
+                  <FileImage className="mr-2 h-4 w-4" />
+                  <span>Download JPG</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleShare("whatsapp")}>
+                  <MessageCircle className="mr-2 h-4 w-4 text-green-600" />
+                  <span>Share via WhatsApp</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleShare("imo")}>
+                  <Share2 className="mr-2 h-4 w-4 text-blue-600" />
+                  <span>Share via Imo</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
             <Button
               size="sm"
               className="bg-primary text-primary-foreground hover:bg-primary/90 h-8 px-2 sm:px-3"

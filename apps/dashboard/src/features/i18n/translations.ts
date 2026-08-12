@@ -70,6 +70,7 @@ export const translations = {
   "nav.help": { en: "Help & Support", bn: "হেল্প ও সাপোর্ট" },
   "nav.billing": { en: "Billing", bn: "বিলিং" },
   "nav.trash": { en: "Trash / Recycle Bin", bn: "ট্রাস / রিসাইকেল বিন" },
+  "nav.systemUpdates": { en: "Update Management", bn: "আপডেট ম্যানেজমেন্ট" },
 
   // Header
   "header.newSale": { en: "New Sale", bn: "নতুন বিক্রয়" },

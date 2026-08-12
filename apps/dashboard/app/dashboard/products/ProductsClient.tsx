@@ -137,8 +137,30 @@ export function ProductsClient({
   const [scanTarget, setScanTarget] = useState<"new" | "form">("new");
   const [bulk, setBulk] = useState<BulkState>(initialBulkState);
 
-  // We no longer need local filtered calculation because it's handled on the server
-  const filtered = products;
+  // Apply local filtering for instant UI updates
+  const filtered = useMemo(() => {
+    let result = products;
+
+    if (search) {
+      const s = search.toLowerCase();
+      result = result.filter(
+        (p) =>
+          p.name.toLowerCase().includes(s) ||
+          p.sku?.toLowerCase().includes(s) ||
+          p.barcode?.toLowerCase().includes(s)
+      );
+    }
+
+    if (filter !== "All") {
+      result = result.filter((p) => p.categoryId === filter);
+    }
+
+    if (lowStockOnly) {
+      result = result.filter((p) => p.stock <= p.minStock);
+    }
+
+    return result;
+  }, [products, search, filter, lowStockOnly]);
 
   const openNew = () => {
     setEditing(null);
@@ -517,18 +539,18 @@ export function ProductsClient({
                         <TableCell>
                           <div className="flex items-center gap-3">
                             {p.imageUrl ? (
-                              <Image src={p.imageUrl} alt={productDisplayName(p)} width={40} height={40} className="h-10 w-10 object-cover rounded-md" />
+                              <Image src={p.imageUrl} alt={productDisplayName(p)} width={32} height={32} className="h-8 w-8 object-cover rounded-md" />
                             ) : (
-                              <div className="h-10 w-10 flex items-center justify-center bg-muted rounded-md text-2xl">{p.emoji}</div>
+                              <div className="h-8 w-8 flex items-center justify-center bg-muted rounded-md text-lg">{p.emoji}</div>
                             )}
-                            <span className="font-medium">{productDisplayName(p)}</span>
+                            <span className="font-medium text-sm">{productDisplayName(p)}</span>
                           </div>
                         </TableCell>
-                        <TableCell className="text-muted-foreground text-sm">{p.sku}</TableCell>
-                        <TableCell><Badge variant="secondary">{categoryName(p)}</Badge></TableCell>
-                        <TableCell className="hidden sm:table-cell text-muted-foreground text-sm">{p.subcategory || "—"}</TableCell>
+                        <TableCell className="text-muted-foreground text-xs">{p.sku}</TableCell>
+                        <TableCell className="text-sm font-medium text-muted-foreground">{categoryName(p)}</TableCell>
+                        <TableCell className="hidden sm:table-cell text-muted-foreground text-xs">{p.subcategory || "—"}</TableCell>
                         <TableCell className="text-right">
-                          <span className="font-medium">{p.minStock} {p.unit === "pcs" ? "p" : p.unit}</span>
+                          <span className="font-medium text-sm">{p.minStock} {p.unit === "pcs" ? "p" : p.unit}</span>
                         </TableCell>
                         <TableCell className="text-right">
                           <DropdownMenu>

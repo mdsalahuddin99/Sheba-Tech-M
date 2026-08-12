@@ -17,7 +17,7 @@ export function PageHeader({ title, description, actions, children, className }:
   return (
     <div
       className={cn(
-        "flex flex-col mb-4 md:mb-5 px-4 py-3 rounded-lg bg-[var(--theme-color,hsl(var(--primary)))] shadow-sm border border-[var(--theme-color,hsl(var(--primary)))] page-header-solid text-white transition-all duration-300",
+        "flex flex-col px-4 py-3 rounded-lg bg-[var(--theme-color,hsl(var(--primary)))] shadow-sm border border-[var(--theme-color,hsl(var(--primary)))] page-header-solid text-white transition-all duration-300",
         className
       )}
     >

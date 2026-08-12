@@ -182,6 +182,7 @@ const navGroups: NavGroup[] = [
       { to: "/dashboard/settings", labelKey: "nav.settings", icon: Settings },
       { to: "/dashboard/permissions", labelKey: "nav.rolesAndPermissions" as TranslationKey, icon: ShieldCheck },
       { to: "/dashboard/trash", labelKey: "nav.trash" as TranslationKey, icon: Trash2 },
+      { to: "/dashboard/system-updates", labelKey: "nav.systemUpdates" as TranslationKey, icon: RefreshCw },
       { to: "/dashboard/help", labelKey: "nav.help" as TranslationKey, icon: HelpCircle },
     ],
   },

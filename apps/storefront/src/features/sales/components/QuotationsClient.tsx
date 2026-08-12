@@ -2,6 +2,7 @@
 
 import { useHeldSales } from "@/features/pos/hooks";
 import { useT } from "@/features/i18n";
+import { Button } from "@/shared/ui/button";
 import {
   Card,
   CardContent,
@@ -10,7 +11,7 @@ import {
   CardDescription,
 } from "@/shared/ui/card";
 import { formatPrice } from "@/features/storefront/lib/formatPrice";
-import { Loader2, FileText, ArrowRight, Printer, Trash2 } from "lucide-react";
+import { Loader2, FileText, ArrowRight, Printer, Trash2, Plus } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { DraftInvoicePreview, type HeldSaleForPrint } from "@/features/sales/components";
@@ -68,6 +69,10 @@ export function QuotationsClient() {
             Manage your saved draft invoices and quotations.
           </p>
         </div>
+        <Button onClick={() => router.push("/dashboard/sales/create")} className="bg-emerald-600 hover:bg-emerald-700 text-white">
+          <Plus className="h-4 w-4 mr-2" />
+          New Quotation
+        </Button>
       </div>
 
       <Card>

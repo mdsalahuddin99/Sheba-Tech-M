@@ -62,29 +62,30 @@ export function InventoryProductTable({
   return (
     <Card className="hidden md:block">
       <div className="overflow-x-auto">
-        <Table className="text-[13px]">
+        <Table className="text-[12px] border-collapse w-full">
           <TableHeader>
-            <TableRow className="hover:bg-transparent">
+            <TableRow className="bg-[#5B45FF] hover:bg-[#5B45FF] text-white border-none">
               {selectable && (
-                <TableHead className="w-10">
+                <TableHead className="w-10 h-7 py-0 px-2 border border-[#6C57FF] text-white">
                   <Checkbox
                     checked={allSelected ? true : someSelected ? "indeterminate" : false}
                     onCheckedChange={(v) => onToggleAll?.(!!v)}
                     aria-label="Select all"
+                    className="border-white data-[state=checked]:bg-white data-[state=checked]:text-[#5B45FF]"
                   />
                 </TableHead>
               )}
-              <TableHead>Product</TableHead>
-              <TableHead>SKU</TableHead>
-              <TableHead>Cat.</TableHead>
-              <TableHead className="hidden lg:table-cell">Sub-Cat.</TableHead>
-              <TableHead className="text-right">Stock</TableHead>
-              <TableHead className="text-right whitespace-nowrap" title="Min / Reorder Point">Min/Reord</TableHead>
-              <TableHead className="text-right whitespace-nowrap">d/s price</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead className="whitespace-nowrap" title="Warranty">Wrnty.</TableHead>
-              <TableHead className="text-center">Web</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
+              <TableHead className="h-7 py-0 px-2 border border-[#6C57FF] text-white font-semibold whitespace-nowrap">Product</TableHead>
+              <TableHead className="h-7 py-0 px-2 border border-[#6C57FF] text-white font-semibold whitespace-nowrap">SKU</TableHead>
+              <TableHead className="h-7 py-0 px-2 border border-[#6C57FF] text-white font-semibold whitespace-nowrap">Cat.</TableHead>
+              <TableHead className="hidden lg:table-cell h-7 py-0 px-2 border border-[#6C57FF] text-white font-semibold whitespace-nowrap">Sub-Cat.</TableHead>
+              <TableHead className="h-7 py-0 px-2 border border-[#6C57FF] text-white font-semibold whitespace-nowrap text-right">Stock</TableHead>
+              <TableHead className="h-7 py-0 px-2 border border-[#6C57FF] text-white font-semibold whitespace-nowrap text-right" title="Min / Reorder Point">Min/Reord</TableHead>
+              <TableHead className="h-7 py-0 px-2 border border-[#6C57FF] text-white font-semibold whitespace-nowrap text-right">d/s price</TableHead>
+              <TableHead className="h-7 py-0 px-2 border border-[#6C57FF] text-white font-semibold whitespace-nowrap">Status</TableHead>
+              <TableHead className="h-7 py-0 px-2 border border-[#6C57FF] text-white font-semibold whitespace-nowrap" title="Warranty">Wrnty.</TableHead>
+              <TableHead className="h-7 py-0 px-2 border border-[#6C57FF] text-white font-semibold whitespace-nowrap text-center">Web</TableHead>
+              <TableHead className="h-7 py-0 px-2 border border-[#6C57FF] text-white font-semibold whitespace-nowrap text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -101,13 +102,14 @@ export function InventoryProductTable({
                 <TableRow
                   key={p.id}
                   className={cn(
+                    "hover:bg-slate-50 transition-colors",
                     warrantyHighlight && "bg-warning/5 hover:bg-warning/10",
                     w.kind === "expired" && "bg-destructive/5 hover:bg-destructive/10",
                     isSelected && "bg-primary/5",
                   )}
                 >
                   {selectable && (
-                    <TableCell>
+                    <TableCell className="py-1 px-2 border border-slate-200">
                       <Checkbox
                         checked={isSelected}
                         onCheckedChange={() => onToggleSelect!(p.id)}
@@ -115,32 +117,32 @@ export function InventoryProductTable({
                       />
                     </TableCell>
                   )}
-                  <TableCell className="font-medium max-w-[250px]">
-                    <div className="flex items-center gap-2.5">
+                  <TableCell className="py-1 px-2 border border-slate-200 font-medium max-w-[250px]">
+                    <div className="flex items-center gap-2">
                       {p.imageUrl ? (
-                        <Image src={p.imageUrl} alt={productDisplayName(p)} width={32} height={32} className="h-8 w-8 rounded-md object-cover border border-slate-200 shrink-0" />
+                        <Image src={p.imageUrl} alt={productDisplayName(p)} width={24} height={24} className="h-6 w-6 rounded object-cover border border-slate-200 shrink-0" />
                       ) : (
-                        <span className="h-8 w-8 grid place-items-center text-lg shrink-0">{p.emoji}</span>
+                        <span className="h-6 w-6 grid place-items-center text-sm shrink-0">{p.emoji}</span>
                       )}
-                      <span className="line-clamp-2 leading-snug text-[13px]">{productDisplayName(p)}</span>
+                      <span className="line-clamp-1 leading-snug text-[12px]">{productDisplayName(p)}</span>
                     </div>
                   </TableCell>
-                  <TableCell className="text-muted-foreground text-[13px] whitespace-nowrap">{p.sku}</TableCell>
-                  <TableCell className="whitespace-nowrap"><Badge variant="secondary" className="font-medium">{categoryName(p)}</Badge></TableCell>
-                  <TableCell className="hidden lg:table-cell text-muted-foreground text-[13px] whitespace-nowrap">{p.subcategory || "—"}</TableCell>
-                  <TableCell className="text-right font-semibold whitespace-nowrap">{p.stock} {p.unit}</TableCell>
-                  <TableCell className="text-right text-muted-foreground whitespace-nowrap">
+                  <TableCell className="py-1 px-2 border border-slate-200 text-slate-600 text-[12px] whitespace-nowrap">{p.sku}</TableCell>
+                  <TableCell className="py-1 px-2 border border-slate-200 whitespace-nowrap"><Badge variant="secondary" className="font-medium text-[10px] px-1.5 py-0">{categoryName(p)}</Badge></TableCell>
+                  <TableCell className="hidden lg:table-cell py-1 px-2 border border-slate-200 text-slate-500 text-[12px] whitespace-nowrap">{p.subcategory || "—"}</TableCell>
+                  <TableCell className="py-1 px-2 border border-slate-200 text-right font-semibold whitespace-nowrap">{p.stock} <span className="text-[10px] font-normal text-slate-500">{p.unit}</span></TableCell>
+                  <TableCell className="py-1 px-2 border border-slate-200 text-right text-slate-500 whitespace-nowrap">
                     {p.minStock}/{reorderPoint}
                   </TableCell>
-                  <TableCell className="text-right whitespace-nowrap">
-                    <div className="flex items-center justify-end gap-2">
+                  <TableCell className="py-1 px-2 border border-slate-200 text-right whitespace-nowrap">
+                    <div className="flex items-center justify-end gap-1">
                       <Popover>
                         <PopoverTrigger asChild>
                           <Button
-                            variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors cursor-pointer select-none touch-manipulation"
+                            variant="ghost" size="icon" className="h-5 w-5 text-slate-400 hover:text-primary hover:bg-primary/10 transition-colors cursor-pointer select-none"
                             title="Quick View Margin"
                           >
-                            <Eye className="h-3.5 w-3.5" />
+                            <Eye className="h-3 w-3" />
                           </Button>
                         </PopoverTrigger>
                         <PopoverContent align="end" className="w-56 p-3 bg-card border border-border rounded-[4px] shadow-none z-50">
@@ -171,41 +173,41 @@ export function InventoryProductTable({
                       </Popover>
                     </div>
                   </TableCell>
-                  <TableCell className="whitespace-nowrap">
-                    {out ? <Badge variant="outline" className="border-destructive/30 text-destructive bg-destructive/5 font-semibold">Out</Badge> :
-                     low ? <Badge variant="outline" className="border-warning/40 text-warning bg-warning/5 font-semibold">Low</Badge> :
-                           <Badge variant="outline" className="border-accent/30 text-accent bg-accent/5 font-semibold">OK</Badge>}
+                  <TableCell className="py-1 px-2 border border-slate-200 whitespace-nowrap">
+                    {out ? <Badge variant="outline" className="border-destructive/30 text-destructive bg-destructive/5 font-semibold text-[10px] px-1.5 py-0">Out</Badge> :
+                     low ? <Badge variant="outline" className="border-warning/40 text-warning bg-warning/5 font-semibold text-[10px] px-1.5 py-0">Low</Badge> :
+                           <Badge variant="outline" className="border-emerald-500/30 text-emerald-600 bg-emerald-50 font-semibold text-[10px] px-1.5 py-0">OK</Badge>}
                   </TableCell>
-                  <TableCell className="text-[13px] whitespace-nowrap">
-                    <div className="flex flex-col gap-0.5">
+                  <TableCell className="py-1 px-2 border border-slate-200 text-[11px] whitespace-nowrap">
+                    <div className="flex flex-col gap-0 leading-tight">
                       {w.kind === "none" ? (
                         p.warrantyMonths ? (
-                          <span className="text-muted-foreground">{p.warrantyMonths} mo</span>
+                          <span className="text-slate-500">{p.warrantyMonths} mo</span>
                         ) : (
-                          <span className="text-muted-foreground">—</span>
+                          <span className="text-slate-400">—</span>
                         )
                       ) : w.kind === "expired" ? (
                         <span className="inline-flex items-center gap-1 text-destructive font-medium" title={`Expired ${w.daysAgo}d ago`}>
-                          <ShieldX className="h-3.5 w-3.5" />
+                          <ShieldX className="h-3 w-3" />
                           {formatWarrantyEnd(w.endDate)}
                         </span>
                       ) : w.nearExpiry ? (
                         <span className="inline-flex items-center gap-1 text-warning font-medium" title={`${w.daysLeft} days left`}>
-                          <ShieldAlert className="h-3.5 w-3.5" />
-                          {formatWarrantyEnd(w.endDate)} · {w.daysLeft}d
+                          <ShieldAlert className="h-3 w-3" />
+                          {formatWarrantyEnd(w.endDate)}
                         </span>
                       ) : (
-                        <span className="inline-flex items-center gap-1 text-muted-foreground" title={`${w.daysLeft} days left`}>
-                          <ShieldCheck className="h-3.5 w-3.5 text-accent" />
+                        <span className="inline-flex items-center gap-1 text-emerald-600 font-medium" title={`${w.daysLeft} days left`}>
+                          <ShieldCheck className="h-3 w-3 text-emerald-500" />
                           {formatWarrantyEnd(w.endDate)}
                         </span>
                       )}
                       {p.warrantyStartDate && (
-                        <span className="text-[10px] text-muted-foreground ml-4">Pur: {new Date(p.warrantyStartDate).toLocaleDateString(undefined, { day: '2-digit', month: 'short', year: '2-digit' })}</span>
+                        <span className="text-[9px] text-slate-400 ml-4">Pur: {new Date(p.warrantyStartDate).toLocaleDateString(undefined, { day: '2-digit', month: 'short', year: '2-digit' })}</span>
                       )}
                     </div>
                   </TableCell>
-                  <TableCell className="text-center">
+                  <TableCell className="py-1 px-2 border border-slate-200 text-center">
                     <div className="flex justify-center">
                       <Checkbox
                         checked={p.active}
@@ -214,10 +216,10 @@ export function InventoryProductTable({
                       />
                     </div>
                   </TableCell>
-                  <TableCell className="text-right">
+                  <TableCell className="py-1 px-2 border border-slate-200 text-right">
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" className="h-8 w-8 p-0">
+                        <Button variant="ghost" className="h-6 w-6 p-0 text-slate-400 hover:text-slate-900">
                           <span className="sr-only">Open menu</span>
                           <MoreHorizontal className="h-4 w-4" />
                         </Button>
@@ -264,7 +266,7 @@ export function InventoryProductTable({
               );
             })}
             {products.length === 0 && (
-              <TableRow><TableCell colSpan={selectable ? 12 : 11} className="text-center py-10 text-muted-foreground">No products match.</TableCell></TableRow>
+              <TableRow><TableCell colSpan={selectable ? 12 : 11} className="py-4 px-2 border border-slate-200 text-center text-muted-foreground">No products match.</TableCell></TableRow>
             )}
           </TableBody>
         </Table>
