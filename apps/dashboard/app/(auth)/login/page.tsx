@@ -13,7 +13,7 @@ import { loginSchema } from "@/features/auth/schemas";
 import { useAuth } from "@/features/auth";
 
 function LoginForm() {
-  const { login, signInGoogle } = useAuth();
+  const { login } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
   const { toast } = useToast();
@@ -21,7 +21,6 @@ function LoginForm() {
   const [password, setPassword] = useState("");
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [submitting, setSubmitting] = useState(false);
-  const [googleLoading, setGoogleLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
   const redirectTarget = searchParams.get("from") ?? searchParams.get("callbackUrl") ?? "/dashboard";
@@ -51,20 +50,6 @@ function LoginForm() {
       });
     } finally {
       setSubmitting(false);
-    }
-  };
-
-  const handleGoogle = async () => {
-    setGoogleLoading(true);
-    try {
-      await signInGoogle();
-    } catch (err) {
-      toast({
-        title: "Google sign-in failed",
-        description: err instanceof Error ? err.message : "Unknown error",
-        variant: "destructive",
-      });
-      setGoogleLoading(false);
     }
   };
 
@@ -122,37 +107,7 @@ function LoginForm() {
           Sign in
         </Button>
 
-        <div className="flex items-center gap-2 text-xs text-muted-foreground pt-2">
-          <span className="h-px flex-1 bg-border" />
-          or
-          <span className="h-px flex-1 bg-border" />
-        </div>
 
-        <Button
-          type="button"
-          variant="outline"
-          className="w-full"
-          onClick={handleGoogle}
-          disabled={googleLoading || submitting}
-        >
-          {googleLoading ? (
-            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-          ) : (
-            <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24" aria-hidden>
-              <path
-                fill="#EA4335"
-                d="M12 10.2v3.9h5.5c-.24 1.4-1.66 4.1-5.5 4.1-3.31 0-6-2.74-6-6.1s2.69-6.1 6-6.1c1.88 0 3.14.8 3.86 1.48l2.64-2.55C16.96 3.32 14.73 2.4 12 2.4 6.86 2.4 2.7 6.55 2.7 12s4.16 9.6 9.3 9.6c5.37 0 8.93-3.77 8.93-9.08 0-.61-.07-1.08-.15-1.55H12z"
-              />
-            </svg>
-          )}
-          Continue with Google
-        </Button>
-        <p className="text-center text-sm text-muted-foreground pt-4">
-          Don&apos;t have an account?{" "}
-          <Link href="/register" className="text-primary hover:underline">
-            Sign up
-          </Link>
-        </p>
       </form>
     </AuthLayout>
   );

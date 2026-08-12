@@ -10,7 +10,7 @@ import "server-only";
 import NextAuth from "next-auth";
 import { getEnvSecret } from "@/lib/env";
 import Credentials from "next-auth/providers/credentials";
-import Google from "next-auth/providers/google";
+
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import { prisma } from "@/server/db/client";
 import { verifyPassword } from "@/server/lib/password";
@@ -58,17 +58,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         };
       },
     }),
-    // Google OAuth (optional — only if env vars are set)
-    ...(process.env.GOOGLE_CLIENT_ID
-      ? [
-          Google({
-            clientId: process.env.GOOGLE_CLIENT_ID,
-            clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
-          }),
-        ]
-      : []),
+
   ],
-  secret: process.env.AUTH_SECRET ?? getEnvSecret('NEXTAUTH_SECRET'),
+  secret: process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET || getEnvSecret('NEXTAUTH_SECRET'),
   pages: {
     signIn: "/login",
     signOut: "/",

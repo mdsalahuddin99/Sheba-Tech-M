@@ -34,7 +34,6 @@ interface AuthContextValue {
   register: (input: RegisterInput) => Promise<void>;
   logout: () => Promise<void>;
   refresh: () => Promise<void>;
-  signInGoogle: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
@@ -114,10 +113,6 @@ function AuthProviderInner({ children }: { children: ReactNode }) {
     await update();
   }, [update]);
 
-  const signInGoogle = useCallback(async () => {
-    await nextSignIn("google", { callbackUrl: "/dashboard" });
-  }, []);
-
   const value = useMemo<AuthContextValue>(
     () => ({
       session,
@@ -126,9 +121,8 @@ function AuthProviderInner({ children }: { children: ReactNode }) {
       register,
       logout,
       refresh,
-      signInGoogle,
     }),
-    [session, mappedStatus, login, register, logout, refresh, signInGoogle],
+    [session, mappedStatus, login, register, logout, refresh],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
