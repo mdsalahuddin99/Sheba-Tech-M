@@ -152,7 +152,7 @@ export function ProductsClient({
     }
 
     if (filter !== "All") {
-      result = result.filter((p) => p.categoryId === filter);
+      result = result.filter((p) => p.category === filter);
     }
 
     if (lowStockOnly) {
