@@ -37,10 +37,12 @@ prisma.$use(async (params, next) => {
     // Intercept delete
     if (params.action === "delete") {
       params.action = "update";
+      if (params.args === undefined) params.args = {};
       params.args["data"] = { deletedAt: new Date() };
     }
     if (params.action === "deleteMany") {
       params.action = "updateMany";
+      if (params.args === undefined) params.args = {};
       if (params.args.data !== undefined) {
         params.args.data.deletedAt = new Date();
       } else {

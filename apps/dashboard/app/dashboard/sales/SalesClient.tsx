@@ -48,6 +48,7 @@ export function SalesClient() {
   const [view, setView] = useState<Sale | null>(null);
   const [invoice, setInvoice] = useState<Sale | null>(null);
   const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [limit, setLimit] = useState(15);
   const [localSort, setLocalSort] = useState<{ key: string, direction: 'asc' | 'desc' } | null>(null);
   const { delete: deleteSale } = useSaleMutations();
 
@@ -94,8 +95,8 @@ export function SalesClient() {
     paymentMethod: method !== "All" ? method : undefined,
     sortKey: sort.split("-")[0],
     sortDir: sort.split("-")[1] as "asc" | "desc",
-    limit: debouncedSearch.trim() ? 1000 : 5,
-  }), [debouncedSearch, method, sort]);
+    limit: debouncedSearch.trim() ? 1000 : limit,
+  }), [debouncedSearch, method, sort, limit]);
 
   const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading } = useInfiniteSalesQuery(queryFilter);
 
@@ -166,10 +167,27 @@ export function SalesClient() {
         }
       />
 
-      <Card className="px-4 py-2 flex flex-col sm:flex-row gap-3">
-        <div className="relative flex-1">
+      <Card className="px-4 py-2 flex flex-col sm:flex-row flex-wrap gap-3">
+        <div className="relative flex-1 min-w-[200px]">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input id="sales-search-input" placeholder="Search invoice, customer name or phone…" value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
+        </div>
+        
+        <div className="flex items-center gap-2">
+          <span className="text-sm text-muted-foreground whitespace-nowrap hidden sm:inline">Show entries:</span>
+          <Select value={limit.toString()} onValueChange={(v) => setLimit(Number(v))}>
+            <SelectTrigger className="w-[70px] h-9"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="15">15</SelectItem>
+              <SelectItem value="50">50</SelectItem>
+              <SelectItem value="70">70</SelectItem>
+              <SelectItem value="100">100</SelectItem>
+              <SelectItem value="200">200</SelectItem>
+              <SelectItem value="500">500</SelectItem>
+              <SelectItem value="1000">1000</SelectItem>
+              <SelectItem value="10000">All</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
         <Select value={method} onValueChange={setMethod}>
           <SelectTrigger className="sm:w-48"><SelectValue /></SelectTrigger>

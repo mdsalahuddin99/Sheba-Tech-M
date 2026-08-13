@@ -1,0 +1,45 @@
+Cannot read properties of undefined (reading 'data')
+
+TypeError: Cannot read properties of undefined (reading 'data')
+    at G:\CLIENT PROJECT\Sheba Tech\apps\dashboard\.next\dev\server\chunks\ssr\[root-of-the-server]__1vcrngd._.js:89:29
+    at G:\CLIENT PROJECT\Sheba Tech\node_modules\@prisma\client\runtime\library.js:130:9597
+    at Object.runInChildSpan (G:\CLIENT PROJECT\Sheba Tech\node_modules\@prisma\client\runtime\library.js:121:1549)
+    at Io.runInChildSpan (G:\CLIENT PROJECT\Sheba Tech\node_modules\@prisma\client\runtime\library.js:121:1913)
+    at l (G:\CLIENT PROJECT\Sheba Tech\node_modules\@prisma\client\runtime\library.js:130:9566)
+    at G:\CLIENT PROJECT\Sheba Tech\node_modules\@prisma\client\runtime\library.js:130:10078
+    at AsyncResource.runInAsyncScope (node:async_hooks:227:14)
+    at G:\CLIENT PROJECT\Sheba Tech\node_modules\@prisma\client\runtime\library.js:130:10058
+    at Object.runInChildSpan (G:\CLIENT PROJECT\Sheba Tech\node_modules\@prisma\client\runtime\library.js:121:1549)
+    at Io.runInChildSpan (G:\CLIENT PROJECT\Sheba Tech\node_modules\@prisma\client\runtime\library.js:121:1913)
+    at r._request (G:\CLIENT PROJECT\Sheba Tech\node_modules\@prisma\client\runtime\library.js:130:9981)
+    at e._createPrismaPromise.action (G:\CLIENT PROJECT\Sheba Tech\node_modules\@prisma\client\runtime\library.js:31:5390)
+    at o (G:\CLIENT PROJECT\Sheba Tech\node_modules\@prisma\client\runtime\library.js:121:1027)
+    at PrismaPromise.requestTransaction (G:\CLIENT PROJECT\Sheba Tech\node_modules\@prisma\client\runtime\library.js:121:1221)
+    at G:\CLIENT PROJECT\Sheba Tech\node_modules\@prisma\client\runtime\library.js:130:7704
+    at Array.map (<anonymous>)
+    at Proxy._transactionWithArray (G:\CLIENT PROJECT\Sheba Tech\node_modules\@prisma\client\runtime\library.js:130:7287)
+    at o (G:\CLIENT PROJECT\Sheba Tech\node_modules\@prisma\client\runtime\library.js:130:8894)
+    at Object.runInChildSpan (G:\CLIENT PROJECT\Sheba Tech\node_modules\@prisma\client\runtime\library.js:121:1549)
+    at Io.runInChildSpan (G:\CLIENT PROJECT\Sheba Tech\node_modules\@prisma\client\runtime\library.js:121:1913)
+    at Proxy.$transaction (G:\CLIENT PROJECT\Sheba Tech\node_modules\@prisma\client\runtime\library.js:130:9029)
+    at G:\CLIENT PROJECT\Sheba Tech\apps\dashboard\.next\dev\server\chunks\[root-of-the-server]__0tddkgb._.js:1331:174
+    at G:\CLIENT PROJECT\Sheba Tech\apps\dashboard\.next\dev\server\chunks\[root-of-the-server]__0tddkgb._.js:910:36
+    at async AppRouteRouteModule.do (G:\CLIENT PROJECT\Sheba Tech\node_modules\next\dist\compiled\next-server\app-route-turbo.runtime.dev.js:5:40131)
+    at async AppRouteRouteModule.handle (G:\CLIENT PROJECT\Sheba Tech\node_modules\next\dist\compiled\next-server\app-route-turbo.runtime.dev.js:5:47411)
+    at async responseGenerator (G:\CLIENT PROJECT\Sheba Tech\apps\dashboard\.next\dev\server\chunks\node_modules_next_190kpev._.js:18888:38)
+    at async AppRouteRouteModule.handleResponse (G:\CLIENT PROJECT\Sheba Tech\node_modules\next\dist\compiled\next-server\app-route-turbo.runtime.dev.js:1:228552)
+    at async handleResponse (G:\CLIENT PROJECT\Sheba Tech\apps\dashboard\.next\dev\server\chunks\node_modules_next_190kpev._.js:18951:32)
+    at async Module.handler (G:\CLIENT PROJECT\Sheba Tech\apps\dashboard\.next\dev\server\chunks\node_modules_next_190kpev._.js:19005:13)
+    at async DevServer.renderToResponseWithComponentsImpl (G:\CLIENT PROJECT\Sheba Tech\node_modules\next\dist\server\base-server.js:1462:9)
+    at async DevServer.renderPageComponent (G:\CLIENT PROJECT\Sheba Tech\node_modules\next\dist\server\base-server.js:1514:24)
+    at async DevServer.renderToResponseImpl (G:\CLIENT PROJECT\Sheba Tech\node_modules\next\dist\server\base-server.js:1564:32)
+    at async DevServer.pipeImpl (G:\CLIENT PROJECT\Sheba Tech\node_modules\next\dist\server\base-server.js:1044:25)
+    at async NextNodeServer.handleCatchallRenderRequest (G:\CLIENT PROJECT\Sheba Tech\node_modules\next\dist\server\next-server.js:338:17)
+    at async DevServer.handleRequestImpl (G:\CLIENT PROJECT\Sheba Tech\node_modules\next\dist\server\base-server.js:935:17)
+    at async G:\CLIENT PROJECT\Sheba Tech\node_modules\next\dist\server\dev\next-dev-server.js:394:20
+    at async Span.traceAsyncFn (G:\CLIENT PROJECT\Sheba Tech\node_modules\next\dist\trace\trace.js:164:20)
+    at async DevServer.handleRequest (G:\CLIENT PROJECT\Sheba Tech\node_modules\next\dist\server\dev\next-dev-server.js:390:24)
+    at async invokeRender (G:\CLIENT PROJECT\Sheba Tech\node_modules\next\dist\server\lib\router-server.js:266:21)
+    at async handleRequest (G:\CLIENT PROJECT\Sheba Tech\node_modules\next\dist\server\lib\router-server.js:465:24)
+    at async requestHandlerImpl (G:\CLIENT PROJECT\Sheba Tech\node_modules\next\dist\server\lib\router-server.js:514:13)
+    at async Server.requestListener (G:\CLIENT PROJECT\Sheba Tech\node_modules\next\dist\server\lib\start-server.js:225:13)

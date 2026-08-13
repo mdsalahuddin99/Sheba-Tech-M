@@ -8,6 +8,7 @@ import { Input } from "@/shared/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/shared/ui/dialog";
 import { toast } from "sonner";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/shared/ui/alert-dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/shared/ui/select";
 
 type EntityType = "brands" | "products" | "models" | "series";
 
@@ -102,8 +103,9 @@ export function CatalogTab({ entity, title, leftAddon }: CatalogTabProps) {
     saveMut.mutate({ id: editingItem?.id, name: nameInput.trim() });
   };
 
+  const [limit, setLimit] = useState(15);
   const isFilterEmpty = !searchQuery.trim();
-  const displayedItems = isFilterEmpty ? items.slice(0, 5) : items;
+  const displayedItems = isFilterEmpty ? items.slice(0, limit) : items;
 
   return (
     <div className="space-y-4">
@@ -130,13 +132,22 @@ export function CatalogTab({ entity, title, leftAddon }: CatalogTabProps) {
             />
           </div>
           
-          {isFilterEmpty && (
-            <div className="flex-1 sm:flex-none min-w-[240px] flex items-center bg-blue-50/80 border border-blue-100 rounded-md px-3 h-10 text-xs text-blue-700 font-medium">
-              <span className="truncate" title="সর্বশেষ ৫টি ডেটা দেখানো হচ্ছে। নির্দিষ্ট ডেটা খুঁজে পেতে সার্চ করুন।">
-                সর্বশেষ ৫টি ডেটা দেখানো হচ্ছে। নির্দিষ্ট ডেটা খুঁজে পেতে সার্চ করুন।
-              </span>
-            </div>
-          )}
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-gray-500 whitespace-nowrap hidden sm:inline">Show entries:</span>
+            <Select value={limit.toString()} onValueChange={(v) => setLimit(Number(v))}>
+              <SelectTrigger className="w-[70px] h-10 bg-white"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="15">15</SelectItem>
+                <SelectItem value="50">50</SelectItem>
+                <SelectItem value="70">70</SelectItem>
+                <SelectItem value="100">100</SelectItem>
+                <SelectItem value="200">200</SelectItem>
+                <SelectItem value="500">500</SelectItem>
+                <SelectItem value="1000">1000</SelectItem>
+                <SelectItem value="10000">All</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </div>
       </div>
 

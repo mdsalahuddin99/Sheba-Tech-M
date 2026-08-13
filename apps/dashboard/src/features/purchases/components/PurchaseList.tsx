@@ -39,6 +39,8 @@ interface PurchaseListProps {
   onEdit: (id: string) => void;
   onPrint: (id: string) => void;
   onDelete: (id: string) => void;
+  limit?: number;
+  setLimit?: (n: number) => void;
   fetchNextPage?: () => void;
   hasNextPage?: boolean;
   isFetchingNextPage?: boolean;
@@ -47,6 +49,7 @@ interface PurchaseListProps {
 export function PurchaseList({
   statusFilter, setStatusFilter, searchTerm, setSearchTerm, filtered, isSearching,
   onNew, onView, onEdit, onPrint, onDelete,
+  limit, setLimit,
   fetchNextPage, hasNextPage, isFetchingNextPage
 }: PurchaseListProps) {
   const [sortConfig, setSortConfig] = useState<{ key: string, direction: 'asc' | 'desc' } | null>(null);
@@ -114,11 +117,22 @@ export function PurchaseList({
             </SelectContent>
           </Select>
 
-          {!searchTerm.trim() && statusFilter === "All" && (
-            <div className="flex-1 min-w-[280px] flex items-center bg-blue-50/80 border border-blue-100 rounded-md px-3 py-1.5 text-sm text-blue-700 font-medium">
-              <span className="truncate" title="সর্বশেষ ৫টি ডেটা দেখানো হচ্ছে। নির্দিষ্ট ডেটা খুঁজে পেতে সার্চ করুন।">
-                সর্বশেষ ৫টি ডেটা দেখানো হচ্ছে। নির্দিষ্ট ডেটা খুঁজে পেতে সার্চ করুন।
-              </span>
+          {limit !== undefined && setLimit !== undefined && (
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-muted-foreground whitespace-nowrap hidden sm:inline">Show entries:</span>
+              <Select value={limit.toString()} onValueChange={(v) => setLimit(Number(v))}>
+                <SelectTrigger className="w-[70px] h-9"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="15">15</SelectItem>
+                  <SelectItem value="50">50</SelectItem>
+                  <SelectItem value="70">70</SelectItem>
+                  <SelectItem value="100">100</SelectItem>
+                  <SelectItem value="200">200</SelectItem>
+                  <SelectItem value="500">500</SelectItem>
+                  <SelectItem value="1000">1000</SelectItem>
+                  <SelectItem value="10000">All</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           )}
 

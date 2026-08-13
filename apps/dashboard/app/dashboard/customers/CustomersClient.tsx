@@ -19,8 +19,11 @@ import {
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/shared/ui/select";
+import {
+  Popover, PopoverContent, PopoverTrigger,
+} from "@/shared/ui/popover";
 import { formatCurrency, formatDate, formatDateTime } from "@/shared/lib/format";
-import { Plus, Search, Pencil, Trash2, Users, History, Receipt, Wallet, FileText, Printer, ArrowUpDown } from "lucide-react";
+import { Plus, Search, Pencil, Trash2, Users, History, Receipt, Wallet, FileText, Printer, ArrowUpDown, Eye } from "lucide-react";
 import { Customer, Sale } from "@/shared/lib/types";
 import { toast } from "sonner";
 import { PageHeader, EmptyState, ConfirmDialog } from "@/shared/components";
@@ -59,21 +62,22 @@ export function CustomersClient({
   type SortDir = "asc" | "desc";
   const [sortKey, setSortKey] = useState<SortKey>("name");
   const [sortDir, setSortDir] = useState<SortDir>("asc");
+  const [limit, setLimit] = useState(15);
   
   const queryFilter = useMemo(() => ({
     search: debouncedSearch.trim() || undefined,
     dueFilter: dueFilter !== "all" ? dueFilter : undefined,
     sortKey,
     sortDir,
-    limit: debouncedSearch.trim() ? 1000 : 5, // No limit (1000) for search, 5 for initial
-  }), [debouncedSearch, dueFilter, sortKey, sortDir]);
+    limit: debouncedSearch.trim() ? 1000 : limit, // No limit (1000) for search, limit for initial
+  }), [debouncedSearch, dueFilter, sortKey, sortDir, limit]);
 
   const initialInfiniteData = useMemo(() => {
     return {
-      pages: [{ items: initialCustomers, nextCursor: null, hasMore: false }],
+      pages: [{ items: initialCustomers.slice(0, limit), nextCursor: null, hasMore: false }],
       pageParams: [undefined],
     };
-  }, [initialCustomers]);
+  }, [initialCustomers, limit]);
 
   const isFilterEmpty = !queryFilter.search && !queryFilter.dueFilter && queryFilter.sortKey === "name" && queryFilter.sortDir === "asc";
 
@@ -203,13 +207,22 @@ export function CustomersClient({
             />
           </div>
           
-          {isFilterEmpty && (
-            <div className="flex-1 min-w-[280px] flex items-center bg-blue-50/80 border border-blue-100 rounded-md px-3 py-1.5 text-sm text-blue-700 font-medium">
-              <span className="truncate" title="সর্বশেষ ৫টি ডেটা দেখানো হচ্ছে। নির্দিষ্ট ডেটা খুঁজে পেতে সার্চ করুন।">
-                সর্বশেষ ৫টি ডেটা দেখানো হচ্ছে। নির্দিষ্ট ডেটা খুঁজে পেতে সার্চ করুন।
-              </span>
-            </div>
-          )}
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-muted-foreground whitespace-nowrap hidden sm:inline">Show entries:</span>
+            <Select value={limit.toString()} onValueChange={(v) => setLimit(Number(v))}>
+              <SelectTrigger className="w-[70px] h-9"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="15">15</SelectItem>
+                <SelectItem value="50">50</SelectItem>
+                <SelectItem value="70">70</SelectItem>
+                <SelectItem value="100">100</SelectItem>
+                <SelectItem value="200">200</SelectItem>
+                <SelectItem value="500">500</SelectItem>
+                <SelectItem value="1000">1000</SelectItem>
+                <SelectItem value="10000">All</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
 
           <div className="flex gap-2 shrink-0 ml-auto w-full sm:w-auto">
             <Select value={dueFilter} onValueChange={(v) => setDueFilter(v as typeof dueFilter)}>
@@ -282,6 +295,20 @@ export function CustomersClient({
                       </div>
                       <p className="text-sm text-muted-foreground mt-0.5">{c.phone}</p>
                       {c.email && <p className="text-xs text-muted-foreground truncate">{c.email}</p>}
+                      {c.address && (
+                        <div className="flex items-center mt-1" onClick={(e) => e.stopPropagation()}>
+                          <Popover>
+                            <PopoverTrigger asChild>
+                              <Button variant="ghost" className="h-5 p-0 hover:bg-transparent text-xs text-muted-foreground">
+                                <Eye className="h-3.5 w-3.5 mr-1" /> Address
+                              </Button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-auto p-3 text-sm max-w-[250px] break-words">
+                              {c.address}
+                            </PopoverContent>
+                          </Popover>
+                        </div>
+                      )}
                       <div className="flex gap-3 mt-2">
                         { (c.balance ?? 0) > 0 && (
                           <p className="text-xs text-emerald-600 font-medium">Adv: {formatCurrency(c.balance ?? 0)}</p>
@@ -324,23 +351,24 @@ export function CustomersClient({
 
             {/* Desktop / tablet: table */}
             <div className="hidden sm:block overflow-x-auto">
-              <Table variant="premium">
+              <Table variant="premium" className="whitespace-nowrap">
                 <TableHeader>
                   <TableRow>
                     {([
-                      ["name", "Name", "left"],
-                      [null, "Contact", "left"],
-                      [null, "Group", "left"],
-                      [null, "Advance", "right"],
-                      ["due", "Due", "right"],
-                      [null, "Avail. Credit", "right"],
-                      ["totalSpent", "Spent", "right"],
-                      ["loyalty", "Loyalty", "right"],
-                    ] as Array<[SortKey | null, string, "left" | "right"]>).map(
-                      ([key, label, align], i) => (
+                      ["name", "Name", "left", ""],
+                      [null, "Contact", "left", "w-0 whitespace-nowrap px-4"],
+                      [null, "Address", "left", "w-0 whitespace-nowrap px-4"],
+                      [null, "Group", "center", "w-0 whitespace-nowrap px-4"],
+                      [null, "Advance", "right", "w-0 whitespace-nowrap px-4"],
+                      ["due", "Due", "right", "w-0 whitespace-nowrap px-4"],
+                      [null, "Avail. Credit", "right", "w-0 whitespace-nowrap px-4"],
+                      ["totalSpent", "Spent", "right", "w-0 whitespace-nowrap px-4"],
+                      ["loyalty", "Loyalty", "right", "w-0 whitespace-nowrap px-4"],
+                    ] as Array<[SortKey | null, string, "left" | "right" | "center", string]>).map(
+                      ([key, label, align, extraClass], i) => (
                         <TableHead
                           key={i}
-                          className={align === "right" ? "text-right" : ""}
+                          className={`${align === "right" ? "text-right" : align === "center" ? "text-center" : ""} ${extraClass}`}
                         >
                           {key ? (
                             <button
@@ -364,7 +392,7 @@ export function CustomersClient({
                         </TableHead>
                       ),
                     )}
-                    <TableHead className="text-right">Actions</TableHead>
+                    <TableHead className="text-right w-0 whitespace-nowrap">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -381,7 +409,21 @@ export function CustomersClient({
                         <p>{c.phone}</p>
                         {c.email && <p className="text-[10px] text-muted-foreground">{c.email}</p>}
                       </TableCell>
-                      <TableCell><Badge className={groupColor(c.group)}>{c.group}</Badge></TableCell>
+                      <TableCell onClick={(e) => e.stopPropagation()}>
+                        {c.address ? (
+                          <Popover>
+                            <PopoverTrigger asChild>
+                              <Button variant="ghost" size="icon" className="h-7 w-7" title="View Address">
+                                <Eye className="h-4 w-4 text-muted-foreground" />
+                              </Button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-auto p-3 text-sm max-w-[300px] break-words">
+                              {c.address}
+                            </PopoverContent>
+                          </Popover>
+                        ) : "—"}
+                      </TableCell>
+                      <TableCell className="text-center"><Badge className={groupColor(c.group)}>{c.group}</Badge></TableCell>
                       <TableCell className="text-right font-medium text-emerald-600">
                         {(c.balance ?? 0) > 0 ? formatCurrency(c.balance ?? 0) : "—"}
                       </TableCell>
@@ -394,20 +436,22 @@ export function CustomersClient({
                       <TableCell className="text-right font-semibold">{formatCurrency(c.totalSpent)}</TableCell>
                       <TableCell className="text-right">{c.loyaltyPoints} pts</TableCell>
                       <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
-                        <Button size="sm" variant="outline" className="mr-1 h-8" onClick={() => setCollectFor(c)}>
-                          <Wallet className="h-3.5 w-3.5 mr-1" />Collect
-                        </Button>
-                        <Button size="icon" variant="ghost" onClick={() => setHistoryFor(c)} aria-label={`View ${c.name} history`} title="Purchase history">
-                          <History className="h-4 w-4" />
-                        </Button>
-                        <Button size="icon" variant="ghost" onClick={() => openEdit(c)} aria-label={`Edit ${c.name}`}>
-                          <Pencil className="h-4 w-4" />
-                        </Button>
-                        {c.id !== "c1" && (
-                          <Button size="icon" variant="ghost" className="text-destructive" onClick={() => setDeleteId(c.id)} aria-label={`Delete ${c.name}`}>
-                            <Trash2 className="h-4 w-4" />
+                        <div className="flex items-center justify-end gap-1">
+                          <Button size="sm" variant="outline" className="h-8" onClick={() => setCollectFor(c)}>
+                            <Wallet className="h-3.5 w-3.5 mr-1" />Collect
                           </Button>
-                        )}
+                          <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => setHistoryFor(c)} aria-label={`View ${c.name} history`} title="Purchase history">
+                            <History className="h-4 w-4" />
+                          </Button>
+                          <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => openEdit(c)} aria-label={`Edit ${c.name}`}>
+                            <Pencil className="h-4 w-4" />
+                          </Button>
+                          {c.id !== "c1" && (
+                            <Button size="icon" variant="ghost" className="h-8 w-8 text-destructive" onClick={() => setDeleteId(c.id)} aria-label={`Delete ${c.name}`}>
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          )}
+                        </div>
                       </TableCell>
                     </TableRow>
                     );
@@ -442,7 +486,7 @@ export function CustomersClient({
             </CardTitle>
           </CardHeader>
           <CardContent className="p-0">
-            <Table variant="premium">
+            <Table variant="premium" className="whitespace-nowrap">
               <TableHeader>
                 <TableRow>
                   <TableHead>Name</TableHead>

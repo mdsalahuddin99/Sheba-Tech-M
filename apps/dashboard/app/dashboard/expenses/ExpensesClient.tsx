@@ -31,6 +31,7 @@ export function ExpensesClient({ initialExpenses }: { initialExpenses: Expense[]
   const [editing, setEditing] = useState<Expense | null>(null);
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState("All");
+  const [limit, setLimit] = useState(15);
   const [deleteId, setDeleteId] = useState<string | null>(null);
 
   const filtered = useMemo(() => {
@@ -130,10 +131,27 @@ export function ExpensesClient({ initialExpenses }: { initialExpenses: Expense[]
         </div>
       </Card>
 
-      <Card className="p-4 flex flex-col sm:flex-row gap-3">
-        <div className="relative flex-1">
+      <Card className="p-4 flex flex-col sm:flex-row flex-wrap gap-3">
+        <div className="relative flex-1 min-w-[200px]">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input placeholder="Search description…" value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
+        </div>
+        
+        <div className="flex items-center gap-2">
+          <span className="text-sm text-muted-foreground whitespace-nowrap hidden sm:inline">Show entries:</span>
+          <Select value={limit.toString()} onValueChange={(v) => setLimit(Number(v))}>
+            <SelectTrigger className="w-[70px] h-9"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="15">15</SelectItem>
+              <SelectItem value="50">50</SelectItem>
+              <SelectItem value="70">70</SelectItem>
+              <SelectItem value="100">100</SelectItem>
+              <SelectItem value="200">200</SelectItem>
+              <SelectItem value="500">500</SelectItem>
+              <SelectItem value="1000">1000</SelectItem>
+              <SelectItem value="10000">All</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
         <Select value={filter} onValueChange={setFilter}>
           <SelectTrigger className="sm:w-44"><SelectValue /></SelectTrigger>
@@ -170,7 +188,7 @@ export function ExpensesClient({ initialExpenses }: { initialExpenses: Expense[]
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filtered.map((e) => (
+                {filtered.slice(0, limit).map((e) => (
                   <TableRow key={e.id}>
                     <TableCell className="text-sm">{formatDate(e.date)}</TableCell>
                     <TableCell><Badge variant="secondary">{e.category}</Badge></TableCell>

@@ -81,6 +81,7 @@ export function PurchasesClient({
   const [receiptId, setReceiptId] = useState<string | null>(null);
 
   const [statusFilter, setStatusFilter] = useState<string>("All");
+  const [limit, setLimit] = useState(15);
 
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
@@ -93,15 +94,15 @@ export function PurchasesClient({
   const queryFilter = useMemo(() => ({
     search: debouncedSearch.trim() || undefined,
     status: statusFilter,
-    limit: debouncedSearch.trim() ? 1000 : 5,
-  }), [debouncedSearch, statusFilter]);
+    limit: debouncedSearch.trim() ? 1000 : limit,
+  }), [debouncedSearch, statusFilter, limit]);
 
   const initialInfiniteData = useMemo(() => {
     return {
-      pages: [{ items: initialPurchases, nextCursor: null, hasMore: false }],
+      pages: [{ items: initialPurchases.slice(0, limit), nextCursor: null, hasMore: false }],
       pageParams: [undefined],
     };
-  }, [initialPurchases]);
+  }, [initialPurchases, limit]);
 
   const isFilterEmpty = !queryFilter.search && queryFilter.status === "All";
 
@@ -168,13 +169,15 @@ export function PurchasesClient({
         setStatusFilter={setStatusFilter}
         searchTerm={searchTerm}
         setSearchTerm={setSearchTerm}
+        limit={limit}
+        setLimit={setLimit}
         filtered={allPurchases}
         isSearching={isLoading}
         onNew={() => { setEditId(null); setOpen(true); }}
-        onView={(id) => setDetailId(id)}
-        onEdit={(id) => { setEditId(id); setOpen(true); }}
-        onPrint={(id) => setReceiptId(id)}
-        onDelete={(id) => deletePurchase(id)}
+        onView={setDetailId}
+        onEdit={setEditId}
+        onPrint={setReceiptId}
+        onDelete={deletePurchase}
         fetchNextPage={fetchNextPage}
         hasNextPage={hasNextPage}
         isFetchingNextPage={isFetchingNextPage}

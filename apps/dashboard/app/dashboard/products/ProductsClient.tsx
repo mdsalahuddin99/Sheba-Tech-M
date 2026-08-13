@@ -91,6 +91,7 @@ export function ProductsClient({
   const [search, setSearch] = useState("");
   const [lowStockOnly, setLowStockOnly] = useState(false);
   const [filter, setFilter] = useState<string>("All");
+  const [limit, setLimit] = useState(15);
   
   // Use debounced search for the API query
   const [debouncedSearch, setDebouncedSearch] = useState(search);
@@ -104,16 +105,16 @@ export function ProductsClient({
     categoryId: filter !== "All" ? filter : undefined,
     lowStock: lowStockOnly || undefined,
     ...(filterOnlineOnly ? { isPublished: true } : {}),
-    limit: debouncedSearch.trim() ? 1000 : 5, // No limit (1000) for search, 5 for initial
-  }), [debouncedSearch, filter, lowStockOnly, filterOnlineOnly]);
+    limit: debouncedSearch.trim() ? 1000 : limit, // No limit (1000) for search, limit for initial
+  }), [debouncedSearch, filter, lowStockOnly, filterOnlineOnly, limit]);
 
   const initialInfiniteData = useMemo(() => {
-    // If initialProducts has more than 5, we only take 5 for the empty state
+    // If initialProducts has more than limit, we only take limit for the empty state
     return {
-      pages: [{ items: initialProducts.slice(0, 5), nextCursor: null, hasMore: false }],
+      pages: [{ items: initialProducts.slice(0, limit), nextCursor: null, hasMore: false }],
       pageParams: [undefined],
     };
-  }, [initialProducts]);
+  }, [initialProducts, limit]);
 
   const isFilterEmpty = !(queryFilter.search || queryFilter.categoryId || queryFilter.lowStock);
 
@@ -373,15 +374,22 @@ export function ProductsClient({
               className="pl-9"
             />
           </div>
-          
-          {isFilterEmpty && (
-            <div className="flex-1 min-w-[280px] flex items-center bg-blue-50/80 border border-blue-100 rounded-md px-3 py-1.5 text-sm text-blue-700 font-medium">
-              <span className="truncate" title="সর্বশেষ ৫টি ডেটা দেখানো হচ্ছে। নির্দিষ্ট ডেটা খুঁজে পেতে সার্চ করুন।">
-                সর্বশেষ ৫টি ডেটা দেখানো হচ্ছে। নির্দিষ্ট ডেটা খুঁজে পেতে সার্চ করুন।
-              </span>
-            </div>
-          )}
-
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-muted-foreground whitespace-nowrap hidden sm:inline">Show entries:</span>
+            <Select value={limit.toString()} onValueChange={(v) => setLimit(Number(v))}>
+              <SelectTrigger className="w-[70px] h-9"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="15">15</SelectItem>
+                <SelectItem value="50">50</SelectItem>
+                <SelectItem value="70">70</SelectItem>
+                <SelectItem value="100">100</SelectItem>
+                <SelectItem value="200">200</SelectItem>
+                <SelectItem value="500">500</SelectItem>
+                <SelectItem value="1000">1000</SelectItem>
+                <SelectItem value="10000">All</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
           <div className="flex gap-2 shrink-0 ml-auto w-full sm:w-auto">
             <Select value={filter} onValueChange={setFilter}>
               <SelectTrigger className="w-full sm:w-[200px]"><SelectValue /></SelectTrigger>

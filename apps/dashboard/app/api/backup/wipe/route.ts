@@ -8,48 +8,49 @@ import { cache } from "@/lib/cache";
 const respond = apiHandler(async (ctx: Ctx) => {
   // Delete all data for the current shop (delete children first to avoid foreign key errors)
   await prisma.$transaction([
-    prisma.auditLog.deleteMany(),
-    prisma.notification.deleteMany(),
-    prisma.stockAdjustment.deleteMany(),
-    prisma.transferItem.deleteMany(),
-    prisma.transfer.deleteMany(),
-    prisma.purchaseTender.deleteMany(),
-    prisma.serialNumber.deleteMany(),
-    prisma.warrantyClaim.deleteMany(), // ADDED
-    prisma.purchaseItem.deleteMany(),
-    prisma.expense.deleteMany(),
-    prisma.supplierTransaction.deleteMany(), // ADDED
-    prisma.purchase.deleteMany(),
-    prisma.saleTender.deleteMany(),
-    prisma.saleItem.deleteMany(),
-    prisma.customerTransaction.deleteMany(), // ADDED
-    prisma.sale.deleteMany(),
-    prisma.heldSale.deleteMany(), // ADDED
-    prisma.restockItem.deleteMany(), // ADDED
-    prisma.restockOrder.deleteMany(), // ADDED
-    prisma.accountTransfer.deleteMany(),
-    prisma.cashShift.deleteMany(),
-    prisma.supplierPayment.deleteMany(),
-    prisma.productImage.deleteMany(),
-    prisma.productVariant.deleteMany(),
-    prisma.warehouseStock.deleteMany(),
-    prisma.product.deleteMany(),
-    prisma.itemList.deleteMany(),
-    prisma.seriesModel.deleteMany(), // ADDED (Cascade should handle, but to be safe)
-    prisma.modelProductType.deleteMany(), // ADDED
-    prisma.productTypeBrand.deleteMany(), // ADDED
-    prisma.brandSubcategory.deleteMany(), // ADDED
-    prisma.series.deleteMany(),
-    prisma.model.deleteMany(),
-    prisma.productType.deleteMany(),
-    prisma.brand.deleteMany(),
-    prisma.category.deleteMany(),
-    prisma.color.deleteMany(),
-    prisma.storage.deleteMany(),
-    prisma.ram.deleteMany(),
-    prisma.customer.deleteMany(),
-    prisma.supplier.deleteMany(),
-    prisma.financialAccount.deleteMany(),
+    prisma.auditLog.deleteMany({ where: {} }),
+    prisma.notification.deleteMany({ where: {} }),
+    prisma.stockAdjustment.deleteMany({ where: {} }),
+    prisma.transferItem.deleteMany({ where: {} }),
+    prisma.transfer.deleteMany({ where: {} }),
+    prisma.purchaseTender.deleteMany({ where: {} }),
+    prisma.serialNumber.deleteMany({ where: {} }),
+    prisma.warrantyClaim.deleteMany({ where: {} }), // ADDED
+    prisma.purchaseItem.deleteMany({ where: {} }),
+    prisma.expense.deleteMany({ where: {} }),
+    prisma.supplierTransaction.deleteMany({ where: {} }), // ADDED
+    prisma.purchase.deleteMany({ where: {} }),
+    prisma.saleTender.deleteMany({ where: {} }),
+    prisma.saleItem.deleteMany({ where: {} }),
+    prisma.customerTransaction.deleteMany({ where: {} }), // ADDED
+    prisma.$executeRawUnsafe('DELETE FROM "Sale"'),
+    prisma.heldSale.deleteMany({ where: {} }), // ADDED
+    prisma.restockItem.deleteMany({ where: {} }), // ADDED
+    prisma.restockOrder.deleteMany({ where: {} }), // ADDED
+    prisma.accountTransfer.deleteMany({ where: {} }),
+    prisma.cashShift.deleteMany({ where: {} }),
+    prisma.supplierPayment.deleteMany({ where: {} }),
+    prisma.productImage.deleteMany({ where: {} }),
+    prisma.productVariant.deleteMany({ where: {} }),
+    prisma.warehouseStock.deleteMany({ where: {} }),
+    prisma.productReview.deleteMany({ where: {} }), // ADDED
+    prisma.$executeRawUnsafe('DELETE FROM "Product"'),
+    prisma.itemList.deleteMany({ where: {} }),
+    prisma.seriesModel.deleteMany({ where: {} }), // ADDED (Cascade should handle, but to be safe)
+    prisma.modelProductType.deleteMany({ where: {} }), // ADDED
+    prisma.productTypeBrand.deleteMany({ where: {} }), // ADDED
+    prisma.brandSubcategory.deleteMany({ where: {} }), // ADDED
+    prisma.series.deleteMany({ where: {} }),
+    prisma.model.deleteMany({ where: {} }),
+    prisma.productType.deleteMany({ where: {} }),
+    prisma.brand.deleteMany({ where: {} }),
+    prisma.$executeRawUnsafe('DELETE FROM "Category"'),
+    prisma.color.deleteMany({ where: {} }),
+    prisma.storage.deleteMany({ where: {} }),
+    prisma.ram.deleteMany({ where: {} }),
+    prisma.$executeRawUnsafe('DELETE FROM "Customer"'),
+    prisma.$executeRawUnsafe('DELETE FROM "Supplier"'),
+    prisma.financialAccount.deleteMany({ where: {} }),
   ]);
 
   await cache.invalidate("app:*");

@@ -59,6 +59,7 @@ export function SuppliersClient({
 
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [limit, setLimit] = useState(15);
   
   useEffect(() => {
     const timer = setTimeout(() => setDebouncedSearch(search), 500);
@@ -67,15 +68,15 @@ export function SuppliersClient({
 
   const queryFilter = useMemo(() => ({
     search: debouncedSearch.trim() || undefined,
-    limit: debouncedSearch.trim() ? 1000 : 5,
-  }), [debouncedSearch]);
+    limit: debouncedSearch.trim() ? 1000 : limit,
+  }), [debouncedSearch, limit]);
 
   const initialInfiniteData = useMemo(() => {
     return {
-      pages: [{ items: initialSuppliers, nextCursor: null, hasMore: false }],
+      pages: [{ items: initialSuppliers.slice(0, limit), nextCursor: null, hasMore: false }],
       pageParams: [undefined],
     };
-  }, [initialSuppliers]);
+  }, [initialSuppliers, limit]);
 
   const isFilterEmpty = !queryFilter.search;
 
@@ -262,13 +263,22 @@ export function SuppliersClient({
               />
             </div>
             
-            {isFilterEmpty && (
-              <div className="flex-1 lg:flex-none min-w-[240px] flex items-center bg-blue-50/80 border border-blue-100 rounded-md px-3 h-9 text-xs text-blue-700 font-medium">
-                <span className="truncate" title="সর্বশেষ ৫টি ডেটা দেখানো হচ্ছে। নির্দিষ্ট ডেটা খুঁজে পেতে সার্চ করুন।">
-                  সর্বশেষ ৫টি ডেটা দেখানো হচ্ছে। নির্দিষ্ট ডেটা খুঁজে পেতে সার্চ করুন।
-                </span>
-              </div>
-            )}
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-muted-foreground whitespace-nowrap hidden sm:inline">Show entries:</span>
+              <Select value={limit.toString()} onValueChange={(v) => setLimit(Number(v))}>
+                <SelectTrigger className="w-[70px] h-9"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="15">15</SelectItem>
+                  <SelectItem value="50">50</SelectItem>
+                  <SelectItem value="70">70</SelectItem>
+                  <SelectItem value="100">100</SelectItem>
+                  <SelectItem value="200">200</SelectItem>
+                  <SelectItem value="500">500</SelectItem>
+                  <SelectItem value="1000">1000</SelectItem>
+                  <SelectItem value="10000">All</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
         </div>
       </Card>
@@ -343,10 +353,10 @@ export function SuppliersClient({
                     <TableHead>Name</TableHead>
                     <TableHead>Contact</TableHead>
                     <TableHead>Phone</TableHead>
-                    <TableHead className="text-right">Total Purchased</TableHead>
-                    <TableHead className="text-right">Payable</TableHead>
-                    <TableHead className="text-right">Wallet</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
+                    <TableHead className="text-right w-0 whitespace-nowrap px-4">Total Purchased</TableHead>
+                    <TableHead className="text-right w-0 whitespace-nowrap px-4">Payable</TableHead>
+                    <TableHead className="text-right w-0 whitespace-nowrap px-4">Wallet</TableHead>
+                    <TableHead className="text-right w-0 whitespace-nowrap px-4">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>

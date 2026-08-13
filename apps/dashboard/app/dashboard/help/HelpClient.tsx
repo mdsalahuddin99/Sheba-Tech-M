@@ -9,6 +9,14 @@ import { PageHeader } from "@/shared/components";
 export default function HelpClient() {
   usePageTitle("Help & Support");
 
+  const licenseStartDate = new Date("2026-06-15T00:00:00Z");
+  const licenseExpiryDate = new Date(licenseStartDate);
+  licenseExpiryDate.setFullYear(licenseExpiryDate.getFullYear() + 1);
+  
+  const today = new Date();
+  const diffTime = Math.max(0, licenseExpiryDate.getTime() - today.getTime());
+  const daysRemaining = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+
   return (
     <div className="space-y-6 max-w-5xl mx-auto pb-10">
       <PageHeader
@@ -26,14 +34,14 @@ export default function HelpClient() {
               <Code2 className="h-7 w-7" />
             </div>
             <div>
-              <h2 className="text-2xl font-bold bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">Amar Tech BD</h2>
+              <h2 className="text-2xl font-bold bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">TITAS IT SOLUTIONS</h2>
               <p className="text-sm text-muted-foreground font-medium">Software & Technology Solutions</p>
             </div>
           </div>
 
           <div className="space-y-4 pt-2">
             <p className="text-sm text-foreground/80 leading-relaxed">
-              Amar Tech BD is a leading software development company specializing in modern Point of Sale (POS), Inventory Management, and E-commerce solutions. We build robust, scalable, and beautifully designed web applications tailored to your business needs.
+              TITAS IT SOLUTIONS is a leading software development company specializing in modern Point of Sale (POS), Inventory Management, and E-commerce solutions. We build robust, scalable, and beautifully designed web applications tailored to your business needs.
             </p>
           </div>
 
@@ -132,8 +140,22 @@ export default function HelpClient() {
                 <span className="font-semibold text-emerald-600 bg-emerald-500/10 px-2 py-0.5 rounded-full text-xs">Premium Server License for 1 Year</span>
               </div>
               <div className="flex justify-between items-center py-2 border-b border-border/50 text-sm">
+                <span className="text-muted-foreground">Activation Date</span>
+                <span className="font-medium">15 Jun 2026</span>
+              </div>
+              <div className="flex justify-between items-center py-2 border-b border-border/50 text-sm">
+                <span className="text-muted-foreground">Expiry Date</span>
+                <span className="font-medium">15 Jun 2027</span>
+              </div>
+              <div className="flex justify-between items-center py-2 border-b border-border/50 text-sm">
+                <span className="text-muted-foreground">Server Renew</span>
+                <span className={`font-semibold px-2 py-0.5 rounded-full text-xs ${daysRemaining < 30 ? "text-destructive bg-destructive/10" : "text-amber-600 bg-amber-500/10"}`}>
+                  {daysRemaining} days left
+                </span>
+              </div>
+              <div className="flex justify-between items-center py-2 border-b border-border/50 text-sm">
                 <span className="text-muted-foreground">Developer</span>
-                <span className="font-medium">Amar Tech BD</span>
+                <span className="font-medium">TITAS IT SOLUTIONS</span>
               </div>
             </div>
           </Card>
