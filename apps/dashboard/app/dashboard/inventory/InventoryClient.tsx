@@ -84,13 +84,15 @@ export function InventoryClient({
 
   const warehouseProducts = useMemo(() => {
     if (!selectedWarehouseId || selectedWarehouseId === "all") return products;
-    return products.map(p => {
-      const wStock = p.warehouseStocks?.find((w: any) => w.warehouseId === selectedWarehouseId);
-      return {
-        ...p,
-        stock: wStock ? Number(wStock.qty) : 0,
-      };
-    });
+    return products
+      .filter(p => p.warehouseStocks?.some((w: any) => w.warehouseId === selectedWarehouseId))
+      .map(p => {
+        const wStock = p.warehouseStocks?.find((w: any) => w.warehouseId === selectedWarehouseId);
+        return {
+          ...p,
+          stock: wStock ? Number(wStock.qty) : 0,
+        };
+      });
   }, [products, selectedWarehouseId]);
 
   const outCount = warehouseProducts.filter(p => p.stock === 0).length;

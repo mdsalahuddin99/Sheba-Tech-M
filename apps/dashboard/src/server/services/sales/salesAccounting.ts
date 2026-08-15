@@ -54,7 +54,7 @@ export const salesAccounting = {
       // Fetch current customer state for ledger snapshots
       const cust = await tx.customer.findUniqueOrThrow({
         where: { id: customerId },
-        select: { due: true, creditLimit: true },
+        select: { due: true, creditLimit: true, balance: true },
       });
       let runningDue = Number(cust.due);
 
@@ -71,8 +71,8 @@ export const salesAccounting = {
             customerId,
             type: "ADJUSTMENT",
             amount: -oldDue, // negative = due reduced
-            balanceBefore: runningDue,
-            balanceAfter: dueAfterRevert,
+            balanceBefore: Number(cust.balance),
+            balanceAfter: Number(cust.balance),
             saleId: sale.id,
             reference: `EDIT-${sale.id.slice(0, 8).toUpperCase()}`,
             notes: `Sale edited — old due ৳${oldDue} reversed`,
@@ -102,8 +102,8 @@ export const salesAccounting = {
             customerId,
             type: "SALE",
             amount: due,
-            balanceBefore: runningDue,
-            balanceAfter: newDue,
+            balanceBefore: Number(cust.balance),
+            balanceAfter: Number(cust.balance),
             saleId: sale.id,
             reference: `EDIT-${sale.id.slice(0, 8).toUpperCase()}`,
             notes: `Sale edited — new due ৳${due}`,
@@ -114,7 +114,7 @@ export const salesAccounting = {
     } else if (due > 0) {
       const cust = await tx.customer.findUniqueOrThrow({
         where: { id: customerId },
-        select: { due: true, creditLimit: true },
+        select: { due: true, creditLimit: true, balance: true },
       });
       const currentDue = Number(cust.due);
       const newDue = math.add(currentDue, due);
@@ -138,8 +138,8 @@ export const salesAccounting = {
           customerId: customerId,
           type: "SALE",
           amount: due,
-          balanceBefore: currentDue,
-          balanceAfter: newDue,
+          balanceBefore: Number(cust.balance),
+          balanceAfter: Number(cust.balance),
           saleId: sale.id,
           reference: `SALE-${sale.id.slice(0, 8).toUpperCase()}`,
           createdById: ctx.userId,
@@ -159,7 +159,7 @@ export const salesAccounting = {
   ): Promise<void> {
     const cust = await tx.customer.findUniqueOrThrow({
       where: { id: customerId },
-      select: { due: true },
+      select: { due: true, balance: true },
     });
 
     if (isDelete) {
@@ -173,8 +173,8 @@ export const salesAccounting = {
           customerId: customerId,
           type: "ADJUSTMENT",
           amount: dueAmount,
-          balanceBefore: 0,
-          balanceAfter: 0,
+          balanceBefore: Number(cust.balance),
+          balanceAfter: Number(cust.balance),
           saleId,
           reference: `DELETE-${saleId.slice(0, 8).toUpperCase()}`,
           notes: "Sale deleted",
@@ -199,7 +199,7 @@ export const salesAccounting = {
     tenders: Array<{ type: string; amount: any }>,
     isUpdate = false
   ): Promise<void> {
-    const walletTenders = tenders.filter((t) => t.type === "Wallet");
+    const walletTenders = tenders.filter((t) => t.type === "WALLET" || t.type === "Wallet");
     if (walletTenders.length === 0) return;
 
     const walletAmount = walletTenders.reduce((sum, t) => math.add(sum, t.amount), 0);

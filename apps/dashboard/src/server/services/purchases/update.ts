@@ -25,6 +25,8 @@ export async function update(ctx: Ctx, id: string, input: PurchaseUpdateInput) {
       id: true,
       invoiceNo: true,
       paid: true,
+      due: true,
+      supplierId: true,
       warehouseId: true,
       expense: { select: { id: true } },
       items: { select: { productId: true, qty: true } },
@@ -251,6 +253,31 @@ export async function update(ctx: Ctx, id: string, input: PurchaseUpdateInput) {
           where: { id: c.productId },
           data: { stock: c._count.productId },
         });
+      }
+    }
+
+    // 7. Sync supplier payable due if due amount changed
+    if (existing.supplierId || input.supplierId) {
+      // If supplier changed, we need to revert the old supplier's due and apply to the new one
+      const oldSupplierId = existing.supplierId;
+      const newSupplierId = input.supplierId || existing.supplierId;
+      const oldDue = Number(existing.due);
+      
+      if (oldSupplierId && oldSupplierId !== newSupplierId && oldDue > 0) {
+        await tx.supplier.update({
+          where: { id: oldSupplierId },
+          data: { payable: { decrement: oldDue } },
+        });
+      }
+      
+      if (newSupplierId) {
+        const netDueChange = oldSupplierId === newSupplierId ? (due - oldDue) : due;
+        if (netDueChange !== 0) {
+          await tx.supplier.update({
+            where: { id: newSupplierId },
+            data: { payable: { increment: netDueChange } },
+          });
+        }
       }
     }
 

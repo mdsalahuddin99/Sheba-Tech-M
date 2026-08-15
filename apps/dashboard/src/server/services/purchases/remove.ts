@@ -87,7 +87,7 @@ export async function remove(ctx: Ctx, id: string) {
       })
     );
 
-    // ── 3. Reverse supplier payable if due > 0 ───────────────────────────────
+    // ── 3. Reverse supplier payable and restore funds ───────────────────────────
     if (purchase.supplierId) {
       const due = Number(purchase.due ?? 0);
       if (due > 0) {
@@ -97,6 +97,44 @@ export async function remove(ctx: Ctx, id: string) {
         });
       }
     }
+
+    const walletTenders = purchase.tenders.filter(t => t.type === "WALLET");
+    const accountTenders = purchase.tenders.filter(t => t.type !== "WALLET" && t.accountId && Number(t.amount) > 0);
+
+    if (walletTenders.length > 0 && purchase.supplierId) {
+      const walletAmount = walletTenders.reduce((sum, t) => sum + Number(t.amount), 0);
+      
+      const supp = await tx.supplier.findUnique({
+        where: { id: purchase.supplierId },
+        select: { advanceBalance: true }
+      });
+      const currentAdvance = Number(supp?.advanceBalance || 0);
+      const newAdvance = currentAdvance + walletAmount;
+      
+      await tx.supplier.update({
+        where: { id: purchase.supplierId },
+        data: { advanceBalance: newAdvance }
+      });
+      
+      await tx.supplierTransaction.create({
+        data: {
+          supplierId: purchase.supplierId,
+          type: "WRITE_OFF",
+          amount: walletAmount,
+          balanceBefore: currentAdvance,
+          balanceAfter: newAdvance,
+          purchaseId: purchase.id,
+          notes: `Advance restored (purchase deleted: ${purchase.invoiceNo || purchase.id.slice(0, 8)})`
+        }
+      });
+    }
+
+    await Promise.all(accountTenders.map((t) =>
+      tx.financialAccount.update({
+        where: { id: t.accountId! },
+        data: { balance: { increment: Number(t.amount) } },
+      })
+    ));
 
     // ── 4. Delete the purchase (cascades to items, tenders, supplierTransactions) ──
     await tx.purchase.delete({ where: { id } });

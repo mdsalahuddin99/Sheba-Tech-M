@@ -45,12 +45,13 @@ export async function addPayment(ctx: Ctx, id: string, payment: {
       },
     });
 
+    const rawPurchase = await tx.purchase.findFirst({
+      where: { id },
+      select: { supplierId: true, invoiceNo: true },
+    });
+
     // Deduct from account balance or supplier advance
     if (payment.accountId === "WALLET" || payment.method === "Wallet") {
-      const rawPurchase = await tx.purchase.findFirst({
-        where: { id },
-        select: { supplierId: true, invoiceNo: true },
-      });
       if (!rawPurchase?.supplierId) throw new ServiceError("BAD_REQUEST", "Purchase has no supplier");
       
       const supp = await tx.supplier.findUnique({
@@ -87,12 +88,54 @@ export async function addPayment(ctx: Ctx, id: string, payment: {
     }
 
     // Update purchase paid + due
-    const newPaid = Number(purchase.paid) + payment.amount;
+    const oldPaid = Number(purchase.paid);
+    const oldDue = Math.max(0, Number(purchase.total) - oldPaid);
+    
+    const newPaid = oldPaid + payment.amount;
     const newDue = Math.max(0, Number(purchase.total) - newPaid);
+    const dueReduction = oldDue - newDue;
+    const overpayment = payment.amount > oldDue ? payment.amount - oldDue : 0;
+
     await tx.purchase.update({
       where: { id },
       data: { paid: newPaid, due: newDue },
     });
+
+    // Update supplier payable & handle overpayment
+    if (rawPurchase?.supplierId) {
+      if (dueReduction > 0) {
+        await tx.supplier.update({
+          where: { id: rawPurchase.supplierId },
+          data: { payable: { decrement: dueReduction } }
+        });
+      }
+
+      if (overpayment > 0 && payment.accountId !== "WALLET" && payment.method !== "Wallet") {
+        const supp = await tx.supplier.findUnique({
+          where: { id: rawPurchase.supplierId },
+          select: { advanceBalance: true }
+        });
+        const currentAdvance = Number(supp?.advanceBalance || 0);
+        const newAdvance = currentAdvance + overpayment;
+
+        await tx.supplier.update({
+          where: { id: rawPurchase.supplierId },
+          data: { advanceBalance: newAdvance }
+        });
+
+        await tx.supplierTransaction.create({
+          data: {
+            supplierId: rawPurchase.supplierId,
+            type: "ADJUSTMENT",
+            amount: overpayment,
+            balanceBefore: currentAdvance,
+            balanceAfter: newAdvance,
+            purchaseId: id,
+            notes: `Overpayment added to advance from invoice ${rawPurchase.invoiceNo || id.slice(0, 8)}`
+          }
+        });
+      }
+    }
   }, { timeout: 30000 });
 
   await auditLogService.log(ctx, {
@@ -163,12 +206,25 @@ export async function deletePayment(ctx: Ctx, purchaseId: string, paymentId: str
     }
 
     // Update purchase paid + due
-    const newPaid = Math.max(0, Number(purchase.paid) - Number(tender.amount));
+    const oldPaid = Number(purchase.paid);
+    const oldDue = Math.max(0, Number(purchase.total) - oldPaid);
+
+    const newPaid = Math.max(0, oldPaid - Number(tender.amount));
     const newDue = Math.max(0, Number(purchase.total) - newPaid);
+    const dueIncrease = newDue - oldDue;
+
     await tx.purchase.update({
       where: { id: purchaseId },
       data: { paid: newPaid, due: newDue },
     });
+
+    // Update supplier payable
+    if (purchase.supplierId && dueIncrease > 0) {
+      await tx.supplier.update({
+        where: { id: purchase.supplierId },
+        data: { payable: { increment: dueIncrease } }
+      });
+    }
   }, { timeout: 30000 });
 
   await auditLogService.log(ctx, {

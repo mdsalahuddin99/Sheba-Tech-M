@@ -306,11 +306,20 @@ export const customerLedgerService = {
 
       const currentDue = Number(cust.due);
       const currentBalance = Number(cust.balance); // wallet advance — for ledger snapshot
-      const newDue = Math.max(0, currentDue - amt);
+      
+      let newDue = currentDue - amt;
+      let newBalance = currentBalance;
+      let overpayment = 0;
+      
+      if (newDue < 0) {
+        overpayment = Math.abs(newDue);
+        newBalance += overpayment;
+        newDue = 0;
+      }
 
       await tx.customer.update({
         where: { id: customerId },
-        data: { due: newDue },
+        data: { due: newDue, balance: newBalance },
       });
 
       // Update financial account (money in)
@@ -329,10 +338,12 @@ export const customerLedgerService = {
           type: "PAYMENT",
           amount: amt,
           balanceBefore: currentBalance,
-          balanceAfter: currentBalance, // wallet advance unchanged by due collection
+          balanceAfter: newBalance,
           accountId: accountId ?? null,
           reference: reference ?? null,
-          notes: notes ?? `Due collection: ${amt} (due: ${currentDue} → ${newDue})`,
+          notes: notes ?? (overpayment > 0 
+            ? `Due collection: ${amt} (due: ${currentDue} → 0, advance +${overpayment})` 
+            : `Due collection: ${amt} (due: ${currentDue} → ${newDue})`),
           createdById: ctx.userId,
         },
       });

@@ -199,7 +199,7 @@ export const salesAccounting = {
     tenders: Array<{ type: string; amount: any }>,
     isUpdate = false
   ): Promise<void> {
-    const walletTenders = tenders.filter((t) => t.type === "Wallet");
+    const walletTenders = tenders.filter((t) => t.type === "WALLET" || t.type === "Wallet");
     if (walletTenders.length === 0) return;
 
     const walletAmount = walletTenders.reduce((sum, t) => math.add(sum, t.amount), 0);
