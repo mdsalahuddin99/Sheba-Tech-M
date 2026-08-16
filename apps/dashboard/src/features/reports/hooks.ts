@@ -20,6 +20,7 @@ export interface ReportsMetrics {
   trend: Array<{ date: string; total: number }>;
   byMethod: Array<{ name: string; value: number }>;
   topProducts: Array<{ name: string; qty: number; revenue: number }>;
+  allSalesItems: Array<{ name: string; cost: number; price: number; discount: number; payable: number; paid: number; due: number; createdAt: string }>;
   expensesList: Array<{ category: string; total: number; count: number }>;
   openingStock: number;
   totalPurchase: number;

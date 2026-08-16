@@ -175,7 +175,10 @@ export function PurchasesClient({
         isSearching={isLoading}
         onNew={() => { setEditId(null); setOpen(true); }}
         onView={setDetailId}
-        onEdit={setEditId}
+        onEdit={(id) => {
+          setEditId(id);
+          setOpen(true);
+        }}
         onPrint={setReceiptId}
         onDelete={deletePurchase}
         fetchNextPage={fetchNextPage}

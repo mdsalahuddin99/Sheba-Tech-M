@@ -664,7 +664,8 @@ export function useCreateSale() {
       // Invalidate in background — sales list will re-fetch behind the scenes
       // without blocking the receipt modal from appearing.
       queryClient.invalidateQueries({ queryKey: ["sales"] });
-      // Mark POS init data (products/customers) stale — will refetch next interaction
+      // Mark POS init data and products stale — will refetch next interaction
+      queryClient.invalidateQueries({ queryKey: ["products"] });
       queryClient.invalidateQueries({
         queryKey: posInitKeys.byWarehouse(selectedWarehouseId),
         refetchType: "none",

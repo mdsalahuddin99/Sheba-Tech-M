@@ -42,6 +42,7 @@ export const reportsService = {
       rawCogs,
       expensesAgg,
       rawTopProducts,
+      rawAllSales,
       salesList,
       expensesByCategory
     ] = await Promise.all([
@@ -87,6 +88,15 @@ export const reportsService = {
         GROUP BY si.name
         ORDER BY qty DESC
         LIMIT 10
+      `,
+      prisma.$queryRaw<Array<{ name: string, cost: number, price: number, discount: number, payable: number, paid: number, due: number, createdAt: Date }>>`
+        SELECT si.name, si.cost, si.price, si.discount, s.total as payable, s.paid, s.due, s."createdAt"
+        FROM "SaleItem" si
+        JOIN "Sale" s ON si."saleId" = s.id
+        WHERE s."createdAt" >= ${fromDate} AND s."createdAt" <= ${toDate}
+        AND s.status = 'COMPLETED'
+        ${pmSql}
+        ORDER BY s."createdAt" DESC
       `,
       prisma.sale.findMany({
         where: completedSaleWhere,
@@ -160,6 +170,17 @@ export const reportsService = {
       revenue: Number(p.revenue),
     }));
 
+    const allSalesItems = rawAllSales.map(s => ({
+      name: s.name,
+      cost: Number(s.cost || 0),
+      price: Number(s.price || 0),
+      discount: Number(s.discount || 0),
+      payable: Number(s.payable || 0),
+      paid: Number(s.paid || 0),
+      due: Number(s.due || 0),
+      createdAt: s.createdAt.toISOString()
+    }));
+
     const trendMap: Record<string, number> = {};
     for (let d = new Date(fromDate); d <= toDate; d.setDate(d.getDate() + 1)) {
       trendMap[d.toLocaleDateString("en-GB", { day: "2-digit", month: "short" })] = 0;
@@ -199,6 +220,7 @@ export const reportsService = {
       trend,
       byMethod,
       topProducts,
+      allSalesItems,
       expensesList,
       openingStock,
       totalPurchase,
