@@ -28,7 +28,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/shared/ui/select";
-import { useCollectPayment, useWithdrawPayment, useDepositAdvance } from "./ledgerHooks";
+import { useCollectPayment, useWithdrawPayment } from "./ledgerHooks";
 import { useAccountBalances } from "@/features/accounts/hooks";
 import { formatCurrency } from "@/shared/lib/format";
 import { ArrowDownToLine, ArrowUpFromLine } from "lucide-react";
@@ -62,7 +62,7 @@ export function CustomerWalletDialog({
   const filteredAccounts = method ? accounts.filter((a) => a.type === method) : [];
   const balances = useAccountBalances(accounts);
 
-  const deposit = useDepositAdvance();
+  const deposit = useCollectPayment();
   const withdraw = useWithdrawPayment();
   const isPending = deposit.isPending || withdraw.isPending;
 

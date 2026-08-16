@@ -15,6 +15,9 @@ import {
   useCallback,
   useContext,
   useMemo,
+  useState,
+  useEffect,
+  useRef,
   type ReactNode,
 } from "react";
 import {
@@ -23,6 +26,16 @@ import {
   signIn as nextSignIn,
   signOut as nextSignOut,
 } from "next-auth/react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/shared/ui/alert-dialog";
+import { useRouter } from "next/navigation";
 import type { AuthSession, LoginInput, RegisterInput } from "@/features/auth/types";
 
 // ─── Context type ───────────────────────────────────────────────────────────
@@ -60,10 +73,31 @@ function AuthProviderInner({ children }: { children: ReactNode }) {
     };
   }, [nextSession]);
 
+  const isIntentionallyLoggingOut = useRef(false);
+  const [showExpiredDialog, setShowExpiredDialog] = useState(false);
+  const router = useRouter();
+
   const mappedStatus = useMemo<AuthContextValue["status"]>(() => {
     if (status === "loading") return "loading";
     return session ? "authenticated" : "unauthenticated";
   }, [status, session]);
+
+  // Monitor for session expiration
+  useEffect(() => {
+    if (mappedStatus === "unauthenticated" && !isIntentionallyLoggingOut.current) {
+      // If we were previously authenticated and suddenly become unauthenticated without intent
+      const wasAuthenticated = localStorage.getItem("was_authenticated");
+      if (wasAuthenticated === "true") {
+        setShowExpiredDialog(true);
+      }
+    }
+    
+    if (mappedStatus === "authenticated") {
+      localStorage.setItem("was_authenticated", "true");
+    } else {
+      localStorage.setItem("was_authenticated", "false");
+    }
+  }, [mappedStatus]);
 
   const login = useCallback(async (input: LoginInput) => {
     const result = await nextSignIn("credentials", {
@@ -106,6 +140,8 @@ function AuthProviderInner({ children }: { children: ReactNode }) {
   }, []);
 
   const logout = useCallback(async () => {
+    isIntentionallyLoggingOut.current = true;
+    localStorage.setItem("was_authenticated", "false");
     await nextSignOut({ redirect: false });
   }, []);
 
@@ -125,14 +161,36 @@ function AuthProviderInner({ children }: { children: ReactNode }) {
     [session, mappedStatus, login, register, logout, refresh],
   );
 
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+  return (
+    <AuthContext.Provider value={value}>
+      {children}
+      <AlertDialog open={showExpiredDialog} onOpenChange={setShowExpiredDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Session Expired</AlertDialogTitle>
+            <AlertDialogDescription>
+              Your session has expired due to inactivity. Please log in again to continue.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogAction onClick={() => {
+              setShowExpiredDialog(false);
+              router.push("/login");
+            }}>
+              Log In
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </AuthContext.Provider>
+  );
 }
 
 // ─── Public provider (wraps SessionProvider) ─────────────────────────────────
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   return (
-    <NextSessionProvider>
+    <NextSessionProvider refetchInterval={5 * 60} refetchOnWindowFocus={true}>
       <AuthProviderInner>{children}</AuthProviderInner>
     </NextSessionProvider>
   );

@@ -659,7 +659,10 @@ export function useCreateSale() {
       setReceipt(sale);
       setReceiptView("invoice");
       toast.success(editingSaleId ? "Invoice updated!" : "Invoice saved!");
-      if (!editingSaleId) clearVoucher();
+      clearVoucher();
+      if (editingSaleId) {
+        router.replace("/dashboard/sales/create");
+      }
 
       // Invalidate in background — sales list will re-fetch behind the scenes
       // without blocking the receipt modal from appearing.

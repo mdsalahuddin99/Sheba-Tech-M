@@ -416,7 +416,7 @@ export function CreateSaleClient() {
           )}
 
           {/* Checkout & Action Buttons (Sticky at bottom of viewport) */}
-          {voucherRows.length > 0 && (
+          {(voucherRows.length > 0 || receipt) && (
             <div className="sticky bottom-0 mt-auto bg-card border-t border-border p-2 flex flex-nowrap sm:flex-wrap items-center justify-between gap-1.5 sm:gap-2 z-30">
               <div className="flex items-center gap-1.5 sm:gap-2 w-full sm:w-auto flex-1 sm:flex-none">
                 <Button
