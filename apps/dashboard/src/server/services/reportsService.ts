@@ -92,13 +92,36 @@ export const reportsService = {
         LIMIT 10
       `,
       prisma.$queryRaw<Array<{ name: string, cost: number, price: number, discount: number, payable: number, paid: number, due: number, createdAt: Date }>>`
-        SELECT si.name, si.cost, si.price, si.discount, s.total as payable, s.paid, s.due, s."createdAt"
-        FROM "SaleItem" si
-        JOIN "Sale" s ON si."saleId" = s.id
-        WHERE s."createdAt" >= ${fromDate} AND s."createdAt" <= ${toDate}
-        AND s.status = 'COMPLETED'
-        ${pmSql}
-        ORDER BY s."createdAt" DESC
+        WITH SaleAgg AS (
+          SELECT 
+            s.id,
+            s."customerId",
+            s."createdAt",
+            s.total,
+            s.paid,
+            s.due,
+            s.discount as sale_discount,
+            COALESCE((SELECT SUM(si.qty * COALESCE(si.cost, 0)) FROM "SaleItem" si WHERE si."saleId" = s.id), 0) as cogs,
+            COALESCE((SELECT SUM(si.qty * si.price) FROM "SaleItem" si WHERE si."saleId" = s.id), 0) as subtotal,
+            COALESCE((SELECT SUM(si.discount) FROM "SaleItem" si WHERE si."saleId" = s.id), 0) as items_discount
+          FROM "Sale" s
+          WHERE s."createdAt" >= ${fromDate} AND s."createdAt" <= ${toDate}
+          AND s.status = 'COMPLETED'
+          ${pmSql}
+        )
+        SELECT 
+          COALESCE(c.name, 'Walk-in Customer') as name,
+          SUM(sa.cogs) as cost,
+          SUM(sa.subtotal) as price,
+          SUM(sa.sale_discount + sa.items_discount) as discount,
+          SUM(sa.total) as payable,
+          SUM(sa.paid) as paid,
+          SUM(sa.due) as due,
+          MAX(sa."createdAt") as "createdAt"
+        FROM SaleAgg sa
+        LEFT JOIN "Customer" c ON sa."customerId" = c.id
+        GROUP BY c.id, c.name
+        ORDER BY MAX(sa."createdAt") DESC
       `,
       prisma.sale.findMany({
         where: completedSaleWhere,

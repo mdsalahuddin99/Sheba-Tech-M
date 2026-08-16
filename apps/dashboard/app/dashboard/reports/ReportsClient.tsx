@@ -169,8 +169,8 @@ export function ReportsClient({
       ["Total Transactions", metrics.txnCount],
       ["Average Order Value", metrics.aov],
       [""],
-      ["-- ALL SALES ITEMS --"],
-      ["Product Name", "Purchase Rate", "Sale Rate", "Discount", "Payable", "Paid", "Dues", "Date"],
+      ["-- CUSTOMER SALES --"],
+      ["Customer Name", "Purchase Rate", "Sale Rate", "Discount", "Payable", "Paid", "Dues", "Last Order Date"],
       ...metrics.allSalesItems.map((p) => [p.name, p.cost, p.price, p.discount, p.payable, p.paid, p.due, formatDate(p.createdAt)])
     ];
     downloadCSV(`sales_report_${from}_to_${to}.csv`, rows);
@@ -656,7 +656,7 @@ export function ReportsClient({
 
           <div className="bg-white rounded-2xl border border-slate-200/80 shadow-md shadow-slate-100/50 overflow-hidden print:overflow-visible print:border-none print:shadow-none">
             <div className="px-4 py-3 border-b border-slate-100/50 flex items-center justify-between print:px-0">
-              <h3 className="text-[12px] font-bold text-slate-800 uppercase tracking-wide">All Sales</h3>
+              <h3 className="text-[12px] font-bold text-slate-800 uppercase tracking-wide">Customer Sales</h3>
               <Button size="sm" variant="ghost" className="h-7 text-xs font-medium text-slate-600 print:hidden" onClick={exportSales}>
                 <Download className="h-3.5 w-3.5 mr-1" /> CSV
               </Button>
@@ -665,8 +665,8 @@ export function ReportsClient({
               <table className="w-full text-[13px] border-collapse">
                 <thead className="bg-slate-50/50 border-b border-slate-100 sticky top-0 z-20 shadow-sm backdrop-blur-md">
                   <tr className="text-slate-500">
-                    <th className="text-left px-4 py-2 text-[10px] font-bold uppercase tracking-wider">Date & Time</th>
-                    <th className="text-left px-4 py-2 text-[10px] font-bold uppercase tracking-wider">Product Name</th>
+                    <th className="text-left px-4 py-2 text-[10px] font-bold uppercase tracking-wider">Last Order Date</th>
+                    <th className="text-left px-4 py-2 text-[10px] font-bold uppercase tracking-wider">Customer Name</th>
                     <th className="text-center px-4 py-2 text-[10px] font-bold uppercase tracking-wider">Purchase rate</th>
                     <th className="text-center px-4 py-2 text-[10px] font-bold uppercase tracking-wider">Sale rate</th>
                     <th className="text-center px-4 py-2 text-[10px] font-bold uppercase tracking-wider">Discount</th>
