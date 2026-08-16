@@ -477,6 +477,7 @@ enum SaleStatus {
   HELD
   VOIDED
   REFUNDED
+  EXCHANGED
 }
 
 model Sale {
@@ -503,6 +504,7 @@ model Sale {
   data        Json                  @default("{}")
   customerTransactions CustomerTransaction[]
   warrantyClaims WarrantyClaim[]
+  exchangeNewSaleId String?
   deletedAt   DateTime?
   createdAt   DateTime              @default(now())
 

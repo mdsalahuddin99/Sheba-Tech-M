@@ -29,15 +29,15 @@ import {
 } from "@/shared/ui/alert-dialog";
 import { formatCurrency, formatDateTime } from "@/shared/lib/format";
 import { toast } from "sonner";
-import { Search, Eye, FileText, Receipt, ArrowUpDown, Trash2, Pencil, Plus } from "lucide-react";
+import { Search, Eye, FileText, Receipt, ArrowUpDown, Trash2, Pencil, Plus, ArrowLeftRight } from "lucide-react";
 import { Sale } from "@/shared/lib/types";
 import Invoice from "@/components/Invoice";
 import { PageHeader, EmptyState } from "@/shared/components";
 import { useInfiniteSalesQuery, useSaleMutations } from "@/features/sales/hooks";
 import { useSettings } from "@/features/settings/hooks";
 
-export function SalesClient() {
-  usePageTitle("Sales");
+export function SalesClient({ fixedStatus }: { fixedStatus?: string }) {
+  usePageTitle(fixedStatus === "EXCHANGED" ? "Exchanges" : "Sales");
   const router = useRouter();
   const searchParams = useSearchParams();
   const initialSearch = searchParams.get("search") || "";
@@ -92,11 +92,12 @@ export function SalesClient() {
 
   const queryFilter = useMemo(() => ({
     search: undefined, // Let local filter handle it to correctly search invoiceNo in JSON data
+    status: fixedStatus,
     paymentMethod: method !== "All" ? method : undefined,
     sortKey: sort.split("-")[0],
     sortDir: sort.split("-")[1] as "asc" | "desc",
     limit: debouncedSearch.trim() ? 1000 : limit,
-  }), [debouncedSearch, method, sort, limit]);
+  }), [debouncedSearch, method, sort, limit, fixedStatus]);
 
   const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading } = useInfiniteSalesQuery(queryFilter);
 
@@ -247,6 +248,9 @@ export function SalesClient() {
                     <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => { router.push(`/dashboard/sales/create?saleId=${s.id}`); }} title="Edit">
                       <Pencil className="h-3.5 w-3.5" />
                     </Button>
+                    <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => { router.push(`/dashboard/sales/create?exchangeSaleId=${s.id}`); }} title="Exchange Items">
+                      <ArrowLeftRight className="h-3.5 w-3.5" />
+                    </Button>
                     <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => { setInvoice(s); }} title="Invoice">
                       <FileText className="h-3.5 w-3.5" />
                     </Button>
@@ -327,6 +331,9 @@ export function SalesClient() {
                       </Button>
                       <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => router.push(`/dashboard/sales/create?saleId=${s.id}`)} title="Edit sale">
                         <Pencil className="h-3.5 w-3.5" />
+                      </Button>
+                      <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => router.push(`/dashboard/sales/create?exchangeSaleId=${s.id}`)} title="Exchange items">
+                        <ArrowLeftRight className="h-3.5 w-3.5" />
                       </Button>
                       <AlertDialog>
                         <AlertDialogTrigger asChild>

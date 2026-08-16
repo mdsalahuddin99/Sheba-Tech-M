@@ -11,6 +11,7 @@ import { list, getById, byCustomer, listReturns } from "./sales/queries";
 import { create } from "./sales/create";
 import { voidSale } from "./sales/void";
 import { refund } from "./sales/refund";
+import { exchange } from "./sales/exchange";
 import { remove } from "./sales/remove";
 import { update } from "./sales/update";
 import { collectDue } from "./sales/collectDue";
@@ -51,6 +52,9 @@ export const salesService = {
 
   /** Refund a sale (partial or full). Requires MANAGER+. */
   refund,
+
+  /** Exchange a sale for new items, updating stock and financials. */
+  exchange,
 
   /** Permanently delete a completed sale — restores stock, serials, and customer due. Requires MANAGER+. */
   remove,

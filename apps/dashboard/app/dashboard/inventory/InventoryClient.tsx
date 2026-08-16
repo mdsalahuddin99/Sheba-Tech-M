@@ -22,8 +22,11 @@ import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/shared/ui/alert-dialog";
+import {
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator
+} from "@/shared/ui/dropdown-menu";
 import { formatCurrency, formatDateTime } from "@/shared/lib/format";
-import { Search, Plus, History, Pencil, Trash2, PackagePlus, Tag, Check, X, ScanLine, Printer, ChevronRight, CornerDownRight, Boxes, Layers, Info } from "lucide-react";
+import { Search, Plus, History, Pencil, Trash2, PackagePlus, Tag, Check, X, ScanLine, Printer, ChevronRight, CornerDownRight, Boxes, Layers, Info, Download, Share2 } from "lucide-react";
 import { Switch } from "@/shared/ui/switch";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/shared/ui/collapsible";
 import { AdjustmentType, Product, Category, ProductCondition, StockAdjustment } from "@/shared/lib/types";
@@ -48,6 +51,8 @@ import {
 } from "@/features/inventory/components";
 import { LabelPrintDialog } from "@/features/labels";
 import { ProductFormDialog } from "@/features/products/ProductFormDialog";
+import { useReactToPrint } from "react-to-print";
+import { toJpeg } from "html-to-image";
 
 export function InventoryClient({
   initialProducts,
@@ -227,7 +232,75 @@ export function InventoryClient({
   const isFilterEmpty = !search.trim() && filter === "All";
   const displayedProducts = isFilterEmpty ? filtered.slice(0, 5) : filtered;
 
+  // --- Price List Functionality ---
+  const priceListRef = useRef<HTMLDivElement>(null);
+  
+  const handlePrintPriceList = useReactToPrint({
+    contentRef: priceListRef,
+    documentTitle: "Product Price List",
+  });
 
+  const handleDownloadJpg = async () => {
+    if (!priceListRef.current) return;
+    try {
+      toast.info("Generating Image...");
+      const el = priceListRef.current;
+      el.style.display = 'block';
+      el.style.position = 'absolute';
+      el.style.top = '0';
+      el.style.left = '0';
+      el.style.zIndex = '-9999';
+      
+      const dataUrl = await toJpeg(el, { quality: 0.95, backgroundColor: '#ffffff' });
+      
+      el.style.display = 'none';
+
+      const link = document.createElement("a");
+      link.download = `price_list_${new Date().getTime()}.jpg`;
+      link.href = dataUrl;
+      link.click();
+      toast.success("Image downloaded successfully");
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to generate image");
+      if (priceListRef.current) priceListRef.current.style.display = 'none';
+    }
+  };
+
+  const handleShareList = async () => {
+    if (!navigator.share) {
+      toast.error("Sharing is not supported on this device/browser");
+      return;
+    }
+    try {
+      if (!priceListRef.current) return;
+      const el = priceListRef.current;
+      el.style.display = 'block';
+      el.style.position = 'absolute';
+      el.style.top = '0';
+      el.style.left = '0';
+      el.style.zIndex = '-9999';
+      
+      const dataUrl = await toJpeg(el, { quality: 0.9, backgroundColor: '#ffffff' });
+      el.style.display = 'none';
+
+      const res = await fetch(dataUrl);
+      const blob = await res.blob();
+      const file = new File([blob], 'price_list.jpg', { type: 'image/jpeg' });
+
+      await navigator.share({
+        title: "Product Price List",
+        text: "Here is the latest product price list.",
+        files: [file]
+      });
+    } catch (err: any) {
+      if (err.name !== 'AbortError') {
+        console.error(err);
+        toast.error("Failed to share the list");
+      }
+      if (priceListRef.current) priceListRef.current.style.display = 'none';
+    }
+  };
 
   // Category management
   const [newCatName, setNewCatName] = useState("");
@@ -371,6 +444,26 @@ export function InventoryClient({
                   </SelectContent>
                 </Select>
 
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline" className="h-9 sm:h-10 px-3 sm:px-4 text-slate-700 bg-white">
+                      <Printer className="h-4 w-4 sm:mr-2 text-indigo-500" /><span className="hidden sm:inline">Price List</span>
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-48">
+                    <DropdownMenuItem onClick={() => handlePrintPriceList()}>
+                      <Printer className="h-4 w-4 mr-2 text-indigo-500" /> Print / Save PDF
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={handleDownloadJpg}>
+                      <Download className="h-4 w-4 mr-2 text-emerald-500" /> Download JPG
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={handleShareList}>
+                      <Share2 className="h-4 w-4 mr-2 text-blue-500" /> Share List
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+
                 {!filterOnlineOnly && (
                   <Button onClick={() => setAdjOpen(true)} className="bg-primary text-primary-foreground hover:bg-primary/90 h-9 sm:h-10 px-3 sm:px-4 shrink-0">
                     <Plus className="h-4 w-4 sm:mr-2" /><span className="hidden sm:inline">New Adjustment</span>
@@ -513,7 +606,6 @@ export function InventoryClient({
         </DialogContent>
       </Dialog>
 
-      {/* Product Add/Edit Dialog */}
       <ProductFormDialog
         open={editOpen}
         onOpenChange={setEditOpen}
@@ -521,6 +613,41 @@ export function InventoryClient({
         prefillBarcode={prefillBarcode}
         onScanRequest={openScanForForm}
       />
+
+      {/* Hidden Price List for Printing / Exporting */}
+      <div style={{ display: 'none' }}>
+        <div ref={priceListRef} className="p-10 bg-white text-black min-h-screen w-[800px] mx-auto font-sans">
+          <div className="flex justify-between items-start mb-10 text-[10px] text-gray-500">
+            <div>{new Date().toLocaleString()}</div>
+            <div>Price List</div>
+          </div>
+          <div className="text-center mb-10">
+            <h1 className="text-2xl font-bold text-gray-900 mb-2 uppercase tracking-wide">PRODUCT PRICE LIST</h1>
+            <p className="text-xs text-gray-500">Generated on: {new Date().toLocaleDateString('en-GB')}</p>
+          </div>
+          <table className="w-full text-left border-collapse">
+            <thead>
+              <tr className="border-b-2 border-gray-200">
+                <th className="py-3 px-2 text-xs font-bold text-gray-600 uppercase tracking-wider w-[50%]">Product Name</th>
+                <th className="py-3 px-2 text-xs font-bold text-gray-600 uppercase tracking-wider w-[25%]">Category</th>
+                <th className="py-3 px-2 text-xs font-bold text-gray-600 uppercase tracking-wider text-right w-[25%]">Price</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filtered.map((p) => (
+                <tr key={p.id} className="border-b border-gray-100">
+                  <td className="py-3 px-2 text-[13px] text-gray-800 font-medium">{p.name}</td>
+                  <td className="py-3 px-2 text-[12px] text-gray-600 uppercase">{p.category || '—'}</td>
+                  <td className="py-3 px-2 text-[13px] text-gray-800 font-medium text-right">{formatCurrency(p.price)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          <div className="mt-10 text-[10px] text-gray-400 text-center">
+            {filtered.length} products listed.
+          </div>
+        </div>
+      </div>
 
       {/* Quick Price Edit Dialog */}
       <Dialog open={quickPriceOpen} onOpenChange={setQuickPriceOpen}>

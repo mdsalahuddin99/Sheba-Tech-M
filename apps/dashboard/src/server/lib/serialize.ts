@@ -168,15 +168,23 @@ export function serializeSale(raw: PrismaSale): Sale {
     customerReferencePerson: raw.customer?.referencePerson ?? undefined,
     customerEmail: raw.customer?.email ?? undefined,
     customerAddress: raw.customer?.address ?? undefined,
-    items: (raw.items ?? []).map((i: typeof raw.items[number] & { serialNumbers?: Array<{ serial: string }> }) => ({
-      productId: i.productId,
-      name: i.name ?? "",
-      price: toNumber(i.price),
-      qty: i.qty,
-      discount: toNumber(i.discount),
-      warrantyMonths: i.warrantyMonths ?? undefined,
-      serials: i.serialNumbers?.map((sn) => sn.serial) ?? undefined,
-    })),
+    items: (raw.items ?? []).map((i: typeof raw.items[number] & { serialNumbers?: Array<{ serial: string }>; product?: any }) => {
+      const b = i.product?.globalBrand?.name;
+      const m = i.product?.globalModel?.name;
+      let finalName = i.name ?? "";
+      if (b && !finalName.toLowerCase().startsWith(b.toLowerCase())) finalName = `${b} ${finalName}`;
+      if (m && !finalName.toLowerCase().endsWith(m.toLowerCase())) finalName = `${finalName} - ${m}`;
+      return {
+        id: i.id,
+        productId: i.productId,
+        name: finalName,
+        price: toNumber(i.price),
+        qty: i.qty,
+        discount: toNumber(i.discount),
+        warrantyMonths: i.warrantyMonths ?? undefined,
+        serials: i.serialNumbers?.map((sn) => sn.serial) ?? undefined,
+      };
+    }),
     subtotal: toNumber(raw.subtotal),
     discount: toNumber(raw.discount),
     total,

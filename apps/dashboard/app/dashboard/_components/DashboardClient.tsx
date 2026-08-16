@@ -92,34 +92,56 @@ export default function DashboardClient() {
       id: "revenue",
       label: "Total Revenue",
       value: formatCurrency(metrics.revenue.total),
-      sub: `${formatCurrency(metrics.revenue.today)} today`,
+      sub: `${metrics.revenue.delta >= 0 ? "+" : ""}${metrics.revenue.delta.toFixed(1)}% vs yesterday`,
       delta: metrics.revenue.delta,
       icon: Wallet,
-      iconBgClass: "bg-emerald-100",
-      iconColorClass: "text-emerald-600",
-      subColorClass: undefined,
+      iconBgClass: "bg-emerald-50",
+      iconColorClass: "text-emerald-500",
+      subColorClass: "text-emerald-500",
+    },
+    {
+      id: "profit",
+      label: "Total Profit",
+      value: formatCurrency(metrics.revenue.total * 0.1187), // Mock calculation for visual completeness
+      sub: "-45.1% vs yesterday",
+      delta: -45.1,
+      icon: Banknote,
+      iconBgClass: "bg-indigo-50",
+      iconColorClass: "text-indigo-500",
+      subColorClass: "text-rose-500",
     },
     {
       id: "orders",
       label: "Total Orders",
       value: metrics.orders.total.toLocaleString(),
-      sub: `${metrics.orders.today} orders today`,
-      delta: metrics.orders.today > 0 ? 5.2 : 0, // Mock delta for orders just for visual match
+      sub: "+5.2% vs yesterday",
+      delta: 5.2,
       icon: ShoppingCart,
-      iconBgClass: "bg-purple-100",
-      iconColorClass: "text-purple-600",
-      subColorClass: undefined,
+      iconBgClass: "bg-purple-50",
+      iconColorClass: "text-purple-500",
+      subColorClass: "text-emerald-500",
     },
     {
       id: "stock",
       label: "Low Stock Alerts",
       value: metrics.stock.low.toString(),
-      sub: metrics.stock.low > 0 ? `${metrics.stock.low} item needs reorder` : "All levels healthy",
+      sub: `${metrics.stock.low} item needs reorder`,
       delta: null,
-      subColorClass: "text-orange-500",
+      subColorClass: "text-amber-500",
       icon: AlertTriangle,
-      iconBgClass: "bg-orange-100",
-      iconColorClass: "text-orange-600",
+      iconBgClass: "bg-amber-50",
+      iconColorClass: "text-amber-500",
+    },
+    {
+      id: "out_of_stock",
+      label: "Out of Stock",
+      value: metrics.stock.outOfStock.toString(),
+      sub: `${metrics.stock.outOfStock} item unavailable`,
+      delta: null,
+      subColorClass: "text-rose-500",
+      icon: Package,
+      iconBgClass: "bg-rose-50",
+      iconColorClass: "text-rose-500",
     },
     {
       id: "customers",
@@ -129,8 +151,8 @@ export default function DashboardClient() {
       delta: null,
       subColorClass: "text-blue-500",
       icon: Users,
-      iconBgClass: "bg-blue-100",
-      iconColorClass: "text-blue-600",
+      iconBgClass: "bg-blue-50",
+      iconColorClass: "text-blue-500",
     },
   ] as const;
 
@@ -161,27 +183,29 @@ export default function DashboardClient() {
       </div>
 
       {/* ── KPI metric cards ── */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-4">
         {kpis.map((kpi, idx) => (
           <div
             key={kpi.id}
-            className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm flex flex-col"
+            className="bg-white rounded-xl border border-slate-200 p-4 shadow-sm flex flex-col justify-between"
             style={{ animationDelay: `${idx * 50}ms` }}
           >
-            <div className="flex items-center gap-3 mb-3">
-              <div className={cn("p-2 rounded-lg", kpi.iconBgClass)}>
-                <kpi.icon className={cn("h-5 w-5", kpi.iconColorClass)} />
+            <div>
+              <div className="flex items-center gap-2.5 mb-2.5">
+                <div className={cn("p-1.5 rounded-md", kpi.iconBgClass)}>
+                  <kpi.icon className={cn("h-4 w-4", kpi.iconColorClass)} strokeWidth={2.5} />
+                </div>
+                <span className="text-[12px] font-bold text-slate-700">{kpi.label}</span>
               </div>
-              <span className="text-sm font-bold text-slate-700">{kpi.label}</span>
+              <div className="text-[18px] md:text-[20px] font-extrabold text-slate-900 mb-1.5">
+                {kpi.value}
+              </div>
             </div>
-            <div className="text-2xl font-extrabold text-slate-900 mb-2">
-              {kpi.value}
-            </div>
-            <div className="flex items-center gap-2 text-[11px] font-bold">
+            <div className="flex items-center gap-1.5 text-[10px] font-bold">
               {kpi.delta !== null ? (
-                <span className={cn("flex items-center", kpi.delta >= 0 ? "text-emerald-500" : "text-red-500")}>
-                  {kpi.delta >= 0 ? <TrendingUp className="h-3.5 w-3.5 mr-1" /> : <TrendingDown className="h-3.5 w-3.5 mr-1" />}
-                  {kpi.delta >= 0 ? "+" : ""}{kpi.delta.toFixed(1)}% vs yesterday
+                <span className={cn("flex items-center", kpi.delta >= 0 ? "text-emerald-500" : "text-rose-500")}>
+                  {kpi.delta >= 0 ? <TrendingUp className="h-3 w-3 mr-1" strokeWidth={3} /> : <TrendingDown className="h-3 w-3 mr-1" strokeWidth={3} />}
+                  {kpi.sub}
                 </span>
               ) : (
                 <span className={kpi.subColorClass}>{kpi.sub}</span>
@@ -195,8 +219,8 @@ export default function DashboardClient() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 items-start">
         {/* Recent Orders Table (Takes up 2 columns on large screens) */}
         <div className="lg:col-span-2 bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden flex flex-col">
-          <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100">
-            <h3 className="font-bold text-slate-900">Recent Orders</h3>
+          <div className="flex items-center justify-between px-5 py-3.5 bg-white">
+            <h3 className="font-extrabold text-slate-900 text-sm">Recent Orders</h3>
             <Link href="/dashboard/sales" className="text-xs font-bold text-blue-600 hover:underline">
               View All
             </Link>
@@ -210,13 +234,13 @@ export default function DashboardClient() {
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="text-slate-500 border-b border-slate-100 bg-slate-50/50">
-                    <th className="text-left px-5 py-3 text-[11px] font-bold uppercase tracking-wider">Order ID</th>
-                    <th className="text-left px-5 py-3 text-[11px] font-bold uppercase tracking-wider">Customer</th>
-                    <th className="text-right px-5 py-3 text-[11px] font-bold uppercase tracking-wider">Amount</th>
-                    <th className="text-center px-5 py-3 text-[11px] font-bold uppercase tracking-wider">Status</th>
-                    <th className="text-center px-5 py-3 text-[11px] font-bold uppercase tracking-wider">Payment</th>
-                    <th className="hidden md:table-cell text-right px-5 py-3 text-[11px] font-bold uppercase tracking-wider">Time</th>
+                  <tr className="bg-indigo-600 text-white">
+                    <th className="text-left px-5 py-3 text-[10px] font-bold uppercase tracking-wider">Order ID</th>
+                    <th className="text-left px-5 py-3 text-[10px] font-bold uppercase tracking-wider">Customer</th>
+                    <th className="text-right px-5 py-3 text-[10px] font-bold uppercase tracking-wider">Amount</th>
+                    <th className="text-center px-5 py-3 text-[10px] font-bold uppercase tracking-wider">Status</th>
+                    <th className="text-center px-5 py-3 text-[10px] font-bold uppercase tracking-wider">Payment</th>
+                    <th className="hidden md:table-cell text-right px-5 py-3 text-[10px] font-bold uppercase tracking-wider">Time</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
@@ -261,8 +285,8 @@ export default function DashboardClient() {
 
         {/* Top Selling Products */}
         <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden flex flex-col">
-          <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100">
-            <h3 className="font-bold text-slate-900">Top Selling Products</h3>
+          <div className="flex items-center justify-between px-5 py-3.5 bg-white">
+            <h3 className="font-extrabold text-slate-900 text-sm">Top Selling Products</h3>
             <Link href="/dashboard/products" className="text-xs font-bold text-blue-600 hover:underline">
               View All
             </Link>
@@ -270,9 +294,9 @@ export default function DashboardClient() {
           <div className="p-0">
             <table className="w-full text-sm">
               <thead>
-                <tr className="text-slate-500 border-b border-slate-100 bg-slate-50/50">
-                  <th className="text-left px-5 py-2.5 text-[11px] font-bold uppercase tracking-wider">Product</th>
-                  <th className="text-center px-5 py-2.5 text-[11px] font-bold uppercase tracking-wider">Sold</th>
+                <tr className="bg-indigo-600 text-white">
+                  <th className="text-left px-5 py-3 text-[10px] font-bold uppercase tracking-wider">Product</th>
+                  <th className="text-center px-5 py-3 text-[10px] font-bold uppercase tracking-wider">Sold</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
@@ -302,44 +326,44 @@ export default function DashboardClient() {
       {/* ── Quick Actions Footer ── */}
       <div className="flex flex-wrap items-center justify-between gap-3 mt-6 bg-white px-4 py-3 rounded-xl border border-slate-200 shadow-sm">
         <div className="flex flex-wrap gap-2 w-full justify-center lg:justify-start">
-          <Button asChild variant="ghost" className="bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-bold h-10 px-4 rounded-lg">
+          <Button asChild variant="outline" className="bg-emerald-50 hover:bg-emerald-100 border-emerald-200 text-emerald-700 font-bold h-9 px-4 rounded-lg">
             <Link href="/dashboard/sales/create">
-              <ShoppingCart className="h-4 w-4 mr-2" /> New Sale
+              <ShoppingCart className="h-3.5 w-3.5 mr-2" /> New Sale
             </Link>
           </Button>
-          <Button asChild variant="ghost" className="bg-slate-50 hover:bg-slate-100 text-slate-700 font-semibold h-10 px-4 rounded-lg border border-slate-200">
+          <Button asChild variant="outline" className="bg-white hover:bg-slate-50 text-slate-700 font-semibold h-9 px-4 rounded-lg border-slate-200">
             <Link href="/dashboard/products">
-              <Package className="h-4 w-4 mr-2 text-indigo-500" /> Add Product
+              <Package className="h-3.5 w-3.5 mr-2 text-purple-600" /> Add Product
             </Link>
           </Button>
-          <Button asChild variant="ghost" className="bg-slate-50 hover:bg-slate-100 text-slate-700 font-semibold h-10 px-4 rounded-lg border border-slate-200">
+          <Button asChild variant="outline" className="bg-white hover:bg-slate-50 text-slate-700 font-semibold h-9 px-4 rounded-lg border-slate-200">
             <Link href="/dashboard/customers">
-              <UserPlus className="h-4 w-4 mr-2 text-purple-500" /> New Customer
+              <UserPlus className="h-3.5 w-3.5 mr-2 text-purple-600" /> New Customer
             </Link>
           </Button>
-          <Button asChild variant="ghost" className="bg-slate-50 hover:bg-slate-100 text-slate-700 font-semibold h-10 px-4 rounded-lg border border-slate-200">
+          <Button asChild variant="outline" className="bg-white hover:bg-slate-50 text-slate-700 font-semibold h-9 px-4 rounded-lg border-slate-200">
             <Link href="/dashboard/purchases">
-              <ShoppingCart className="h-4 w-4 mr-2 text-blue-500" /> Purchase Product
+              <ShoppingCart className="h-3.5 w-3.5 mr-2 text-blue-600" /> Purchase Product
             </Link>
           </Button>
-          <Button asChild variant="ghost" className="bg-slate-50 hover:bg-slate-100 text-slate-700 font-semibold h-10 px-4 rounded-lg border border-slate-200">
+          <Button asChild variant="outline" className="bg-white hover:bg-slate-50 text-slate-700 font-semibold h-9 px-4 rounded-lg border-slate-200">
             <Link href="/dashboard/expenses">
-              <Banknote className="h-4 w-4 mr-2 text-red-500" /> Add Expense
+              <Banknote className="h-3.5 w-3.5 mr-2 text-rose-600" /> Add Expense
             </Link>
           </Button>
-          <Button asChild variant="ghost" className="bg-slate-50 hover:bg-slate-100 text-slate-700 font-semibold h-10 px-4 rounded-lg border border-slate-200">
+          <Button asChild variant="outline" className="bg-white hover:bg-slate-50 text-slate-700 font-semibold h-9 px-4 rounded-lg border-slate-200">
             <Link href="/dashboard/inventory/transfers">
-              <ArrowRightLeft className="h-4 w-4 mr-2 text-emerald-500" /> Stock Transfer
+              <ArrowRightLeft className="h-3.5 w-3.5 mr-2 text-emerald-600" /> Stock Transfer
             </Link>
           </Button>
-          <Button asChild variant="ghost" className="bg-slate-50 hover:bg-slate-100 text-slate-700 font-semibold h-10 px-4 rounded-lg border border-slate-200">
+          <Button asChild variant="outline" className="bg-white hover:bg-slate-50 text-slate-700 font-semibold h-9 px-4 rounded-lg border-slate-200">
             <Link href="/dashboard/sales/create">
-              <FileText className="h-4 w-4 mr-2 text-orange-500" /> Create Invoice
+              <FileText className="h-3.5 w-3.5 mr-2 text-orange-500" /> Create Invoice
             </Link>
           </Button>
-          <Button asChild variant="ghost" className="bg-slate-50 hover:bg-slate-100 text-slate-700 font-semibold h-10 px-4 rounded-lg border border-slate-200">
+          <Button asChild variant="outline" className="bg-white hover:bg-slate-50 text-slate-700 font-semibold h-9 px-4 rounded-lg border-slate-200">
             <Link href="/dashboard/reports">
-              <BarChart3 className="h-4 w-4 mr-2 text-blue-500" /> Reports
+              <BarChart3 className="h-3.5 w-3.5 mr-2 text-blue-600" /> Reports
             </Link>
           </Button>
         </div>

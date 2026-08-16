@@ -24,6 +24,9 @@ async function runSaleListQuery(ctx: Ctx, params?: PaginationParams, filter?: Sa
       { id: { contains: q, mode: "insensitive" } },
       { customer: { name: { contains: q, mode: "insensitive" } } },
       { customer: { phone: { contains: q, mode: "insensitive" } } },
+      { items: { some: { name: { contains: q, mode: "insensitive" } } } },
+      { items: { some: { serialNumbers: { some: { serial: { contains: q, mode: "insensitive" } } } } } },
+      { data: { path: ['invoiceNo'], string_contains: q } }
     ];
   }
   
@@ -45,6 +48,10 @@ async function runSaleListQuery(ctx: Ctx, params?: PaginationParams, filter?: Sa
     };
   }
 
+  if (filter?.status) {
+    where.status = filter.status;
+  }
+
   let orderBy: any = { createdAt: "desc" };
   if (filter?.sortKey) {
     if (filter.sortKey === "date") orderBy = { createdAt: filter.sortDir || "desc" };
@@ -55,7 +62,7 @@ async function runSaleListQuery(ctx: Ctx, params?: PaginationParams, filter?: Sa
   const raw = await paginate(
     prisma.sale,
     // serialNumbers omitted from list — only needed in getById detail view
-    { where, include: { items: true, tenders: true, customer: true, editedBy: true, user: true } } as any,
+    { where, include: { items: { include: { product: { include: { globalBrand: true, globalModel: true } } } }, tenders: true, customer: true, editedBy: true, user: true } } as any,
     params,
     { orderBy },
   );
@@ -87,7 +94,7 @@ export async function getById(ctx: Ctx, id: string) {
   const raw = await prisma.sale.findFirst({
     where: { id },
     include: {
-      items: { include: { serialNumbers: true } } as any,
+      items: { include: { serialNumbers: true, product: { include: { globalBrand: true, globalModel: true } } } } as any,
       tenders: true,
       customer: true,
       user: true,
@@ -101,7 +108,7 @@ export async function getById(ctx: Ctx, id: string) {
 export async function byCustomer(ctx: Ctx, customerId: string) {
   const raw = await prisma.sale.findMany({
     where: { customerId },
-    include: { items: true, tenders: true, customer: true, editedBy: true, user: true },
+    include: { items: { include: { product: { include: { globalBrand: true, globalModel: true } } } }, tenders: true, customer: true, editedBy: true, user: true },
     orderBy: { createdAt: "desc" },
     take: 50,
   });

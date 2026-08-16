@@ -14,6 +14,7 @@ import {
   deleteReturnAction,
   collectSaleDueAction,
   bulkCollectSaleDueAction,
+  exchangeSaleAction,
 } from "@/server/actions/sales";
 
 export interface PaginatedResponse<T> {
@@ -85,5 +86,11 @@ export const salesApi = {
 
   bulkCollectDue(input: { customerId: string; amount: number; accountId: string; type: string; notes?: string }): Promise<any> {
     return bulkCollectSaleDueAction(input) as unknown as Promise<any>;
+  },
+
+  async exchange(input: Record<string, unknown>): Promise<any> {
+    const res = await exchangeSaleAction(input) as any;
+    if (res && res.__error) throw new Error(res.__error);
+    return res.data;
   },
 };

@@ -168,8 +168,8 @@ export function useSettingsForm() {
 
   const updateMutation = useUpdateSettings();
 
-  const save = useCallback(async () => {
-    await updateMutation.mutateAsync(form);
+  const save = useCallback(async (overrideForm?: Partial<ShopSettings>) => {
+    await updateMutation.mutateAsync({ ...form, ...(overrideForm || {}) });
   }, [form, updateMutation]);
 
   return {

@@ -224,11 +224,10 @@ export function ProductFilterBar({
                   let availableStock = Number(p.stock ?? 0);
                   if (warehouseId && p.warehouseStocks) {
                     const wStock = p.warehouseStocks.find((ws: any) => ws.warehouseId === warehouseId);
-                    // Strict filtering: only show stock available in this warehouse
-                    availableStock = wStock ? Number(wStock.qty ?? 0) : 0;
+                    availableStock = wStock ? Number(wStock.qty ?? 0) : Number(p.stock ?? 0);
                   }
 
-                  const available = availableStock - inInvoice;
+                  const available = availableStock;
                   const q = searchQuery.trim().toLowerCase();
                   const matchedTags = q && Array.isArray(p.searchTags) 
                     ? p.searchTags.filter((t: string) => t.toLowerCase().includes(q))

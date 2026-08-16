@@ -40,6 +40,7 @@ export interface SaleListFilter {
   to?: Date;
   search?: string;
   paymentMethod?: string;
+  status?: string;
   sortKey?: string;
   sortDir?: "asc" | "desc";
 }

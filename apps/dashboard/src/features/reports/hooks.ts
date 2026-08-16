@@ -51,6 +51,7 @@ export interface ReportsMetrics {
   returnTotal: number;
   paidSalesReturn: number;
   dueSalesReturn: number;
+  dueCollected: number;
 }
 
 export function useReportsMetricsQuery(

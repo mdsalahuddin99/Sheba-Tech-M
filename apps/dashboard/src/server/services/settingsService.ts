@@ -80,12 +80,14 @@ export const settingsService = {
 
   /** Update settings for the current shop. */
   async update(ctx: Ctx, input: Partial<ShopSettings>): Promise<ShopSettings> {
-    // Fetch the single shop record to get its ID
-    const shop = await prisma.shop.findFirst({ select: { id: true } });
+    // Fetch the single shop record to get its ID and current settings
+    const shop = await prisma.shop.findFirst({ select: { id: true, settings: true } });
     if (!shop) throw new ServiceError("NOT_FOUND", "Shop not found", 404);
 
+    const currentSettings = (shop.settings as Record<string, unknown>) || {};
+
     // Build the JSON to store: everything except shopName/logoUrl goes into settings column
-    const settingsUpdate: Record<string, unknown> = {};
+    const settingsUpdate: Record<string, unknown> = { ...currentSettings };
 
     // Fields that live in the settings JSON column
     const settingsKeys: (keyof ShopSettings)[] = [
@@ -114,9 +116,7 @@ export const settingsService = {
         ...(input.shopName !== undefined && { name: input.shopName }),
         ...(input.logoUrl !== undefined && { logoUrl: input.logoUrl }),
         // Everything else goes into the JSON settings column
-        ...(Object.keys(settingsUpdate).length > 0 && {
-          settings: settingsUpdate as Prisma.InputJsonValue,
-        }),
+        settings: settingsUpdate as Prisma.InputJsonValue,
       },
     });
 

@@ -60,7 +60,8 @@ export function CreateSaleClient() {
     quickPhone, setQuickPhone, heldOpen, setHeldOpen,
     draftPreview, setDraftPreview, vSearchRef, voucherRowRefs,
     heldSales, refetchHeldSales, currentCustomer, customers,
-    loadDraftId, subtotal, invoiceTotal, addProductToVoucher,
+    loadDraftId, subtotal, invoiceTotal, addProductToVoucher, exchangeTotalReturn,
+    exchangeSaleId, exchangeSale, exchangeReturnItems, setExchangeReturnItems, exchangeReason, setExchangeReason,
     handleBarcodeEnter, changeQty, changeSerials, changeWarranty,
     changePrice, changeDiscount, removeRow, clearVoucher, holdCurrentSale,
     resumeHeldSale, deleteHeldSale, handleCheckout, handleCameraBarcode,
@@ -244,6 +245,55 @@ export function CreateSaleClient() {
               )}
 
               <div className="flex-1 min-w-0">
+                {exchangeSaleId && exchangeSale && (
+                  <div className="bg-amber-50 border border-amber-200 p-3 rounded-[4px] mb-2">
+                    <h3 className="text-sm font-bold text-amber-800 mb-2">Exchange: Return Items from #{exchangeSale.invoiceNo}</h3>
+                    <div className="space-y-2">
+                      {exchangeSale.items.map((item: any) => {
+                        const returnedQty = exchangeReturnItems.find(r => r.id === item.id)?.qty || 0;
+                        return (
+                          <div key={item.id} className="flex items-center justify-between bg-white p-2 border border-amber-100 rounded-[4px]">
+                            <div>
+                              <p className="font-semibold text-sm">{item.name}</p>
+                              <p className="text-xs text-muted-foreground">{formatCurrency(Number(item.price))} × {item.qty} purchased</p>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <span className="text-xs font-medium">Return Qty:</span>
+                              <Input 
+                                type="number" 
+                                min="0" 
+                                max={item.qty} 
+                                value={returnedQty || ""}
+                                onChange={(e) => {
+                                  const val = Math.min(item.qty, Math.max(0, parseInt(e.target.value) || 0));
+                                  setExchangeReturnItems(prev => {
+                                    const filtered = prev.filter(p => p.id !== item.id);
+                                    if (val > 0) {
+                                      return [...filtered, { id: item.id, productId: item.productId, qty: val, price: Number(item.price) }];
+                                    }
+                                    return filtered;
+                                  });
+                                }}
+                                className="w-16 h-8 text-center"
+                              />
+                            </div>
+                          </div>
+                        )
+                      })}
+                    </div>
+                    <div className="mt-3 flex justify-between items-center border-t border-amber-200 pt-2">
+                      <Input
+                        value={exchangeReason}
+                        onChange={(e) => setExchangeReason(e.target.value)}
+                        placeholder="Reason for exchange..."
+                        className="h-8 text-xs w-64 border-amber-300 bg-white"
+                      />
+                      <div className="text-right font-bold text-amber-900">
+                        Total Return Value: {formatCurrency(exchangeTotalReturn)}
+                      </div>
+                    </div>
+                  </div>
+                )}
                 {!selectedWarehouseId ? (
                   <div className="flex h-9 sm:h-10 items-center justify-center text-sm text-slate-400 border border-dashed rounded-[4px]">
                     {isLoading ? "Loading POS data..." : "Select warehouse first"}
@@ -294,13 +344,19 @@ export function CreateSaleClient() {
                   />
 
                   {/* Invoice subtotal summary (above payment) */}
-                  {voucherRows.length > 0 && (
+                  {(voucherRows.length > 0 || exchangeTotalReturn > 0) && (
                     <div className="flex justify-end pr-1">
                       <div className="text-xs text-slate-500 font-medium">
                         {voucherRows.length} item{voucherRows.length !== 1 ? "s" : ""} ·{" "}
-                        Subtotal:{" "}
+                        New Items Subtotal: <span className="font-semibold tabular-nums">{formatCurrency(subtotal)}</span>
+                        {exchangeTotalReturn > 0 && (
+                          <>
+                            {" "}· Return Credit: <span className="font-semibold tabular-nums text-emerald-600">-{formatCurrency(exchangeTotalReturn)}</span>
+                          </>
+                        )}
+                        {" "}· Net Payable:{" "}
                         <span className="font-extrabold text-slate-800 tabular-nums">
-                          {formatCurrency(subtotal)}
+                          {formatCurrency(invoiceTotal)}
                         </span>
                       </div>
                     </div>
@@ -388,7 +444,7 @@ export function CreateSaleClient() {
               {/* Right Sub-column: Payment Collector */}
               <div className="lg:col-span-8 space-y-2">
                 <PaymentCollector
-                  subtotal={subtotal}
+                  subtotal={invoiceTotal}
                   payments={payments}
                   onAddPayment={(p) => setPayments((prev) => [...prev, p])}
                   onRemovePayment={(idx) => {
@@ -466,12 +522,12 @@ export function CreateSaleClient() {
                 )}
                 <LoadingButton
                   loading={isCheckingOut || saleLoading}
-                  disabled={voucherRows.length === 0 || !selectedWarehouseId}
+                  disabled={(!exchangeSaleId && voucherRows.length === 0) || !selectedWarehouseId || (exchangeSaleId && exchangeReturnItems.length === 0)}
                   className="h-8 sm:h-10 bg-primary text-primary-foreground shadow-none hover:bg-primary/95 min-w-0 sm:min-w-32 rounded-[4px] font-bold text-[10px] sm:text-xs px-2 sm:px-4 flex-1 sm:flex-none whitespace-nowrap"
                   onClick={handleCheckout}
                 >
                   <CheckCircle2 className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-1.5 hidden sm:inline" />
-                  {editingSaleId ? "Update" : "Save Invoice"}
+                  {exchangeSaleId ? "Complete Exchange" : editingSaleId ? "Update" : "Save Invoice"}
                 </LoadingButton>
               </div>
             </div>

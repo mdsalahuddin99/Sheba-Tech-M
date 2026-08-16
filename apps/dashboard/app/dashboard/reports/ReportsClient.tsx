@@ -18,7 +18,7 @@ import {
   Tooltip, CartesianGrid, ResponsiveContainer, Legend,
 } from "recharts";
 import { formatCurrency, formatDate } from "@/shared/lib/format";
-import { Download, BarChart3, Boxes, Receipt, Calculator, TrendingUp, TrendingDown, Layers, Box, Printer, Search, UserMinus, Scale, CreditCard, ArrowDownRight, ArrowUpRight, Percent, ClipboardList, AlertCircle, RefreshCw, Phone } from "lucide-react";
+import { Download, BarChart3, Boxes, Receipt, Calculator, TrendingUp, TrendingDown, Layers, Box, Printer, Search, UserMinus, Scale, CreditCard, ArrowDownRight, ArrowUpRight, Percent, ClipboardList, AlertCircle, RefreshCw, Phone, PackageX } from "lucide-react";
 import { toast } from "sonner";
 import { useReportsMetricsQuery, useInventoryMetricsQuery, useDuesMetricsQuery, useExpensesDetailedQuery } from "@/features/reports/hooks";
 import { cn } from "@/shared/lib/utils";
@@ -90,6 +90,8 @@ export function ReportsClient({
 
   const [activeTab, setActiveTab] = useState("pl");
   const [searchLowStock, setSearchLowStock] = useState("");
+  const [searchOutOfStock, setSearchOutOfStock] = useState("");
+  const [searchDeadStock, setSearchDeadStock] = useState("");
   const [searchExpense, setSearchExpense] = useState("");
 
   const isInitialDateRange = initialFromDate && initialToDate && from === initialFromDate && to === initialToDate && method === "All";
@@ -186,6 +188,19 @@ export function ReportsClient({
     ];
     downloadCSV(`low_stock_report.csv`, rows);
     toast.success("Low stock report downloaded!");
+  };
+
+  const exportOutOfStock = () => {
+    if (!inventory) return;
+    const rows: (string | number)[][] = [
+      ["Out of Stock Report"],
+      ["Generated on", new Date().toLocaleDateString()],
+      [""],
+      ["Product Name", "Current Stock"],
+      ...inventory.lowStock.filter((p: any) => p.stock <= 0).map((p: any) => [p.name, p.stock])
+    ];
+    downloadCSV(`out_of_stock_report.csv`, rows);
+    toast.success("Out of stock report downloaded!");
   };
 
   const exportDeadStock = () => {
@@ -353,10 +368,10 @@ export function ReportsClient({
     else if (from === "2020-01-01" && to === todayStr) activePreset = "allTime";
 
     return (
-    <div className="flex flex-col xl:flex-row justify-between items-start xl:items-end gap-3 mb-6 bg-slate-50/80 backdrop-blur-md p-4 rounded-2xl border border-slate-200/60 shadow-sm print:hidden">
-      <div className="flex flex-col gap-3 w-full xl:w-auto">
-        <div className="flex items-center gap-1.5 flex-wrap">
-          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mr-2">Presets:</span>
+    <div className="flex flex-col xl:flex-row justify-between items-center gap-3 mb-6 bg-white p-3 rounded-2xl border border-slate-200 shadow-sm print:hidden">
+      <div className="flex items-center gap-3 w-full xl:w-auto overflow-x-auto">
+        <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest pl-2">Presets:</span>
+        <div className="flex items-center gap-1.5 shrink-0">
           {["today", "yesterday", "thisWeek", "thisMonth", "allTime"].map((preset) => {
             const labelMap = {
               today: "Today",
@@ -372,10 +387,10 @@ export function ReportsClient({
                 size="sm"
                 variant={isActive ? "default" : "outline"}
                 className={cn(
-                  "h-7 text-[11px] font-bold px-3 rounded-lg shadow-sm transition-all",
+                  "h-8 text-[11px] font-bold px-3.5 rounded-lg shadow-sm transition-all",
                   isActive 
-                    ? "bg-indigo-600 hover:bg-indigo-700 text-white border-indigo-600" 
-                    : "text-slate-700 bg-white hover:bg-slate-50 hover:text-slate-900 border-slate-200/80 hover:border-slate-300 shadow-slate-100/30"
+                    ? "bg-slate-800 hover:bg-slate-900 text-white border-slate-800" 
+                    : "text-slate-600 bg-white hover:bg-slate-50 hover:text-slate-900 border-slate-200 shadow-sm"
                 )}
                 onClick={() => setPreset(preset as any)}
               >
@@ -384,34 +399,32 @@ export function ReportsClient({
             );
           })}
         </div>
-        <div className="flex flex-wrap items-end gap-3">
-          <div className="flex items-center gap-2 bg-white border border-slate-200/80 rounded-xl p-1.5 shadow-sm">
-            <span className="text-[10px] font-bold text-slate-400 uppercase px-1.5">From</span>
-            <Input type="date" value={from} onChange={(e) => setFrom(e.target.value)} className="h-7 w-[120px] text-xs bg-transparent border-none shadow-none focus-visible:ring-0 p-0 text-slate-700 font-medium" />
-            <span className="text-[10px] font-bold text-slate-400 uppercase px-1.5 border-l border-slate-100">To</span>
-            <Input type="date" value={to} onChange={(e) => setTo(e.target.value)} className="h-7 w-[120px] text-xs bg-transparent border-none shadow-none focus-visible:ring-0 p-0 text-slate-700 font-medium" />
-          </div>
-          {showMethod && (
-            <div className="flex items-center gap-2 bg-white border border-slate-200/80 rounded-xl p-1.5 shadow-sm">
-              <span className="text-[10px] font-bold text-slate-400 uppercase px-2">Method</span>
-              <Select value={method} onValueChange={setMethod}>
-                <SelectTrigger className="w-[130px] h-7 text-xs bg-transparent border-none shadow-none px-1 focus:ring-0 font-medium text-slate-700"><SelectValue /></SelectTrigger>
-                <SelectContent className="rounded-xl border border-slate-200">
-                  <SelectItem value="All">All Tenders</SelectItem>
-                  <SelectItem value="Cash">Cash</SelectItem>
-                  <SelectItem value="Card">Card</SelectItem>
-                  <SelectItem value="Mobile Banking">Mobile</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          )}
+        <div className="flex items-center gap-2 bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 shadow-sm ml-1 shrink-0">
+          <span className="text-[10px] font-bold text-slate-400 uppercase">From</span>
+          <Input type="date" value={from} onChange={(e) => setFrom(e.target.value)} className="h-6 w-[110px] text-xs font-semibold bg-transparent border-none shadow-none focus-visible:ring-0 p-0 text-slate-700" />
+          <span className="text-[10px] font-bold text-slate-400 uppercase pl-2 border-l border-slate-100">To</span>
+          <Input type="date" value={to} onChange={(e) => setTo(e.target.value)} className="h-6 w-[110px] text-xs font-semibold bg-transparent border-none shadow-none focus-visible:ring-0 p-0 text-slate-700" />
         </div>
+        {showMethod && (
+          <div className="flex items-center gap-2 bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 shadow-sm shrink-0">
+            <span className="text-[10px] font-bold text-slate-400 uppercase">Method</span>
+            <Select value={method} onValueChange={setMethod}>
+              <SelectTrigger className="w-[110px] h-6 text-xs bg-transparent border-none shadow-none p-0 focus:ring-0 font-semibold text-slate-700"><SelectValue /></SelectTrigger>
+              <SelectContent className="rounded-xl border border-slate-200">
+                <SelectItem value="All">All Tenders</SelectItem>
+                <SelectItem value="Cash">Cash</SelectItem>
+                <SelectItem value="Card">Card</SelectItem>
+                <SelectItem value="Mobile Banking">Mobile</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        )}
       </div>
-      <div className="flex items-center gap-2.5 w-full xl:w-auto xl:justify-end mt-2 xl:mt-0">
-        <Button size="sm" variant="outline" className="h-9 text-xs font-semibold rounded-xl border-slate-200 hover:bg-slate-50 hover:text-slate-900 transition-all" onClick={onExport}>
+      <div className="flex items-center gap-2.5 w-full xl:w-auto xl:justify-end shrink-0">
+        <Button size="sm" variant="outline" className="h-9 text-xs font-bold rounded-xl bg-slate-50 border-slate-200 hover:bg-slate-100 text-slate-700 transition-all shadow-sm" onClick={onExport}>
           <Download className="h-3.5 w-3.5 mr-2 text-slate-500" /> Export CSV
         </Button>
-        <Button size="sm" className="h-9 text-xs font-semibold rounded-xl bg-slate-900 hover:bg-slate-800 text-white shadow-sm transition-all" onClick={handlePrint}>
+        <Button size="sm" className="h-9 text-xs font-bold rounded-xl bg-slate-900 hover:bg-slate-800 text-white shadow-sm transition-all" onClick={handlePrint}>
           <Printer className="h-3.5 w-3.5 mr-2" /> Print {printLabel}
         </Button>
       </div>
@@ -442,81 +455,112 @@ export function ReportsClient({
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         
-        {/* Tabs switcher Container */}
-        <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-4 mb-5 print:hidden">
-          <div className="bg-slate-100/80 backdrop-blur-md p-1.5 rounded-2xl border border-slate-200/60 inline-flex overflow-x-auto w-full xl:w-auto shadow-sm shadow-slate-100/50">
-            <TabsList className="bg-transparent gap-1.5 w-full justify-start h-auto p-0">
-              {[
-                { 
-                  value: "pl", 
-                  label: "P&L / লাভ-ক্ষতি", 
-                  icon: Calculator,
-                  activeClass: "data-[state=active]:bg-indigo-600 data-[state=active]:text-white data-[state=active]:border-indigo-600 data-[state=active]:shadow-md",
-                  hoverClass: "hover:bg-indigo-50/80 hover:text-indigo-700 hover:border-indigo-200/30",
-                  iconColor: "text-indigo-500 group-hover:text-indigo-600 group-data-[state=active]:text-white"
-                },
-                { 
-                  value: "sales", 
-                  label: "Sales / বিক্রি", 
-                  icon: Receipt,
-                  activeClass: "data-[state=active]:bg-emerald-600 data-[state=active]:text-white data-[state=active]:border-emerald-600 data-[state=active]:shadow-md",
-                  hoverClass: "hover:bg-emerald-50/80 hover:text-emerald-700 hover:border-emerald-200/30",
-                  iconColor: "text-emerald-500 group-hover:text-emerald-600 group-data-[state=active]:text-white"
-                },
-                { 
-                  value: "inventory", 
-                  label: "Inventory / স্টক", 
-                  icon: Boxes,
-                  activeClass: "data-[state=active]:bg-amber-500 data-[state=active]:text-white data-[state=active]:border-amber-500 data-[state=active]:shadow-md",
-                  hoverClass: "hover:bg-amber-50/80 hover:text-amber-700 hover:border-amber-200/30",
-                  iconColor: "text-amber-500 group-hover:text-amber-600 group-data-[state=active]:text-white"
-                },
-                { 
-                  value: "dues", 
-                  label: "Dues / বকেয়া", 
-                  icon: UserMinus,
-                  activeClass: "data-[state=active]:bg-violet-600 data-[state=active]:text-white data-[state=active]:border-violet-600 data-[state=active]:shadow-md",
-                  hoverClass: "hover:bg-violet-50/80 hover:text-violet-700 hover:border-violet-200/30",
-                  iconColor: "text-violet-500 group-hover:text-violet-600 group-data-[state=active]:text-white"
-                },
-                { 
-                  value: "expenses", 
-                  label: "Expenses / খরচ", 
-                  icon: CreditCard,
-                  activeClass: "data-[state=active]:bg-rose-600 data-[state=active]:text-white data-[state=active]:border-rose-600 data-[state=active]:shadow-md",
-                  hoverClass: "hover:bg-rose-50/80 hover:text-rose-700 hover:border-rose-200/30",
-                  iconColor: "text-rose-500 group-hover:text-rose-600 group-data-[state=active]:text-white"
-                },
-              ].map((tab) => {
-                const Icon = tab.icon;
-                return (
-                  <TabsTrigger
-                    key={tab.value}
-                    value={tab.value}
-                    className={cn(
-                      "bg-white/45 text-slate-600 border border-slate-200/30 rounded-xl px-4 py-2 text-[12px] font-bold shadow-sm shadow-slate-100/10 transition-all duration-200 flex items-center h-9 data-[state=active]:shadow-md group",
-                      tab.hoverClass,
-                      tab.activeClass
-                    )}
-                  >
-                    <Icon className={cn("h-4 w-4 mr-2 transition-colors", tab.iconColor)} /> {tab.label}
-                  </TabsTrigger>
-                );
-              })}
-            </TabsList>
+        {/* Top Section: Tabs & Stats in one row */}
+        <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-4 mb-4 print:hidden">
+          
+          <TabsList className="bg-transparent gap-2 w-full xl:w-auto justify-start h-auto p-0 flex-wrap">
+            {[
+              { 
+                value: "pl", 
+                label: "P&L", 
+                icon: ClipboardList,
+                activeClass: "data-[state=active]:bg-indigo-600 data-[state=active]:text-white border-transparent",
+                hoverClass: "hover:bg-slate-50 border-slate-100",
+                iconColor: "text-indigo-500 group-data-[state=active]:text-white"
+              },
+              { 
+                value: "sales", 
+                label: "Sales", 
+                icon: Receipt,
+                activeClass: "data-[state=active]:bg-indigo-600 data-[state=active]:text-white border-transparent",
+                hoverClass: "hover:bg-slate-50 border-slate-100",
+                iconColor: "text-emerald-500 group-data-[state=active]:text-white"
+              },
+              { 
+                value: "inventory", 
+                label: "Inventory", 
+                icon: Boxes,
+                activeClass: "data-[state=active]:bg-indigo-600 data-[state=active]:text-white border-transparent",
+                hoverClass: "hover:bg-slate-50 border-slate-100",
+                iconColor: "text-amber-500 group-data-[state=active]:text-white"
+              },
+              { 
+                value: "dues", 
+                label: "Dues", 
+                icon: UserMinus,
+                activeClass: "data-[state=active]:bg-indigo-600 data-[state=active]:text-white border-transparent",
+                hoverClass: "hover:bg-slate-50 border-slate-100",
+                iconColor: "text-violet-500 group-data-[state=active]:text-white"
+              },
+              { 
+                value: "expenses", 
+                label: "Expenses", 
+                icon: CreditCard,
+                activeClass: "data-[state=active]:bg-indigo-600 data-[state=active]:text-white border-transparent",
+                hoverClass: "hover:bg-slate-50 border-slate-100",
+                iconColor: "text-rose-500 group-data-[state=active]:text-white"
+              },
+            ].map((tab) => {
+              const Icon = tab.icon;
+              return (
+                <TabsTrigger
+                  key={tab.value}
+                  value={tab.value}
+                  className={cn(
+                    "bg-white text-slate-700 border rounded-xl px-4 py-2 text-[13px] font-bold transition-all duration-200 flex items-center h-10 group",
+                    tab.hoverClass,
+                    tab.activeClass
+                  )}
+                >
+                  <Icon className={cn("h-4 w-4 mr-2 transition-colors", tab.iconColor)} strokeWidth={2.5} /> {tab.label}
+                </TabsTrigger>
+              );
+            })}
+          </TabsList>
+
+          {/* Quick Stats Pills */}
+          <div className="flex items-center gap-2 overflow-x-auto pb-2 xl:pb-0 hide-scrollbar w-full xl:w-auto">
+            {activeTab === "pl" && (
+              <>
+                <StatPill label="Total Sales" value={formatCurrency(metrics.totalSales)} icon={TrendingUp} color="indigo" />
+                <StatPill label="Cost of Goods" value={formatCurrency(metrics.cogs)} icon={Layers} color="amber" />
+                <StatPill label="Total Expenses" value={formatCurrency(metrics.expenseTotal)} icon={TrendingDown} color="rose" />
+                <StatPill label="Gross Profit" value={formatCurrency(metrics.grossProfit)} icon={Calculator} color="emerald" />
+                <StatPill label="Net Profit" value={formatCurrency(metrics.netProfit)} icon={TrendingUp} color="emerald" />
+              </>
+            )}
+            {activeTab === "inventory" && (
+              <>
+                <StatPill label="Total Asset Value" value={formatCurrency(inventory.stockValue)} icon={Calculator} color="indigo" />
+                <StatPill label="Low Stock Alerts" value={inventory.lowStock.filter(p => p.stock > 0).length.toString()} icon={TrendingDown} color="amber" />
+                <StatPill label="Out of Stock" value={inventory.lowStock.filter(p => p.stock <= 0).length.toString()} icon={PackageX} color="rose" />
+                <StatPill label="Dead Stock (90 Days)" value={inventory.deadStock.length.toString()} icon={Box} color="amber" />
+              </>
+            )}
+            {activeTab === "sales" && (
+              <>
+                <StatPill label="Total Revenue" value={formatCurrency(metrics.totalRevenue)} icon={TrendingUp} color="indigo" />
+                <StatPill label="Transactions" value={metrics.txnCount.toString()} icon={Receipt} color="violet" />
+                <StatPill label="Products Sold" value={metrics.topProducts.reduce((sum: any, p: any) => sum + p.qty, 0).toString()} icon={Box} color="amber" />
+                <StatPill label="Avg Order Value" value={formatCurrency(metrics.aov)} icon={Calculator} color="emerald" />
+              </>
+            )}
+            {activeTab === "dues" && (
+              <>
+                <StatPill label="Total Customer Due" value={formatCurrency(dues.totalCustomerDue)} icon={ArrowDownRight} color="rose" />
+                <StatPill label="Total Supplier Payable" value={formatCurrency(dues.totalSupplierPayable)} icon={ArrowUpRight} color="amber" />
+              </>
+            )}
+            {activeTab === "expenses" && (
+              <>
+                <StatPill label="Total Expenses" value={formatCurrency(expensesDetailed.totalExpense)} icon={TrendingDown} color="rose" />
+              </>
+            )}
           </div>
         </div>
 
         {/* ── PROFIT & LOSS ── */}
         <TabsContent value="pl" className="space-y-4 mt-0 print:block">
-          {/* Top Summary Stat Cards (Restored Header Boxes) */}
-          <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 print:grid-cols-5">
-            <Stat label="Total Sales" value={formatCurrency(metrics.totalSales)} icon={TrendingUp} color="indigo" />
-            <Stat label="Cost of Goods" value={formatCurrency(metrics.cogs)} icon={Layers} color="amber" />
-            <Stat label="Total Expenses" value={formatCurrency(metrics.expenseTotal)} icon={TrendingDown} color="rose" />
-            <Stat label="Gross Profit" value={formatCurrency(metrics.grossProfit)} icon={Calculator} color="emerald" />
-            <Stat label="Net Profit" value={formatCurrency(metrics.netProfit)} icon={TrendingUp} color="emerald" />
-          </div>
 
           {renderDateFilters(false, exportPL, "P&L")}
 
@@ -578,17 +622,23 @@ export function ReportsClient({
                     <tbody>
                       <PLRow label="Total Expense" value={formatCurrency(metrics.expenseTotal)} badgeVariant="danger" />
                       
-                      <PLRow label="Sales" isHeading />
-                      <PLRow label="Total Sales" value={formatCurrency(metrics.totalSales)} bgClass="bg-slate-50/50" badgeVariant="highlight" />
-                      <PLRow label="Total Discount" value={formatCurrency(metrics.totalDiscountSales + metrics.couponDiscount)} />
+                      <PLRow label="SALES" isHeading />
+                      <PLRow label="Gross Sales" value={formatCurrency(metrics.totalSales + metrics.totalDiscountSales + metrics.couponDiscount)} />
+                      <PLRow label="Total Discount" value={formatCurrency(metrics.totalDiscountSales + metrics.couponDiscount)} badgeVariant="danger" />
+                      <PLRow label="Net Sales" value={formatCurrency(metrics.totalSales)} badgeVariant="highlight" />
                       <PLRow label="Paid Payment" value={formatCurrency(metrics.paidSales)} badgeVariant="success" />
                       <PLRow label="Sales Due" value={formatCurrency(metrics.dueSales)} badgeVariant="danger" />
 
-                      <PLRow label="Sales Return" isHeading />
-                      <PLRow label="Return Total" value={formatCurrency(metrics.returnTotal)} bgClass="bg-slate-50/50" badgeVariant="highlight" />
+                      <PLRow label="SALES RETURN" isHeading />
+                      <PLRow label="Return Total" value={formatCurrency(metrics.returnTotal)} badgeVariant="highlight" />
                       <PLRow label="Total Discount" value={formatCurrency(metrics.totalDiscountSalesReturn + metrics.couponDiscountSalesReturn)} />
                       <PLRow label="Paid Payment" value={formatCurrency(metrics.paidSalesReturn)} badgeVariant="success" />
                       <PLRow label="Sales Return Due" value={formatCurrency(metrics.dueSalesReturn)} badgeVariant="danger" />
+                      
+                      <PLRow label="CASH INFLOW" isHeading />
+                      <PLRow label="Cash From New Sales" value={formatCurrency(metrics.paidSales)} />
+                      <PLRow label="Due Collected" value={formatCurrency(metrics.dueCollected || 0)} badgeVariant="success" />
+                      <PLRow label="Total Cash In" value={formatCurrency(metrics.paidSales + (metrics.dueCollected || 0))} badgeVariant="highlight" />
                     </tbody>
                   </table>
                 </div>
@@ -597,18 +647,12 @@ export function ReportsClient({
 
           </div>
 
+
         </TabsContent>
 
         {/* ── SALES ── */}
         <TabsContent value="sales" className="space-y-4 mt-0 print:block">
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-            <Stat label="Total Revenue" value={formatCurrency(metrics.totalRevenue)} icon={TrendingUp} color="indigo" />
-            <Stat label="Transactions" value={metrics.txnCount.toString()} icon={Receipt} color="violet" />
-            <Stat label="Products Sold" value={metrics.topProducts.reduce((sum, p) => sum + p.qty, 0).toString()} icon={Box} color="amber" />
-            <Stat label="Avg Order Value" value={formatCurrency(metrics.aov)} icon={Calculator} color="emerald" />
-          </div>
           {renderDateFilters(true, exportSales, "Sales")}
-
 
           <div className="bg-white rounded-2xl border border-slate-200/80 shadow-md shadow-slate-100/50 overflow-hidden print:overflow-visible print:border-none print:shadow-none">
             <div className="px-4 py-3 border-b border-slate-100/50 flex items-center justify-between print:px-0">
@@ -680,114 +724,205 @@ export function ReportsClient({
 
         {/* ── INVENTORY ── */}
         <TabsContent value="inventory" className="space-y-4 mt-0 print:block">
-          <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
-            <Stat label="Total Asset Value" value={formatCurrency(inventory.stockValue)} icon={Calculator} color="indigo" />
-            <Stat label="Low Stock Alerts" value={inventory.lowStock.length.toString()} icon={TrendingDown} color="rose" />
-            <Stat label="Dead Stock (90 Days)" value={inventory.deadStock.length.toString()} icon={Box} color="amber" />
+          
+          <div className="flex items-center gap-2 mb-4 print:hidden">
+            <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wide">Filter by Category:</span>
+            <Select defaultValue="all">
+              <SelectTrigger className="w-[180px] h-8 text-[12px] bg-white border-slate-200">
+                <SelectValue placeholder="All Categories" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Categories</SelectItem>
+                <SelectItem value="accessories">Accessories</SelectItem>
+                <SelectItem value="lcd">LCD</SelectItem>
+                <SelectItem value="phones">Phones</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            <div className="bg-white rounded-2xl border border-slate-200/80 shadow-md shadow-slate-100/50 overflow-hidden print:overflow-visible flex flex-col h-[450px] print:h-auto print:border-none print:shadow-none">
-              <div className="px-4 py-3 border-b border-slate-100/50 bg-amber-50/30 print:bg-transparent print:px-0 flex flex-col gap-2">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+            
+            {/* Low Stock Queue */}
+            <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden print:overflow-visible flex flex-col h-[500px] print:h-auto print:border-none print:shadow-none">
+              <div className="px-4 py-3 bg-white print:bg-transparent print:px-0 flex flex-col gap-2">
                 <div className="flex items-center justify-between">
-                  <h3 className="text-[12px] font-bold text-amber-900 print:text-slate-900 uppercase tracking-wide">Low Stock Queue</h3>
+                  <h3 className="text-[12px] font-extrabold text-amber-700 print:text-slate-900 uppercase tracking-wide">Low Stock Queue</h3>
                   <div className="flex gap-1 print:hidden">
-                    <Button size="icon" variant="ghost" className="h-6 w-6 text-amber-700 hover:bg-amber-100" onClick={exportLowStock}>
+                    <Button size="icon" variant="ghost" className="h-6 w-6 text-amber-700 hover:bg-amber-50" onClick={exportLowStock}>
                       <Download className="h-3.5 w-3.5" />
                     </Button>
-                    <Button size="icon" variant="ghost" className="h-6 w-6 text-amber-700 hover:bg-amber-100" onClick={handlePrint}>
+                    <Button size="icon" variant="ghost" className="h-6 w-6 text-amber-700 hover:bg-amber-50" onClick={handlePrint}>
                       <Printer className="h-3.5 w-3.5" />
                     </Button>
                   </div>
                 </div>
-                <div className="flex flex-col xl:flex-row gap-2 print:hidden">
-                  <div className="flex items-center gap-2 bg-white/50 p-1 rounded border border-amber-100/60 w-fit">
-                    <span className="text-[9px] font-bold text-amber-800 uppercase pl-1">From</span>
-                    <Input type="date" value={from} onChange={(e) => setFrom(e.target.value)} className="h-6 w-[100px] text-[11px] bg-white border-amber-100/60 px-1" />
-                    <span className="text-[9px] font-bold text-amber-800 uppercase px-1">To</span>
-                    <Input type="date" value={to} onChange={(e) => setTo(e.target.value)} className="h-6 w-[100px] text-[11px] bg-white border-amber-100/60 px-1" />
+                <div className="flex flex-col gap-2 print:hidden">
+                  <div className="flex items-center gap-1.5 bg-white p-1 rounded border border-slate-200">
+                    <span className="text-[9px] font-bold text-slate-500 uppercase px-1">From</span>
+                    <Input type="date" value={from} onChange={(e) => setFrom(e.target.value)} className="h-6 w-full text-[10px] bg-transparent border-none p-0 focus:ring-0 text-slate-700 font-medium" />
+                    <span className="text-[9px] font-bold text-slate-500 uppercase px-1 border-l border-slate-100">To</span>
+                    <Input type="date" value={to} onChange={(e) => setTo(e.target.value)} className="h-6 w-full text-[10px] bg-transparent border-none p-0 focus:ring-0 text-slate-700 font-medium" />
                   </div>
-                  <div className="relative flex-1">
-                    <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-amber-600/50" />
+                  <div className="relative">
+                    <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
                     <Input 
                       placeholder="Search low stock..." 
                       value={searchLowStock}
                       onChange={(e) => setSearchLowStock(e.target.value)}
-                      className="h-7 text-[11px] bg-white border-amber-200/50 pl-7 placeholder:text-amber-700/40 text-amber-900"
+                      className="h-8 text-[11px] bg-white border-slate-200 pl-8 placeholder:text-slate-400 text-slate-900 font-medium rounded-lg"
                     />
                   </div>
                 </div>
               </div>
-              <div className="flex-1 overflow-y-auto print:overflow-visible">
-                <table className="w-full text-[13px]">
-                  <thead className="bg-slate-50/50 sticky top-0 z-10 border-b border-slate-100">
-                    <tr className="text-slate-500">
+              <div className="flex-1 overflow-y-auto print:overflow-visible relative">
+                <table className="w-full text-[12px]">
+                  <thead className="bg-cyan-700 text-white sticky top-0 z-10 border-b border-cyan-800">
+                    <tr>
                       <th className="text-left px-4 py-2 text-[10px] font-bold uppercase tracking-wider">Product</th>
                       <th className="text-right px-4 py-2 text-[10px] font-bold uppercase tracking-wider">Stock</th>
                     </tr>
                   </thead>
-                  <tbody>
+                  <tbody className="divide-y divide-slate-100">
+                    {inventory.lowStock.filter((p: any) => p.stock > 0 && p.name.toLowerCase().includes(searchLowStock.toLowerCase())).length === 0 && (
+                      <tr><td colSpan={2} className="text-center py-8 text-slate-400 font-medium">No items found.</td></tr>
+                    )}
                     {inventory.lowStock
-                      .filter(p => p.name.toLowerCase().includes(searchLowStock.toLowerCase()))
-                      .map((p) => (
-                      <tr key={p.id} className="border-b border-slate-50 hover:bg-amber-50/20 transition-colors">
-                        <td className="px-4 py-1.5 font-medium text-slate-800">{p.name}</td>
-                        <td className="px-4 py-1.5 text-right">
-                          <span className="text-amber-700 font-bold bg-amber-100/50 px-2 py-0.5 rounded text-[11px] border border-amber-100">{p.stock} / {p.minStock}</span>
+                      .filter((p: any) => p.stock > 0 && p.name.toLowerCase().includes(searchLowStock.toLowerCase()))
+                      .map((p: any) => (
+                      <tr key={p.id} className="hover:bg-slate-50/50 transition-colors">
+                        <td className="px-4 py-2">
+                          <div className="font-bold text-slate-800">{p.name}</div>
+                          <div className="text-[10px] font-medium text-slate-400">{p.category || p.minStock + ' min'}</div>
+                        </td>
+                        <td className="px-4 py-2 text-right">
+                          <span className="text-amber-700 font-extrabold bg-amber-50 px-2.5 py-0.5 rounded-md text-[11px]">{p.stock}/{p.minStock}</span>
                         </td>
                       </tr>
                     ))}
-                    {inventory.lowStock.filter(p => p.name.toLowerCase().includes(searchLowStock.toLowerCase())).length === 0 && (
-                      <tr><td colSpan={2} className="px-4 py-6 text-center text-slate-400 font-medium">No items found</td></tr>
-                    )}
                   </tbody>
                 </table>
               </div>
             </div>
 
-            <div className="bg-white rounded-2xl border border-slate-200/80 shadow-md shadow-slate-100/50 overflow-hidden print:overflow-visible flex flex-col h-[450px] print:h-auto print:border-none print:shadow-none">
-              <div className="px-4 py-3 border-b border-slate-100/50 bg-rose-50/30 print:bg-transparent print:px-0 flex flex-col gap-2">
+            {/* Out of Stock Queue */}
+            <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden print:overflow-visible flex flex-col h-[500px] print:h-auto print:border-none print:shadow-none">
+              <div className="px-4 py-3 bg-white print:bg-transparent print:px-0 flex flex-col gap-2">
                 <div className="flex items-center justify-between">
-                  <h3 className="text-[12px] font-bold text-rose-900 print:text-slate-900 uppercase tracking-wide">Dead Stock Value</h3>
+                  <h3 className="text-[12px] font-extrabold text-rose-700 print:text-slate-900 uppercase tracking-wide">Out of Stock Queue</h3>
                   <div className="flex gap-1 print:hidden">
-                    <Button size="icon" variant="ghost" className="h-6 w-6 text-rose-700 hover:bg-rose-100" onClick={exportDeadStock}>
+                    <Button size="icon" variant="ghost" className="h-6 w-6 text-rose-700 hover:bg-rose-50" onClick={exportOutOfStock}>
                       <Download className="h-3.5 w-3.5" />
                     </Button>
-                    <Button size="icon" variant="ghost" className="h-6 w-6 text-rose-700 hover:bg-rose-100" onClick={handlePrint}>
+                    <Button size="icon" variant="ghost" className="h-6 w-6 text-rose-700 hover:bg-rose-50" onClick={handlePrint}>
                       <Printer className="h-3.5 w-3.5" />
                     </Button>
                   </div>
                 </div>
-                <div className="flex items-center gap-2 bg-white/50 p-1 rounded border border-rose-100/60 w-fit print:hidden">
-                  <span className="text-[9px] font-bold text-rose-800 uppercase pl-1">From</span>
-                  <Input type="date" value={from} onChange={(e) => setFrom(e.target.value)} className="h-6 w-[100px] text-[11px] bg-white border-rose-100/60 px-1" />
-                  <span className="text-[9px] font-bold text-rose-800 uppercase px-1">To</span>
-                  <Input type="date" value={to} onChange={(e) => setTo(e.target.value)} className="h-6 w-[100px] text-[11px] bg-white border-rose-100/60 px-1" />
+                <div className="flex flex-col gap-2 print:hidden">
+                  <div className="flex items-center gap-1.5 bg-white p-1 rounded border border-slate-200">
+                    <span className="text-[9px] font-bold text-slate-500 uppercase px-1">From</span>
+                    <Input type="date" value={from} onChange={(e) => setFrom(e.target.value)} className="h-6 w-full text-[10px] bg-transparent border-none p-0 focus:ring-0 text-slate-700 font-medium" />
+                    <span className="text-[9px] font-bold text-slate-500 uppercase px-1 border-l border-slate-100">To</span>
+                    <Input type="date" value={to} onChange={(e) => setTo(e.target.value)} className="h-6 w-full text-[10px] bg-transparent border-none p-0 focus:ring-0 text-slate-700 font-medium" />
+                  </div>
+                  <div className="relative">
+                    <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
+                    <Input 
+                      placeholder="Search out of stock..." 
+                      value={searchOutOfStock}
+                      onChange={(e) => setSearchOutOfStock(e.target.value)}
+                      className="h-8 text-[11px] bg-white border-slate-200 pl-8 placeholder:text-slate-400 text-slate-900 font-medium rounded-lg"
+                    />
+                  </div>
                 </div>
               </div>
-              <div className="flex-1 overflow-y-auto print:overflow-visible">
-                <table className="w-full text-[13px]">
-                  <thead className="bg-slate-50/50 sticky top-0 z-10 border-b border-slate-100">
-                    <tr className="text-slate-500">
+              <div className="flex-1 overflow-y-auto print:overflow-visible relative">
+                <table className="w-full text-[12px]">
+                  <thead className="bg-cyan-700 text-white sticky top-0 z-10 border-b border-cyan-800">
+                    <tr>
+                      <th className="text-left px-4 py-2 text-[10px] font-bold uppercase tracking-wider">Product</th>
+                      <th className="text-right px-4 py-2 text-[10px] font-bold uppercase tracking-wider">Stock</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {inventory.lowStock.filter((p: any) => p.stock <= 0 && p.name.toLowerCase().includes(searchOutOfStock.toLowerCase())).length === 0 && (
+                      <tr><td colSpan={2} className="text-center py-8 text-slate-400 font-medium">No items found.</td></tr>
+                    )}
+                    {inventory.lowStock
+                      .filter((p: any) => p.stock <= 0 && p.name.toLowerCase().includes(searchOutOfStock.toLowerCase()))
+                      .map((p: any) => (
+                      <tr key={p.id} className="hover:bg-slate-50/50 transition-colors">
+                        <td className="px-4 py-2">
+                          <div className="font-bold text-slate-800">{p.name}</div>
+                          <div className="text-[10px] font-medium text-slate-400">{p.category || 'N/A'}</div>
+                        </td>
+                        <td className="px-4 py-2 text-right">
+                          <span className="text-rose-700 font-extrabold bg-rose-50 px-2.5 py-0.5 rounded-md text-[11px]">0</span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            {/* Dead Stock */}
+            <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden print:overflow-visible flex flex-col h-[500px] print:h-auto print:border-none print:shadow-none">
+              <div className="px-4 py-3 bg-white print:bg-transparent print:px-0 flex flex-col gap-2">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-[12px] font-extrabold text-rose-700 print:text-slate-900 uppercase tracking-wide">Dead Stock Value</h3>
+                  <div className="flex gap-1 print:hidden">
+                    <Button size="icon" variant="ghost" className="h-6 w-6 text-rose-700 hover:bg-rose-50" onClick={exportDeadStock}>
+                      <Download className="h-3.5 w-3.5" />
+                    </Button>
+                    <Button size="icon" variant="ghost" className="h-6 w-6 text-rose-700 hover:bg-rose-50" onClick={handlePrint}>
+                      <Printer className="h-3.5 w-3.5" />
+                    </Button>
+                  </div>
+                </div>
+                <div className="flex flex-col gap-2 print:hidden">
+                  <div className="flex items-center gap-1.5 bg-white p-1 rounded border border-slate-200">
+                    <span className="text-[9px] font-bold text-slate-500 uppercase px-1">From</span>
+                    <Input type="date" value={from} onChange={(e) => setFrom(e.target.value)} className="h-6 w-full text-[10px] bg-transparent border-none p-0 focus:ring-0 text-slate-700 font-medium" />
+                    <span className="text-[9px] font-bold text-slate-500 uppercase px-1 border-l border-slate-100">To</span>
+                    <Input type="date" value={to} onChange={(e) => setTo(e.target.value)} className="h-6 w-full text-[10px] bg-transparent border-none p-0 focus:ring-0 text-slate-700 font-medium" />
+                  </div>
+                  <div className="relative">
+                    <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
+                    <Input 
+                      placeholder="Search dead stock..." 
+                      value={searchDeadStock}
+                      onChange={(e) => setSearchDeadStock(e.target.value)}
+                      className="h-8 text-[11px] bg-white border-slate-200 pl-8 placeholder:text-slate-400 text-slate-900 font-medium rounded-lg"
+                    />
+                  </div>
+                </div>
+              </div>
+              <div className="flex-1 overflow-y-auto print:overflow-visible relative">
+                <table className="w-full text-[12px]">
+                  <thead className="bg-cyan-700 text-white sticky top-0 z-10 border-b border-cyan-800">
+                    <tr>
                       <th className="text-left px-4 py-2 text-[10px] font-bold uppercase tracking-wider">Product</th>
                       <th className="text-center px-4 py-2 text-[10px] font-bold uppercase tracking-wider">Stock</th>
                       <th className="text-right px-4 py-2 text-[10px] font-bold uppercase tracking-wider">Value</th>
                     </tr>
                   </thead>
-                  <tbody>
-                    {inventory.deadStock.map((p) => (
-                      <tr key={p.id} className="border-b border-slate-50 hover:bg-rose-50/20 transition-colors">
-                        <td className="px-4 py-1.5">
-                          <span className="font-medium text-slate-800">{p.name}</span>
-                          <span className="ml-2 text-[9px] font-bold text-slate-400 uppercase tracking-widest">{p.category}</span>
+                  <tbody className="divide-y divide-slate-100">
+                    {inventory.deadStock.filter((p: any) => p.name.toLowerCase().includes(searchDeadStock.toLowerCase()) || p.category.toLowerCase().includes(searchDeadStock.toLowerCase())).length === 0 && (
+                      <tr><td colSpan={3} className="text-center py-8 text-slate-400 font-medium">No items found.</td></tr>
+                    )}
+                    {inventory.deadStock
+                      .filter((p: any) => p.name.toLowerCase().includes(searchDeadStock.toLowerCase()) || p.category.toLowerCase().includes(searchDeadStock.toLowerCase()))
+                      .map((p: any) => (
+                      <tr key={p.id} className="hover:bg-slate-50/50 transition-colors">
+                        <td className="px-4 py-2">
+                          <div className="font-bold text-slate-800">{p.name}</div>
+                          <div className="text-[10px] font-medium text-slate-400">{p.category}</div>
                         </td>
-                        <td className="px-4 py-1.5 text-center text-slate-600 font-medium">{p.stock}</td>
-                        <td className="px-4 py-1.5 text-right font-bold text-rose-700">{formatCurrency(p.value)}</td>
+                        <td className="px-4 py-2 text-center text-rose-700 font-extrabold">{p.stock}</td>
+                        <td className="px-4 py-2 text-right font-extrabold text-slate-700">{formatCurrency(p.value)}</td>
                       </tr>
                     ))}
-                    {inventory.deadStock.length === 0 && (
-                      <tr><td colSpan={3} className="px-4 py-6 text-center text-slate-400 font-medium">No dead stock found</td></tr>
-                    )}
                   </tbody>
                 </table>
               </div>
@@ -810,11 +945,6 @@ export function ReportsClient({
                 <Printer className="h-3.5 w-3.5 mr-2" /> Print Dues
               </Button>
             </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 print:grid-cols-2">
-            <Stat label="Total Customer Due" value={formatCurrency(dues.totalCustomerDue)} icon={ArrowDownRight} color="rose" />
-            <Stat label="Total Supplier Payable" value={formatCurrency(dues.totalSupplierPayable)} icon={ArrowUpRight} color="amber" />
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
@@ -890,94 +1020,117 @@ export function ReportsClient({
 
         {/* ── EXPENSES REPORT ── */}
         <TabsContent value="expenses" className="space-y-4 mt-0 print:block">
-          {renderDateFilters(false, exportExpensesDetailed, "Expenses")}
+            {renderDateFilters(false, exportExpensesDetailed, "Expenses")}
 
-          {/* Summary stats */}
-          <div className="grid grid-cols-1 gap-3">
-            <Stat label="Total Expenses" value={formatCurrency(expensesDetailed.totalExpense)} icon={TrendingDown} color="rose" />
-          </div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-            {/* Left Column: Category Summary breakdown */}
-            <div className="bg-white rounded-2xl border border-slate-200/80 shadow-md shadow-slate-100/50 overflow-hidden flex flex-col h-fit print:border-none print:shadow-none">
-              <div className="px-4 py-2.5 border-b border-slate-100/50 flex items-center justify-between">
-                <h3 className="text-[12px] font-bold text-slate-800 uppercase tracking-wide">Category Summary</h3>
-              </div>
-              <div className="p-4 space-y-4">
-                {expensesDetailed.breakdown.map((b) => (
-                  <div key={b.category} className="space-y-1.5">
-                    <div className="flex items-center justify-between text-xs font-semibold text-slate-700">
-                      <span className="flex items-center gap-1">
-                        <Badge variant="secondary" className="px-1.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider">{b.category}</Badge>
-                        <span className="text-[10px] font-normal text-slate-400">({b.count})</span>
-                      </span>
-                      <span>{formatCurrency(b.amount)} ({b.percentage.toFixed(1)}%)</span>
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+              {/* Left Column: Category Summary breakdown */}
+              <div className="bg-white rounded-2xl border border-slate-200/80 shadow-md shadow-slate-100/50 overflow-hidden flex flex-col h-fit print:border-none print:shadow-none">
+                <div className="px-4 py-2.5 border-b border-slate-100/50 flex items-center justify-between">
+                  <h3 className="text-[12px] font-bold text-slate-800 uppercase tracking-wide">Category Summary</h3>
+                </div>
+                <div className="p-4 space-y-4">
+                  {expensesDetailed.breakdown.map((b) => (
+                    <div key={b.category} className="space-y-1.5">
+                      <div className="flex items-center justify-between text-xs font-semibold text-slate-700">
+                        <span className="flex items-center gap-1">
+                          <Badge variant="secondary" className="px-1.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider">{b.category}</Badge>
+                          <span className="text-[10px] font-normal text-slate-400">({b.count})</span>
+                        </span>
+                        <span>{formatCurrency(b.amount)} ({b.percentage.toFixed(1)}%)</span>
+                      </div>
+                      {/* Progress Bar */}
+                      <div className="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
+                        <div className="h-full bg-indigo-600 rounded-full" style={{ width: `${b.percentage}%` }} />
+                      </div>
                     </div>
-                    {/* Progress Bar */}
-                    <div className="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
-                      <div className="h-full bg-indigo-600 rounded-full" style={{ width: `${b.percentage}%` }} />
-                    </div>
-                  </div>
-                ))}
-                {expensesDetailed.breakdown.length === 0 && (
-                  <p className="text-center py-6 text-slate-400 font-medium text-xs">No expense breakdown available.</p>
-                )}
-              </div>
-            </div>
-
-            {/* Right Column: Detailed Log */}
-            <div className="lg:col-span-2 bg-white rounded-2xl border border-slate-200/80 shadow-md shadow-slate-100/50 overflow-hidden flex flex-col print:border-none print:shadow-none">
-              <div className="px-4 py-2.5 border-b border-slate-100/50 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                <h3 className="text-[12px] font-bold text-slate-800 uppercase tracking-wide">Expense Log (খরচের খাতা)</h3>
-                {/* Search Bar */}
-                <div className="relative w-full sm:w-[220px] print:hidden">
-                  <Search className="absolute left-2.5 top-2 h-3.5 w-3.5 text-slate-400" />
-                  <Input
-                    type="search"
-                    placeholder="Search expenses..."
-                    value={searchExpense}
-                    onChange={(e) => setSearchExpense(e.target.value)}
-                    className="pl-8 h-7 text-xs bg-slate-50 border-slate-200 focus-visible:bg-white"
-                  />
+                  ))}
+                  {expensesDetailed.breakdown.length === 0 && (
+                    <p className="text-center py-6 text-slate-400 font-medium text-xs">No expense breakdown available.</p>
+                  )}
                 </div>
               </div>
-              <div className="overflow-x-auto">
-                <table className="w-full text-[13px] border-collapse">
-                  <thead className="bg-slate-50/50 border-b border-slate-100">
-                    <tr className="text-slate-500 text-[10px] font-bold uppercase tracking-wider">
-                      <th className="text-left px-4 py-2">Category</th>
-                      <th className="text-left px-4 py-2">Date</th>
-                      <th className="text-left px-4 py-2">Notes</th>
-                      <th className="text-right px-4 py-2">Amount</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {expensesDetailed.expenses
-                      .filter((e) => 
-                        e.category.toLowerCase().includes(searchExpense.toLowerCase()) ||
-                        e.notes.toLowerCase().includes(searchExpense.toLowerCase())
-                      )
-                      .map((e) => (
-                        <tr key={e.id} className="border-b border-slate-50 hover:bg-slate-50/30 transition-colors">
-                          <td className="px-4 py-2 font-medium">
-                            <Badge variant="outline" className="font-bold text-[9.5px] uppercase tracking-wider text-slate-600 bg-slate-50">{e.category}</Badge>
-                          </td>
-                          <td className="px-4 py-2 text-slate-500 font-semibold">{formatDate(e.date)}</td>
-                          <td className="px-4 py-2 text-slate-600 max-w-[200px] truncate" title={e.notes}>{e.notes || "—"}</td>
-                          <td className="px-4 py-2 text-right font-bold text-rose-700">{formatCurrency(e.amount)}</td>
-                        </tr>
-                      ))}
-                    {expensesDetailed.expenses.length === 0 && (
-                      <tr><td colSpan={4} className="text-center py-6 text-slate-400 font-medium">No expenses logged.</td></tr>
-                    )}
-                  </tbody>
-                </table>
+
+              {/* Right Column: Detailed Log */}
+              <div className="lg:col-span-2 bg-white rounded-2xl border border-slate-200/80 shadow-md shadow-slate-100/50 overflow-hidden flex flex-col print:border-none print:shadow-none">
+                <div className="px-4 py-2.5 border-b border-slate-100/50 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                  <h3 className="text-[12px] font-bold text-slate-800 uppercase tracking-wide">Expense Log (খরচের খাতা)</h3>
+                  {/* Search Bar */}
+                  <div className="relative w-full sm:w-[220px] print:hidden">
+                    <Search className="absolute left-2.5 top-2 h-3.5 w-3.5 text-slate-400" />
+                    <Input
+                      type="search"
+                      placeholder="Search expenses..."
+                      value={searchExpense}
+                      onChange={(e) => setSearchExpense(e.target.value)}
+                      className="pl-8 h-7 text-xs bg-slate-50 border-slate-200 focus-visible:bg-white"
+                    />
+                  </div>
+                </div>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-[13px] border-collapse">
+                    <thead className="bg-slate-50/50 border-b border-slate-100">
+                      <tr className="text-slate-500 text-[10px] font-bold uppercase tracking-wider">
+                        <th className="text-left px-4 py-2">Category</th>
+                        <th className="text-left px-4 py-2">Date</th>
+                        <th className="text-left px-4 py-2">Notes</th>
+                        <th className="text-right px-4 py-2">Amount</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {expensesDetailed.expenses
+                        .filter((e) => 
+                          (e.category || "").toLowerCase().includes(searchExpense.toLowerCase()) ||
+                          (e.notes || "").toLowerCase().includes(searchExpense.toLowerCase())
+                        )
+                        .map((e) => (
+                          <tr key={e.id} className="border-b border-slate-50 hover:bg-slate-50/30 transition-colors">
+                            <td className="px-4 py-2 font-medium">
+                              <Badge variant="outline" className="font-bold text-[9.5px] uppercase tracking-wider text-slate-600 bg-slate-50">{e.category}</Badge>
+                            </td>
+                            <td className="px-4 py-2 text-slate-500 font-semibold">{formatDate(e.date)}</td>
+                            <td className="px-4 py-2 text-slate-600 max-w-[200px] truncate" title={e.notes}>{e.notes || "—"}</td>
+                            <td className="px-4 py-2 text-right font-bold text-rose-700">{formatCurrency(e.amount)}</td>
+                          </tr>
+                        ))}
+                      {expensesDetailed.expenses.length === 0 && (
+                        <tr><td colSpan={4} className="text-center py-6 text-slate-400 font-medium">No expenses logged.</td></tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
               </div>
             </div>
-          </div>
         </TabsContent>
 
       </Tabs>
+    </div>
+  );
+}
+
+function StatPill({ label, value, icon: Icon, color = "indigo" }: { label: string; value: string; icon: any; color?: "indigo" | "emerald" | "rose" | "amber" | "violet" }) {
+  const scheme = {
+    indigo: "bg-indigo-50/80 text-indigo-700",
+    emerald: "bg-emerald-50/80 text-emerald-700",
+    rose: "bg-rose-50/80 text-rose-700",
+    amber: "bg-amber-50/80 text-amber-700",
+    violet: "bg-violet-50/80 text-violet-700",
+  }[color];
+
+  const iconColor = {
+    indigo: "text-indigo-400",
+    emerald: "text-emerald-400",
+    rose: "text-rose-400",
+    amber: "text-amber-400",
+    violet: "text-violet-400",
+  }[color];
+
+  return (
+    <div className={cn("flex flex-col justify-center px-4 py-1.5 rounded-xl border border-transparent min-w-[130px]", scheme)}>
+      <div className="flex items-center gap-1 mb-0.5">
+        <Icon className={cn("h-3 w-3", iconColor)} strokeWidth={3} />
+        <span className="text-[9px] font-extrabold uppercase tracking-widest opacity-80">{label}</span>
+      </div>
+      <span className="text-[13px] font-extrabold tracking-tight tabular-nums">{value}</span>
     </div>
   );
 }
@@ -1053,47 +1206,47 @@ function PLRow({
   if (isHeading) {
     return (
       <tr className="border-b border-slate-100">
-        <td colSpan={2} className="px-5 py-3 bg-slate-50/50">
-          <div className="flex items-center gap-2">
-            <div className="h-2 w-1.5 bg-indigo-600 rounded-full" />
-            <span className="text-[13px] font-bold text-indigo-900 uppercase tracking-wider">{label}</span>
+        <td colSpan={2} className="px-5 py-4">
+          <div className="flex items-center gap-2.5">
+            <div className="h-1.5 w-1.5 bg-indigo-600 rounded-full" />
+            <span className="text-[11px] font-bold text-indigo-700 uppercase tracking-wider">{label}</span>
           </div>
         </td>
       </tr>
     );
   }
 
-  let valueNode = <span className={cn("font-bold text-[14px] tabular-nums", valueClass)}>{value}</span>;
+  let valueNode = <span className={cn("font-bold text-[13px] tabular-nums", valueClass)}>{value}</span>;
 
   if (badgeVariant === "success") {
     valueNode = (
-      <Badge variant="outline" className="bg-emerald-50 text-emerald-700 border-emerald-200/80 font-bold text-[13px] px-3 py-1 shadow-none rounded-md">
+      <Badge variant="outline" className="bg-emerald-50 text-emerald-600 border-emerald-200/60 font-bold text-[12px] px-2.5 py-1 shadow-none rounded-md">
         {value}
       </Badge>
     );
   } else if (badgeVariant === "danger") {
     valueNode = (
-      <Badge variant="outline" className="bg-rose-50 text-rose-700 border-rose-200/80 font-bold text-[13px] px-3 py-1 shadow-none rounded-md">
+      <Badge variant="outline" className="bg-rose-50 text-rose-600 border-rose-200/60 font-bold text-[12px] px-2.5 py-1 shadow-none rounded-md">
         {value}
       </Badge>
     );
   } else if (badgeVariant === "info") {
     valueNode = (
-      <Badge variant="outline" className="bg-sky-50 text-sky-700 border-sky-200/80 font-bold text-[13px] px-3 py-1 shadow-none rounded-md">
+      <Badge variant="outline" className="bg-sky-50 text-sky-600 border-sky-200/60 font-bold text-[12px] px-2.5 py-1 shadow-none rounded-md">
         {value}
       </Badge>
     );
   } else if (badgeVariant === "highlight") {
     valueNode = (
-      <Badge variant="outline" className="bg-slate-100 text-slate-800 border-slate-300 font-bold text-[13px] px-3 py-1 shadow-none rounded-md">
+      <Badge variant="outline" className="bg-slate-100 text-slate-700 border-slate-200 font-bold text-[12px] px-2.5 py-1 shadow-none rounded-md">
         {value}
       </Badge>
     );
   }
 
   return (
-    <tr className={cn("border-b border-slate-100/50 last:border-0 hover:bg-slate-50/30 transition-colors", bgClass)}>
-      <td className="px-5 py-3.5 text-[14px] text-slate-600 font-semibold">{label}</td>
+    <tr className={cn("border-b border-slate-100/50 last:border-0 hover:bg-slate-50/50 transition-colors", bgClass)}>
+      <td className="px-5 py-3.5 text-[13px] text-slate-600 font-medium">{label}</td>
       <td className="px-5 py-3.5 text-right">{valueNode}</td>
     </tr>
   );

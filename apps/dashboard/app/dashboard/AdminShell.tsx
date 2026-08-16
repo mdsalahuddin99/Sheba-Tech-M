@@ -81,6 +81,7 @@ const navGroups: NavGroup[] = [
     items: [
       { to: "/dashboard/sales/create", labelKey: "nav.pos", icon: ScanBarcode },
       { to: "/dashboard/sales", labelKey: "nav.sales", icon: ShoppingCart },
+      { to: "/dashboard/exchange", labelKey: "nav.exchange" as TranslationKey, icon: ArrowLeftRight },
       { to: "/dashboard/quotations", labelKey: "nav.quotations", icon: FileText },
       { to: "/dashboard/returns", labelKey: "nav.returns", icon: Undo2 },
       { to: "/dashboard/dues", labelKey: "nav.dues", icon: ClipboardCheck },

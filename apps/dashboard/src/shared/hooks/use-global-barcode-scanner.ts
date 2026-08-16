@@ -2,7 +2,6 @@
 import { useEffect } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { toast } from "sonner";
-import { useProducts } from "@/features/products/hooks";
 import { useCartActions } from "@/features/pos/hooks";
 
 /**
@@ -16,7 +15,6 @@ import { useCartActions } from "@/features/pos/hooks";
 export function useGlobalBarcodeScanner() {
   const router = useRouter();
   const pathname = usePathname();
-  const { data: products = [] } = useProducts();
   const { addToCart } = useCartActions();
 
   useEffect(() => {
@@ -38,32 +36,59 @@ export function useGlobalBarcodeScanner() {
       return false;
     };
 
-    const flush = () => {
+    const flush = async () => {
       const code = buffer.trim();
       buffer = "";
       if (code.length < 4) return;
-      const product = products.find(
-        (p) =>
-          p.barcode === code ||
-          p.sku === code ||
-          (p.serials?.some((u) => u.imei === code || u.serialNumber === code) ?? false)
-      );
-      if (!product) {
-        toast.error("Product not found");
-        return;
-      }
+      
       const now = Date.now();
       if (code === lastScanCode && now - lastScanAt < DEDUPE_MS) {
         return; // duplicate of same barcode within dedupe window
       }
-      lastScanCode = code;
-      lastScanAt = now;
-      if (pathname.startsWith("/pos")) {
-        addToCart(product.id, undefined, undefined, undefined, product.bundleQty);
-        toast.success(`✓ ${product.name}`);
-      } else {
-        toast.success(`Found: ${product.name}`);
-        router.push(`/products?search=${encodeURIComponent(product.sku)}`);
+
+      try {
+        const qs = new URLSearchParams({ q: code, exact: "true" });
+        const res = await fetch(`/api/products/search?${qs.toString()}`);
+        if (!res.ok) throw new Error();
+        const data = await res.json();
+        
+        const lowerCode = code.toLowerCase();
+        let product = data.items?.find(
+          (p: any) =>
+            (p.barcode || "").toLowerCase() === lowerCode ||
+            (p.sku || "").toLowerCase() === lowerCode
+        );
+
+        if (!product) {
+          product = data.items?.find((p: any) => 
+            p.serialNumbers?.some((s: any) => (s.serial || "").toLowerCase() === lowerCode)
+          );
+        }
+
+        if (!product) {
+          toast.error("Product not found");
+          return;
+        }
+
+        lastScanCode = code;
+        lastScanAt = now;
+
+        const isPos = pathname.startsWith("/pos") || pathname.includes("/sales/create");
+        if (isPos) {
+          const b = product.globalBrand?.name ?? product.brand;
+          const m = product.globalModel?.name ?? product.model;
+          let finalName = product.name ?? "";
+          if (b && !finalName.toLowerCase().startsWith(b.toLowerCase())) finalName = `${b} ${finalName}`;
+          if (m && !finalName.toLowerCase().endsWith(m.toLowerCase())) finalName = `${finalName} - ${m}`;
+
+          addToCart(product.id, finalName, undefined, undefined, product.bundleQty);
+          toast.success(`✓ ${product.name}`);
+        } else {
+          toast.success(`Found: ${product.name}`);
+          router.push(`/products?search=${encodeURIComponent(product.sku)}`);
+        }
+      } catch (err) {
+        toast.error("Product not found");
       }
     };
 
@@ -104,5 +129,5 @@ export function useGlobalBarcodeScanner() {
       window.removeEventListener("keydown", onKey);
       window.clearTimeout(timer);
     };
-  }, [products, addToCart, router, pathname]);
+  }, [addToCart, router, pathname]);
 }

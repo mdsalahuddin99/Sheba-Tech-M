@@ -22,6 +22,7 @@ export function useCreateSale() {
   const router = useRouter();
   const queryClient = useQueryClient();
   const editingSaleId = searchParams.get("saleId") ?? null;
+  const exchangeSaleId = searchParams.get("exchangeSaleId") ?? null;
   const cashAccounts = useAccountsByType("cash");
   const { session } = useAuth();
 
@@ -88,6 +89,12 @@ export function useCreateSale() {
   const [quickPhone, setQuickPhone] = useState("");
   const [heldOpen, setHeldOpen] = useState(false);
   const [draftPreview, setDraftPreview] = useState<HeldSaleForPrint | null>(null);
+  
+  // Exchange state
+  const [exchangeSale, setExchangeSale] = useState<Sale | null>(null);
+  const [exchangeReturnItems, setExchangeReturnItems] = useState<any[]>([]);
+  const [exchangeReason, setExchangeReason] = useState("");
+
   const vSearchRef = useRef<HTMLInputElement>(null);
 
   const voucherRowRefs = useRef<
@@ -172,6 +179,29 @@ export function useCreateSale() {
     };
   }, [editingSaleId, router]);
 
+  // ── Load existing sale for exchange ─────────────────────────────────────
+  useEffect(() => {
+    if (!exchangeSaleId) return;
+    let cancelled = false;
+    (async () => {
+      setSaleLoading(true);
+      try {
+        const sale = await salesApi.getById(exchangeSaleId);
+        if (!sale || cancelled) return;
+        setExchangeSale(sale);
+        if (sale.customerId) setVoucherCustomerId(sale.customerId);
+      } catch {
+        toast.error("Failed to load sale for exchange");
+        router.replace("/dashboard/sales/create");
+      } finally {
+        if (!cancelled) setSaleLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [exchangeSaleId, router]);
+
   // ── Load draft from URL ─────────────────────────────────────────────────
   const loadDraftId = searchParams.get("loadDraft") ?? null;
   useEffect(() => {
@@ -192,11 +222,15 @@ export function useCreateSale() {
 
 
   // ── Computed totals ─────────────────────────────────────────────────────
+  const exchangeTotalReturn = useMemo(() => {
+    return exchangeReturnItems.reduce((sum, item) => sum + (item.qty * item.price), 0);
+  }, [exchangeReturnItems]);
+
   const subtotal = useMemo(
     () => round2(voucherRows.reduce((s, r) => s + r.price * r.qty - (r.discount || 0), 0)),
     [voucherRows],
   );
-  const invoiceTotal = round2(Math.max(0, subtotal));
+  const invoiceTotal = round2(Math.max(0, subtotal - exchangeTotalReturn));
 
   // Reset auto-apply flag when customer changes
   useEffect(() => {
@@ -242,6 +276,12 @@ export function useCreateSale() {
     (product: any, scannedSerial?: string, matchedTag?: string) => {
       if (!product) return;
       const productId = product.id;
+      const b = product.globalBrand?.name;
+      const m = product.globalModel?.name;
+      let finalName = product.name ?? "";
+      if (b && !finalName.toLowerCase().startsWith(b.toLowerCase())) finalName = `${b} ${finalName}`;
+      if (m && !finalName.toLowerCase().endsWith(m.toLowerCase())) finalName = `${finalName} - ${m}`;
+      
       const existing = voucherRows.find((r) => r.productId === productId);
       const currentQty = existing ? existing.qty : 0;
       let availableStock = Number(product.stock ?? 0);
@@ -304,11 +344,10 @@ export function useCreateSale() {
             id: rowId,
             productId: product.id,
             name: (() => {
-              const baseName = productDisplayName(product);
               if (matchedTag) {
-                return `${baseName} [${matchedTag}]`;
+                return `${finalName} [${matchedTag}]`;
               }
-              return baseName;
+              return finalName;
             })(),
             qty: product.bundleQty || 1,
             price: Number(product.price),
@@ -541,7 +580,11 @@ export function useCreateSale() {
 
   // ── Checkout ─────────────────────────────────────────────────────────────
   const handleCheckout = async () => {
-    if (voucherRows.length === 0) {
+    if (exchangeSaleId && exchangeReturnItems.length === 0) {
+      toast.error("Please add at least one item to return for the exchange.");
+      return;
+    }
+    if (!exchangeSaleId && voucherRows.length === 0) {
       toast.error("Add at least one product");
       return;
     }
@@ -625,7 +668,21 @@ export function useCreateSale() {
       warehouseId: selectedWarehouseId ?? undefined,
       discount: 0,
       channel: "POS" as const,
-      date: invoiceDate ? new Date(invoiceDate).toISOString() : undefined,
+      date: (() => {
+        if (!invoiceDate) return undefined;
+        const now = new Date();
+        const tzoffset = now.getTimezoneOffset() * 60000;
+        const todayLocal = new Date(now.getTime() - tzoffset).toISOString().split('T')[0];
+        
+        if (invoiceDate === todayLocal) {
+          return now.toISOString();
+        }
+        
+        const [year, month, day] = invoiceDate.split('-').map(Number);
+        const customDate = new Date();
+        customDate.setFullYear(year, month - 1, day);
+        return customDate.toISOString();
+      })(),
       salesPerson: salesPerson || undefined,
       destination: destination || undefined,
       attention: attention || undefined,
@@ -648,19 +705,32 @@ export function useCreateSale() {
       toast.error(parsed.error.errors[0]?.message ?? "Validation error");
       return;
     }
-
-    setIsCheckingOut(true);
     try {
-      const sale = editingSaleId
-        ? await salesApi.update(editingSaleId, payload)
-        : await salesApi.create(payload);
+      setIsCheckingOut(true);
+      let sale;
+      if (exchangeSaleId) {
+        sale = await salesApi.exchange({
+          exchangeSaleId,
+          returnItems: exchangeReturnItems,
+          newItems: payload.items,
+          reason: exchangeReason || "Customer exchange",
+          tenders: finalTenders,
+        });
+        sale = sale.newSale || sale; // Ensure we have a valid Sale object to display
+      } else if (editingSaleId) {
+        sale = await salesApi.update(editingSaleId, payload);
+      } else {
+        sale = await salesApi.create(payload);
+      }
 
       // Show success UI immediately — do NOT await invalidation
-      setReceipt(sale);
-      setReceiptView("invoice");
-      toast.success(editingSaleId ? "Invoice updated!" : "Invoice saved!");
+      if (sale && sale.id) {
+        setReceipt(sale);
+        setReceiptView("invoice");
+      }
+      toast.success(exchangeSaleId ? "Exchange successful!" : editingSaleId ? "Invoice updated!" : "Invoice saved!");
       clearVoucher();
-      if (editingSaleId) {
+      if (editingSaleId || exchangeSaleId) {
         router.replace("/dashboard/sales/create");
       }
 
@@ -708,7 +778,8 @@ export function useCreateSale() {
     quickPhone, setQuickPhone, heldOpen, setHeldOpen,
     draftPreview, setDraftPreview, vSearchRef, voucherRowRefs,
     heldSales, refetchHeldSales, currentCustomer, customers,
-    loadDraftId, subtotal, invoiceTotal, addProductToVoucher,
+    loadDraftId, subtotal, invoiceTotal, addProductToVoucher, exchangeTotalReturn,
+    exchangeSaleId, exchangeSale, exchangeReturnItems, setExchangeReturnItems, exchangeReason, setExchangeReason,
     handleBarcodeEnter, changeQty, changeSerials, changeWarranty,
     changePrice, changeDiscount, removeRow, clearVoucher, holdCurrentSale,
     resumeHeldSale, deleteHeldSale, handleCheckout, handleCameraBarcode,

@@ -24,7 +24,7 @@ export function useSalesQuery(initialData?: Sale[]) {
   });
 }
 
-export function useInfiniteSalesQuery(filter?: { search?: string; paymentMethod?: string; sortKey?: string; sortDir?: "asc" | "desc"; limit?: number }) {
+export function useInfiniteSalesQuery(filter?: { search?: string; paymentMethod?: string; status?: string; sortKey?: string; sortDir?: "asc" | "desc"; limit?: number }) {
   const { session, status } = useAuth();
   return useInfiniteQuery({
     queryKey: [...saleKeys.list(), filter],

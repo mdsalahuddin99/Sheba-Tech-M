@@ -50,3 +50,19 @@ export const refundCreateSchema = z.object({
 export const voidSaleSchema = z.object({
   reason: z.string().min(1, "Reason is required"),
 });
+
+export const exchangeReturnItemSchema = z.object({
+  id: z.string(),
+  productId: z.string(),
+  qty: z.number().positive(),
+  price: z.number().min(0),
+});
+
+export const saleExchangeSchema = z.object({
+  exchangeSaleId: z.string(),
+  returnItems: z.array(exchangeReturnItemSchema).min(1, "At least one return item is required"),
+  newItems: z.array(saleItemSchema).optional(),
+  reason: z.string().min(1, "Reason is required"),
+  tenders: z.array(saleTenderSchema).optional(),
+});
+

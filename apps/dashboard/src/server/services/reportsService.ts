@@ -44,7 +44,9 @@ export const reportsService = {
       rawTopProducts,
       rawAllSales,
       salesList,
-      expensesByCategory
+      expensesByCategory,
+      rawRefundedCogs,
+      customerPaymentsAgg
     ] = await Promise.all([
       prisma.sale.aggregate({
         where: completedSaleWhere,
@@ -114,7 +116,11 @@ export const reportsService = {
         JOIN "Sale" s ON si."saleId" = s.id
         WHERE s."createdAt" >= ${fromDate} AND s."createdAt" <= ${toDate}
         AND s.status = 'REFUNDED'
-      `
+      `,
+      prisma.customerTransaction.aggregate({
+        where: { createdAt: { gte: fromDate, lte: toDate }, type: 'PAYMENT' },
+        _sum: { amount: true }
+      })
     ]);
 
     const totalRevenue = Number(completedSalesAgg._sum.total || 0);
@@ -163,6 +169,8 @@ export const reportsService = {
     const returnTotal = Number(refundedSalesAgg._sum.total || 0);
     const paidSalesReturn = Number(refundedSalesAgg._sum.paid || 0);
     const dueSalesReturn = Number(refundedSalesAgg._sum.due || 0);
+
+    const dueCollected = Number(customerPaymentsAgg._sum.amount || 0);
 
     const topProducts = rawTopProducts.map(p => ({
       name: p.name,
@@ -251,6 +259,7 @@ export const reportsService = {
       returnTotal,
       paidSalesReturn,
       dueSalesReturn,
+      dueCollected,
     };
   },
 

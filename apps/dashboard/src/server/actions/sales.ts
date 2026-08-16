@@ -6,7 +6,7 @@ import { ServiceError } from "@/server/lib/errors";
 import { salesService, type RefundInput } from "@/server/services/salesService";
 import { prisma } from "@/server/db/client";
 import { requireRole } from "@/server/auth/rbac";
-import { saleCreateSchema, refundCreateSchema, voidSaleSchema } from "@/shared/validators/sale";
+import { saleCreateSchema, refundCreateSchema, voidSaleSchema, saleExchangeSchema } from "@/shared/validators/sale";
 import type { PaginationParams } from "@/server/lib/paginate";
 
 /**
@@ -87,6 +87,17 @@ export async function refundSaleAction(saleId: string, input: any) {
     const valid = refundCreateSchema.parse(input) as unknown as RefundInput;
     const refund = await salesService.refund(ctx, saleId, valid);
     return { data: refund };
+  } catch (err: any) {
+    return { __error: err.message || "An unexpected error occurred" };
+  }
+}
+
+export async function exchangeSaleAction(input: any) {
+  try {
+    const ctx = await getActionCtx();
+    const valid = saleExchangeSchema.parse(input);
+    const result = await salesService.exchange(ctx, valid as any);
+    return { data: result };
   } catch (err: any) {
     return { __error: err.message || "An unexpected error occurred" };
   }

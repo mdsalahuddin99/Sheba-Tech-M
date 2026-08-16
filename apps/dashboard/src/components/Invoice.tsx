@@ -102,10 +102,10 @@ export default function Invoice({ sale, settings, open, onClose }: Props) {
     }
   };
 
-  const handleShare = async (platform: "whatsapp" | "imo") => {
+  const handleShare = async () => {
     if (isDownloading.current) return;
     isDownloading.current = true;
-    const toastId = toast.loading(`Preparing invoice to share on ${platform === "whatsapp" ? "WhatsApp" : "Imo"}...`);
+    const toastId = toast.loading(`Preparing invoice to share...`);
     const html = buildStandaloneInvoice(sale, settings, previousDue, totalDueAmount, currentDueAmount);
     const host = document.createElement("div");
     host.style.position = "fixed";
@@ -164,13 +164,7 @@ export default function Invoice({ sale, settings, open, onClose }: Props) {
         link.click();
         URL.revokeObjectURL(url);
         
-        const message = encodeURIComponent(`Here is the invoice ${sale.invoiceNo} from ${settings.shopName}. (Please attach the downloaded image)`);
-        if (platform === "whatsapp") {
-          window.open(`https://web.whatsapp.com/send?text=${message}`, "_blank");
-          toast.dismiss(toastId);
-        } else {
-          toast.info("Image downloaded. Please open Imo and attach the downloaded image.", { id: toastId });
-        }
+        toast.info("Device sharing not supported. Image downloaded instead.", { id: toastId });
       }
     } catch (err) {
       console.error("Share failed", err);
@@ -226,13 +220,9 @@ export default function Invoice({ sale, settings, open, onClose }: Props) {
                   <FileImage className="mr-2 h-4 w-4" />
                   <span>Download JPG</span>
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => handleShare("whatsapp")}>
-                  <MessageCircle className="mr-2 h-4 w-4 text-green-600" />
-                  <span>Share via WhatsApp</span>
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => handleShare("imo")}>
-                  <Share2 className="mr-2 h-4 w-4 text-blue-600" />
-                  <span>Share via Imo</span>
+                <DropdownMenuItem onClick={() => handleShare()}>
+                  <Share2 className="mr-2 h-4 w-4" />
+                  <span>Share</span>
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
