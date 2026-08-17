@@ -13,17 +13,8 @@ const getProduct = cache(async (slug: string) => {
   return await productsService.getBySlug(slug);
 });
 
-export async function generateStaticParams() {
-  const products = await prisma.product.findMany({
-    where: { isPublished: true },
-    select: { slug: true },
-    take: 100, // Pre-render top 100 products to avoid huge build times
-  });
-
-  return products.map((p) => ({
-    slug: p.slug,
-  }));
-}
+// generateStaticParams removed to prevent build-time database connection timeouts on Vercel.
+// Pages will be generated on-demand and cached via ISR (revalidate = 300).
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
