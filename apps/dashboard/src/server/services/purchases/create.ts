@@ -62,12 +62,27 @@ export async function create(ctx: Ctx, input: PurchaseCreateInput) {
   const productIds = input.items.map((i) => i.productId);
   const existingProducts = await prisma.product.findMany({
     where: { id: { in: productIds } },
-    select: { id: true },
+    select: { id: true, name: true, trackSerials: true },
   });
   if (existingProducts.length !== new Set(productIds).size) {
     const existingSet = new Set(existingProducts.map((p) => p.id));
     const missing = input.items.find((i) => !existingSet.has(i.productId));
     throw new ServiceError("VALIDATION", `Product "${missing?.name || missing?.productId}" does not exist in the database. It may have been deleted. Please remove it and try again.`, 400);
+  }
+
+  // Validate: products with trackSerials=true MUST have serial numbers matching qty
+  const trackSerialMap = new Map(existingProducts.map((p) => [p.id, { trackSerials: p.trackSerials, name: p.name }]));
+  for (const item of input.items) {
+    const productInfo = trackSerialMap.get(item.productId);
+    if (productInfo?.trackSerials) {
+      const serialCount = item.serials?.length ?? 0;
+      if (serialCount === 0) {
+        throw new ServiceError("VALIDATION", `"${productInfo.name}" প্রোডাক্টে সিরিয়াল ট্র্যাকিং চালু আছে। ${item.qty}টি সিরিয়াল নম্বর দিতে হবে।`, 400);
+      }
+      if (serialCount !== item.qty) {
+        throw new ServiceError("VALIDATION", `"${productInfo.name}" প্রোডাক্টে ${item.qty}টি সিরিয়াল নম্বর দরকার, কিন্তু ${serialCount}টি দেওয়া হয়েছে।`, 400);
+      }
+    }
   }
 
   const subtotal = input.items.reduce((sum, i) => math.add(sum, math.mul(i.cost, i.qty)), 0);

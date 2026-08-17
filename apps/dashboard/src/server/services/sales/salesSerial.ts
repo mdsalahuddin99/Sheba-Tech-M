@@ -107,7 +107,13 @@ export const salesSerial = {
 
     await tx.serialNumber.updateMany({
       where: { saleItemId: { in: saleItemIds } },
-      data: { status: "IN_STOCK", saleItemId: null, soldAt: null, warrantyExpiryDate: null },
+      data: {
+        status: "IN_STOCK",
+        saleItemId: null,
+        soldAt: null,
+        warrantyExpiryDate: null,
+        ...(warehouseId && { warehouseId }),
+      },
     });
 
     if (productIds.length > 0) {
