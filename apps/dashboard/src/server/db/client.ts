@@ -55,26 +55,5 @@ prisma.$use(async (params, next) => {
 
 if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = prisma;
 
-// ─── Neon Keep-Alive ──────────────────────────────────────────────────────────
-// Neon free-tier suspends after 5 min of inactivity.  This ping keeps the DB
-// warm so the first query after a lull doesn't pay a 3-5 s cold-start penalty.
-function pingDb() {
-  prisma.$queryRaw`SELECT 1`.catch(() => {});
-}
-
-let keepAliveTimer: ReturnType<typeof setInterval> | null = null;
-
-export function startKeepAlive() {
-  if (keepAliveTimer) return;
-  keepAliveTimer = setInterval(pingDb, 3 * 60 * 1000);
-  pingDb();
-}
-
-export function stopKeepAlive() {
-  if (keepAliveTimer) {
-    clearInterval(keepAliveTimer);
-    keepAliveTimer = null;
-  }
-}
-
-startKeepAlive();
+// ─── Removed Keep-Alive ───────────────────────────────────────────────────────
+// (setInterval does not work as intended in Vercel serverless functions and causes build timeouts)
