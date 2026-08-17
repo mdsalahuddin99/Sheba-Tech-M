@@ -131,8 +131,6 @@ export function ProductFilterBar({
       let availableStock = Number(p.stock ?? 0);
       if (warehouseId && p.warehouseStocks) {
         const wStock = p.warehouseStocks.find((ws: any) => ws.warehouseId === warehouseId);
-        // Strict filtering: if the product has no stock record for this warehouse,
-        // it means it's not available here, so available stock should be 0.
         availableStock = wStock ? Number(wStock.qty ?? 0) : 0;
       }
       // Note: if warehouseId is set but warehouseStocks is undefined (stale cache),
@@ -224,7 +222,7 @@ export function ProductFilterBar({
                   let availableStock = Number(p.stock ?? 0);
                   if (warehouseId && p.warehouseStocks) {
                     const wStock = p.warehouseStocks.find((ws: any) => ws.warehouseId === warehouseId);
-                    availableStock = wStock ? Number(wStock.qty ?? 0) : Number(p.stock ?? 0);
+                    availableStock = wStock ? Number(wStock.qty ?? 0) : 0;
                   }
 
                   const available = availableStock;
