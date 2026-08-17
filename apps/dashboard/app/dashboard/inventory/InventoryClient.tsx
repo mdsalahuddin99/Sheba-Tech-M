@@ -423,15 +423,17 @@ export function InventoryClient({
               </div>
               
               <div className="flex items-center gap-2 w-full sm:w-auto">
-                <Select value={selectedWarehouseId} onValueChange={setSelectedWarehouseId}>
-                  <SelectTrigger className="flex-1 sm:flex-none sm:w-44 h-9 sm:h-10 text-xs sm:text-sm"><SelectValue placeholder="All Warehouses" /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Warehouses</SelectItem>
-                    {warehouses.map(w => (
-                      <SelectItem key={w.id} value={w.id}>{w.name}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                {warehouses.length > 1 && (
+                  <Select value={selectedWarehouseId} onValueChange={setSelectedWarehouseId}>
+                    <SelectTrigger className="flex-1 sm:flex-none sm:w-44 h-9 sm:h-10 text-xs sm:text-sm"><SelectValue placeholder="All Warehouses" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Warehouses</SelectItem>
+                      {warehouses.map(w => (
+                        <SelectItem key={w.id} value={w.id}>{w.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
 
                 <Select value={filter} onValueChange={setFilter}>
                   <SelectTrigger className="flex-1 sm:flex-none sm:w-44 h-9 sm:h-10 text-xs sm:text-sm"><SelectValue /></SelectTrigger>

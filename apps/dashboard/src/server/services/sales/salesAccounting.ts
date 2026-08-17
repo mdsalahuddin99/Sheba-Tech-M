@@ -302,28 +302,68 @@ export const salesAccounting = {
   ): Promise<void> {
     const cust = await tx.customer.findUniqueOrThrow({
       where: { id: customerId },
-      select: { balance: true },
+      select: { balance: true, due: true },
     });
+    
+    const currentDue = Number(cust.due);
     const currentBalance = Number(cust.balance);
-    const newBalance = math.add(currentBalance, refundAmount);
+    
+    let dueDecrement = 0;
+    let balanceIncrement = 0;
+    
+    if (currentDue > 0) {
+      if (refundAmount <= currentDue) {
+        dueDecrement = refundAmount;
+      } else {
+        dueDecrement = currentDue;
+        balanceIncrement = math.sub(refundAmount, currentDue);
+      }
+    } else {
+      balanceIncrement = refundAmount;
+    }
+    
+    const newDue = math.sub(currentDue, dueDecrement);
+    const newBalance = math.add(currentBalance, balanceIncrement);
 
     await tx.customer.update({
       where: { id: customerId },
-      data: { balance: newBalance },
-    });
-
-    await tx.customerTransaction.create({
-      data: {
-        customerId,
-        type: "REFUND",
-        amount: refundAmount,
-        balanceBefore: currentBalance,
-        balanceAfter: newBalance,
-        saleId,
-        reference: `REFUND-${saleId.slice(0, 8).toUpperCase()}`,
-        createdById: ctx.userId,
+      data: { 
+        balance: newBalance,
+        due: newDue
       },
     });
+
+    if (dueDecrement > 0) {
+      await tx.customerTransaction.create({
+        data: {
+          customerId,
+          type: "ADJUSTMENT",
+          amount: dueDecrement,
+          balanceBefore: currentBalance,
+          balanceAfter: currentBalance,
+          saleId,
+          reference: `REFUND-OFFSET-${saleId.slice(0, 8).toUpperCase()}`,
+          notes: `Due reduced from refund`,
+          createdById: ctx.userId,
+        },
+      });
+    }
+
+    if (balanceIncrement > 0) {
+      await tx.customerTransaction.create({
+        data: {
+          customerId,
+          type: "REFUND",
+          amount: balanceIncrement,
+          balanceBefore: currentBalance,
+          balanceAfter: newBalance,
+          saleId,
+          reference: `REFUND-${saleId.slice(0, 8).toUpperCase()}`,
+          notes: `Refund amount added to wallet`,
+          createdById: ctx.userId,
+        },
+      });
+    }
   },
 
   /** Increment or decrement a customer's total spent and loyalty points */

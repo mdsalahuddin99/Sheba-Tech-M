@@ -129,7 +129,7 @@ export function ProductFilterBar({
       const inInvoice = invoiceRows.find((r) => r.productId === p.id)?.qty ?? 0;
       
       let availableStock = Number(p.stock ?? 0);
-      if (warehouseId && p.warehouseStocks) {
+      if (warehouseId && p.warehouseStocks && p.warehouseStocks.length > 0) {
         const wStock = p.warehouseStocks.find((ws: any) => ws.warehouseId === warehouseId);
         availableStock = wStock ? Number(wStock.qty ?? 0) : 0;
       }
@@ -220,7 +220,7 @@ export function ProductFilterBar({
                   const inInvoice = invoiceRows.find((r) => r.productId === p.id)?.qty ?? 0;
                   
                   let availableStock = Number(p.stock ?? 0);
-                  if (warehouseId && p.warehouseStocks) {
+                  if (warehouseId && p.warehouseStocks && p.warehouseStocks.length > 0) {
                     const wStock = p.warehouseStocks.find((ws: any) => ws.warehouseId === warehouseId);
                     availableStock = wStock ? Number(wStock.qty ?? 0) : 0;
                   }

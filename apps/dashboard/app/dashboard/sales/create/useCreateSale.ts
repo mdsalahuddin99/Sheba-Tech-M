@@ -285,9 +285,9 @@ export function useCreateSale() {
       const existing = voucherRows.find((r) => r.productId === productId);
       const currentQty = existing ? existing.qty : 0;
       let availableStock = Number(product.stock ?? 0);
-      if (selectedWarehouseId && product.warehouseStocks) {
+      if (selectedWarehouseId && product.warehouseStocks && product.warehouseStocks.length > 0) {
         const wStock = product.warehouseStocks.find((ws: any) => ws.warehouseId === selectedWarehouseId);
-        availableStock = wStock ? Number(wStock.qty ?? 0) : Number(product.stock ?? 0);
+        availableStock = wStock ? Number(wStock.qty ?? 0) : 0;
       }
       const avail = availableStock - currentQty;
       if (avail <= 0 && !product.isService) {
