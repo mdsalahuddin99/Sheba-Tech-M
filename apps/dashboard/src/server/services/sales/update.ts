@@ -32,13 +32,47 @@ export async function update(ctx: Ctx, id: string, input: SaleUpdateInput) {
     if (sale.status !== "COMPLETED") {
       throw new ServiceError("CONFLICT", "Only completed sales can be updated");
     }
+    
+    if ((Date.now() - sale.createdAt.getTime()) / (1000 * 60 * 60) > 24) {
+      throw new ServiceError("FORBIDDEN", "Invoices can only be edited within 24 hours of creation");
+    }
+
+    // Pre-load all involved products
+    const allProductIds = [...new Set([...sale.items.map(i => i.productId), ...input.items.map(i => i.productId)])];
+    const products = await tx.product.findMany({
+      where: { id: { in: allProductIds } },
+    });
+    const productMap = new Map(products.map((p: any) => [p.id, p]));
+
+    // Pre-load old warehouse stocks
+    const oldWarehouseStocks = sale.warehouseId ? await tx.warehouseStock.findMany({
+      where: { warehouseId: sale.warehouseId, productId: { in: sale.items.map(i => i.productId) } },
+    }) : [];
+    const oldWarehouseStockMap = new Map<string, any>(oldWarehouseStocks.map((ws: any) => [ws.productId, ws]));
 
     // Step 1: Restock old items (reverse of create)
     for (const item of sale.items) {
+      const product = productMap.get(item.productId);
+      if (product?.isService) continue;
+
       await tx.product.update({
         where: { id: item.productId },
         data: { stock: { increment: item.qty } },
       });
+
+      if (sale.warehouseId) {
+        const ws = oldWarehouseStockMap.get(item.productId);
+        if (ws) {
+          await tx.warehouseStock.update({
+            where: { id: ws.id },
+            data: { qty: { increment: item.qty } },
+          });
+        } else {
+          await tx.warehouseStock.create({
+            data: { warehouseId: sale.warehouseId, productId: item.productId, qty: item.qty },
+          });
+        }
+      }
     }
 
     // Step 2: Release old serials
@@ -54,15 +88,17 @@ export async function update(ctx: Ctx, id: string, input: SaleUpdateInput) {
       });
       for (const bs of warehouseStocks) warehouseStockMap.set(bs.productId, bs);
     }
-    const products = await tx.product.findMany({
-      where: { id: { in: input.items.map((i) => i.productId) } },
-    });
-    const productMap = new Map(products.map((p: any) => [p.id, p]));
     const productSnapshots = new Map<string, { cost: number; name: string }>();
 
     for (const item of input.items) {
       const product = productMap.get(item.productId);
       if (!product) throw new ServiceError("NOT_FOUND", `Product ${item.productId} not found`);
+      
+      if (product.isService) {
+        productSnapshots.set(item.productId, { cost: 0, name: product.name });
+        continue;
+      }
+      
       if (Number(product.stock) < item.qty) {
         throw new ServiceError("OUT_OF_STOCK", `${product.name} has insufficient stock (${product.stock} available, ${item.qty} requested)`);
       }
@@ -71,10 +107,27 @@ export async function update(ctx: Ctx, id: string, input: SaleUpdateInput) {
 
     // Step 4: Deduct stock for new items
     for (const item of input.items) {
+      const product = productMap.get(item.productId);
+      if (product?.isService) continue;
+
       await tx.product.update({
         where: { id: item.productId },
         data: { stock: { decrement: item.qty } },
       });
+
+      if (warehouseId) {
+        const ws = warehouseStockMap.get(item.productId);
+        if (ws) {
+          await tx.warehouseStock.update({
+            where: { id: ws.id },
+            data: { qty: { decrement: item.qty } },
+          });
+        } else {
+          await tx.warehouseStock.create({
+            data: { warehouseId, productId: item.productId, qty: -item.qty },
+          });
+        }
+      }
     }
 
     // Step 5: Delete old items + tenders

@@ -8,9 +8,10 @@ import { cache } from "@/lib/cache";
 import { salesAccounting } from "./salesAccounting";
 import { salesSerial } from "./salesSerial";
 
-/** Permanently delete a completed sale — restores stock, serials, and customer due. Requires MANAGER+. */
+/** Permanently delete a completed sale — restricted. */
 export async function remove(ctx: Ctx, id: string) {
   requireRole(ctx, "ADMIN");
+  throw new ServiceError("FORBIDDEN", "Invoices cannot be deleted under any circumstances");
 
   const productIds = await prisma.$transaction(async (tx) => {
     const sale = await tx.sale.findFirst({
