@@ -59,6 +59,9 @@ export async function update(ctx: Ctx, id: string, input: SaleUpdateInput) {
         where: { id: item.productId },
         data: { stock: { increment: item.qty } },
       });
+      if (product) {
+        product.stock = Number(product.stock) + item.qty;
+      }
 
       if (sale.warehouseId) {
         const ws = oldWarehouseStockMap.get(item.productId);

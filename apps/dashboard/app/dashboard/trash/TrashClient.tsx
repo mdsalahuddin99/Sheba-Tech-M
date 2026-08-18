@@ -16,6 +16,16 @@ const TABS = [
   { id: "supplier", label: "Suppliers" },
   { id: "category", label: "Categories" },
   { id: "sale", label: "Sales" },
+  { id: "purchase", label: "Purchases" },
+  { id: "expense", label: "Expenses" },
+  { id: "quotation", label: "Quotations" },
+  { id: "brand", label: "Brands" },
+  { id: "productType", label: "Product Types" },
+  { id: "model", label: "Models" },
+  { id: "series", label: "Series" },
+  { id: "warehouse", label: "Warehouses" },
+  { id: "stockAdjustment", label: "Stock Adjustments" },
+  { id: "warrantyClaim", label: "Warranty Claims" },
 ];
 
 export function TrashClient() {
@@ -94,12 +104,12 @@ export function TrashClient() {
     <div className="space-y-6">
       <PageHeader title="Trash" description="Manage deleted items. You can restore them or permanently delete them." />
 
-      <div className="flex gap-2 border-b">
+      <div className="flex gap-2 border-b overflow-x-auto pb-2 scrollbar-hide">
         {TABS.map((tab) => (
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
-            className={`px-4 py-2 font-medium text-sm border-b-2 transition-colors ${
+            className={`px-4 py-2 font-medium text-sm border-b-2 transition-colors whitespace-nowrap ${
               activeTab === tab.id
                 ? "border-primary text-primary"
                 : "border-transparent text-muted-foreground hover:text-foreground"
@@ -146,8 +156,10 @@ export function TrashClient() {
               sortedItems.map((item) => (
                 <TableRow key={item.id}>
                   <TableCell className="font-medium">
-                    {item.name || item.slug || item.id} 
+                    {item.name || item.slug || item.claimNo || item.invoiceNo || item.category || item.id} 
                     {item.customer && ` (Customer: ${item.customer.name})`}
+                    {item.supplier && ` (Supplier: ${item.supplier.name})`}
+                    {item.customerName && ` (Customer: ${item.customerName})`}
                   </TableCell>
                   <TableCell>
                     {new Date(item.deletedAt).toLocaleString()}

@@ -69,7 +69,8 @@ export function CreateSaleClient() {
     pendingAmount, setPendingAmount,
     pendingAccountId, setPendingAccountId,
     refundMethod, setRefundMethod,
-    refundAccountId, setRefundAccountId
+    refundAccountId, setRefundAccountId,
+    activeQuotationId, setActiveQuotationId
   } = useCreateSale();
   return (
     <div className="w-full max-w-[1600px] mx-auto p-0 flex flex-col min-h-[calc(100vh-100px)] gap-2">
@@ -533,7 +534,7 @@ export function CreateSaleClient() {
 
                 {voucherRows.length > 0 && !editingSaleId && (
                   <Button variant="outline" className="border-border text-slate-600 h-8 sm:h-10 rounded-[4px] font-semibold hover:bg-secondary text-[10px] sm:text-xs px-2 sm:px-4 flex-1 sm:flex-none whitespace-nowrap" onClick={holdCurrentSale}>
-                    <FileText className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-1.5" /> <span className="hidden sm:inline">Save</span> Quotation
+                    <FileText className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-1.5" /> <span className="hidden sm:inline">{activeQuotationId ? "Update" : "Save"}</span> Quotation
                   </Button>
                 )}
               </div>

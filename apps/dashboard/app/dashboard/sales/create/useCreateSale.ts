@@ -89,6 +89,7 @@ export function useCreateSale() {
   const [quickPhone, setQuickPhone] = useState("");
   const [heldOpen, setHeldOpen] = useState(false);
   const [draftPreview, setDraftPreview] = useState<HeldSaleForPrint | null>(null);
+  const [activeQuotationId, setActiveQuotationId] = useState<string | null>(null);
   
   // Exchange state
   const [exchangeSale, setExchangeSale] = useState<Sale | null>(null);
@@ -216,6 +217,7 @@ export function useCreateSale() {
       if (sale.destination) setDestination(sale.destination);
       if (sale.attention) setAttention(sale.attention);
       if (sale.notes) setNarration(sale.notes);
+      setActiveQuotationId(sale.id);
       
       // Remove query param to prevent reload
       router.replace("/dashboard/sales/create");
@@ -467,6 +469,7 @@ export function useCreateSale() {
     setPendingMethod("Cash");
     setPendingAmount("");
     setPendingAccountId(null);
+    setActiveQuotationId(null);
   }, [session, allCustomers]);
 
   // ── Context event listeners for global Command Palette ────────────────────
@@ -531,8 +534,11 @@ export function useCreateSale() {
   const holdCurrentSale = async () => {
     if (voucherRows.length === 0) return;
     try {
-      await apiFetch("/api/pos/held-sales", {
-        method: "POST",
+      const url = activeQuotationId ? `/api/pos/held-sales?id=${activeQuotationId}` : "/api/pos/held-sales";
+      const method = activeQuotationId ? "PUT" : "POST";
+      
+      await apiFetch(url, {
+        method,
         body: JSON.stringify({
           customerId: voucherCustomerId,
           customerName: quickName || "", // Customer name isn't readily available without fetch, using quickName as fallback
@@ -544,7 +550,7 @@ export function useCreateSale() {
           notes: narration || undefined,
         }),
       });
-      toast.success("Quotation saved!");
+      toast.success(activeQuotationId ? "Quotation updated!" : "Quotation saved!");
       refetchHeldSales();
       clearVoucher();
     } catch (err: any) {
@@ -566,6 +572,7 @@ export function useCreateSale() {
     if (sale.destination) setDestination(sale.destination);
     if (sale.attention) setAttention(sale.attention);
     if (sale.notes) setNarration(sale.notes);
+    setActiveQuotationId(sale.id);
     
     // We do NOT delete the quotation automatically upon loading it anymore
     setHeldOpen(false);
@@ -791,6 +798,7 @@ export function useCreateSale() {
     resumeHeldSale, deleteHeldSale, handleCheckout, handleCameraBarcode,
     pendingMethod, setPendingMethod,
     pendingAmount, setPendingAmount,
-    pendingAccountId, setPendingAccountId
+    pendingAccountId, setPendingAccountId,
+    activeQuotationId, setActiveQuotationId
   };
 }

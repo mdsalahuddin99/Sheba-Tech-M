@@ -96,6 +96,7 @@ model Warehouse {
   stockAdjustments StockAdjustment[]
   transfersOut     Transfer[]        @relation("FromWarehouseTransfers")
   transfersIn      Transfer[]        @relation("ToWarehouseTransfers")
+  deletedAt        DateTime?
   createdAt        DateTime          @default(now())
 }
 
@@ -125,6 +126,7 @@ model Brand {
   name          String               @unique
   products      Product[]
   isPublished   Boolean              @default(false)
+  deletedAt     DateTime?
   createdAt     DateTime             @default(now())
   subcategories BrandSubcategory[]
   productTypes  ProductTypeBrand[]
@@ -136,6 +138,7 @@ model ProductType {
   name          String             @unique
   products      Product[]
   isPublished   Boolean            @default(false)
+  deletedAt     DateTime?
   createdAt     DateTime           @default(now())
   brands        ProductTypeBrand[]
   models        ModelProductType[]
@@ -147,6 +150,7 @@ model Model {
   name          String             @unique
   products      Product[]
   isPublished   Boolean            @default(false)
+  deletedAt     DateTime?
   createdAt     DateTime           @default(now())
   productTypes  ModelProductType[]
   series        SeriesModel[]
@@ -158,6 +162,7 @@ model Series {
   name          String             @unique
   products      Product[]
   isPublished   Boolean            @default(false)
+  deletedAt     DateTime?
   createdAt     DateTime           @default(now())
   models        SeriesModel[]
   itemLists     ItemList[]
@@ -575,6 +580,7 @@ model HeldSale {
   vat          Decimal   @default(0) @db.Decimal(12, 2)
   extraCharges Decimal   @default(0) @db.Decimal(12, 2)
   heldAt       DateTime  @default(now())
+  deletedAt    DateTime?
 
   @@index([userId])
 }
@@ -599,6 +605,7 @@ model Purchase {
   supplierTransactions SupplierTransaction[]
   notes       String?
   createdAt   DateTime         @default(now())
+  deletedAt   DateTime?
   expense     Expense?
 
   @@index([createdAt])
@@ -778,6 +785,7 @@ model Expense {
   notes     String?
   purchaseId String?          @unique
   purchase   Purchase?        @relation(fields: [purchaseId], references: [id], onDelete: Cascade)
+  deletedAt  DateTime?
 
   @@index([date])
 }
@@ -803,6 +811,7 @@ model StockAdjustment {
   notes       String?
   userId      String?
   createdAt   DateTime         @default(now())
+  deletedAt   DateTime?
 
   @@index([productId])
   @@index([warehouseId])
@@ -981,6 +990,7 @@ model WarrantyClaim {
   
   createdAt        DateTime   @default(now())
   updatedAt        DateTime   @updatedAt
+  deletedAt        DateTime?
 
   @@index([productId])
   @@index([customerId])

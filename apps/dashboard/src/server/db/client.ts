@@ -20,7 +20,12 @@ export const prisma =
     log: ["query", "warn", "error"],
   });
 
-const SOFT_DELETE_MODELS = ["Product", "Customer", "Supplier", "Category", "Sale"];
+const SOFT_DELETE_MODELS = [
+  "Product", "Customer", "Supplier", "Category", "Sale",
+  "Purchase", "Expense", "HeldSale",
+  "Brand", "ProductType", "Model", "Series",
+  "Warehouse", "StockAdjustment", "WarrantyClaim"
+];
 
 prisma.$use(async (params, next) => {
   if (SOFT_DELETE_MODELS.includes(params.model || "")) {

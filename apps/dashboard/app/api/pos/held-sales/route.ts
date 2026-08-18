@@ -26,6 +26,15 @@ export const POST = apiHandler(async (ctx: Ctx, req: Request) => {
   return heldSalesService.create(ctx, input as any);
 }, "heldSales:create");
 
+export const PUT = apiHandler(async (ctx: Ctx, req: Request) => {
+  const url = new URL(req.url);
+  const id = url.searchParams.get("id");
+  if (!id) throw new Error("Missing id");
+  const body = await req.json();
+  const input = createSchema.parse(body);
+  return heldSalesService.update(ctx, id, input as any);
+}, "heldSales:update");
+
 export const DELETE = apiHandler(async (ctx: Ctx, req: Request) => {
   const url = new URL(req.url);
   const id = url.searchParams.get("id");

@@ -82,6 +82,43 @@ export const heldSalesService = {
   },
 
   /**
+   * Update an existing held sale.
+   */
+  async update(ctx: Ctx, id: string, input: HeldSaleCreateInput) {
+    requireRole(ctx, "CASHIER");
+    
+    const existing = await prisma.heldSale.findFirst({
+      where: { id },
+    });
+
+    if (!existing) {
+      throw new ServiceError("NOT_FOUND", "Held sale not found", 404);
+    }
+
+    const sale = await prisma.heldSale.update({
+      where: { id },
+      data: {
+        customerId: input.customerId || null,
+        customerName: input.customerName,
+        cart: input.cart,
+        discount: input.discount,
+        salesPerson: input.salesPerson,
+        destination: input.destination ?? null,
+        attention: input.attention ?? null,
+        notes: input.notes,
+        vat: input.vat ?? 0,
+        extraCharges: input.extraCharges ?? 0,
+      },
+    });
+
+    return {
+      ...sale,
+      discount: Number(sale.discount),
+      vat: Number(sale.vat),
+    };
+  },
+
+  /**
    * Delete (resume or cancel) a held sale.
    */
   async delete(ctx: Ctx, id: string) {

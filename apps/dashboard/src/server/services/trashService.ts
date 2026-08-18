@@ -45,6 +45,87 @@ export const trashService = {
     });
   },
 
+  async listDeletedPurchases(ctx: Ctx) {
+    requireRole(ctx, "ADMIN");
+    return prisma.purchase.findMany({
+      where: { deletedAt: { not: null } },
+      include: { supplier: true },
+      orderBy: { deletedAt: "desc" },
+    });
+  },
+
+  async listDeletedExpenses(ctx: Ctx) {
+    requireRole(ctx, "ADMIN");
+    return prisma.expense.findMany({
+      where: { deletedAt: { not: null } },
+      orderBy: { deletedAt: "desc" },
+    });
+  },
+
+  async listDeletedQuotations(ctx: Ctx) {
+    requireRole(ctx, "ADMIN");
+    return prisma.heldSale.findMany({
+      where: { deletedAt: { not: null } },
+      orderBy: { deletedAt: "desc" },
+    });
+  },
+
+  async listDeletedBrands(ctx: Ctx) {
+    requireRole(ctx, "ADMIN");
+    return prisma.brand.findMany({
+      where: { deletedAt: { not: null } },
+      orderBy: { deletedAt: "desc" },
+    });
+  },
+
+  async listDeletedProductTypes(ctx: Ctx) {
+    requireRole(ctx, "ADMIN");
+    return prisma.productType.findMany({
+      where: { deletedAt: { not: null } },
+      orderBy: { deletedAt: "desc" },
+    });
+  },
+
+  async listDeletedModels(ctx: Ctx) {
+    requireRole(ctx, "ADMIN");
+    return prisma.model.findMany({
+      where: { deletedAt: { not: null } },
+      orderBy: { deletedAt: "desc" },
+    });
+  },
+
+  async listDeletedSeries(ctx: Ctx) {
+    requireRole(ctx, "ADMIN");
+    return prisma.series.findMany({
+      where: { deletedAt: { not: null } },
+      orderBy: { deletedAt: "desc" },
+    });
+  },
+
+  async listDeletedWarehouses(ctx: Ctx) {
+    requireRole(ctx, "ADMIN");
+    return prisma.warehouse.findMany({
+      where: { deletedAt: { not: null } },
+      orderBy: { deletedAt: "desc" },
+    });
+  },
+
+  async listDeletedStockAdjustments(ctx: Ctx) {
+    requireRole(ctx, "ADMIN");
+    return prisma.stockAdjustment.findMany({
+      where: { deletedAt: { not: null } },
+      orderBy: { deletedAt: "desc" },
+    });
+  },
+
+  async listDeletedWarrantyClaims(ctx: Ctx) {
+    requireRole(ctx, "ADMIN");
+    return prisma.warrantyClaim.findMany({
+      where: { deletedAt: { not: null } },
+      orderBy: { deletedAt: "desc" },
+    });
+  },
+
   async restoreItem(ctx: Ctx, type: string, id: string) {
     requireRole(ctx, "ADMIN");
     const data = { deletedAt: null };
@@ -60,6 +141,26 @@ export const trashService = {
         return prisma.category.update({ where: { id }, data });
       case "sale":
         return prisma.sale.update({ where: { id }, data });
+      case "purchase":
+        return prisma.purchase.update({ where: { id }, data });
+      case "expense":
+        return prisma.expense.update({ where: { id }, data });
+      case "quotation":
+        return prisma.heldSale.update({ where: { id }, data });
+      case "brand":
+        return prisma.brand.update({ where: { id }, data });
+      case "productType":
+        return prisma.productType.update({ where: { id }, data });
+      case "model":
+        return prisma.model.update({ where: { id }, data });
+      case "series":
+        return prisma.series.update({ where: { id }, data });
+      case "warehouse":
+        return prisma.warehouse.update({ where: { id }, data });
+      case "stockAdjustment":
+        return prisma.stockAdjustment.update({ where: { id }, data });
+      case "warrantyClaim":
+        return prisma.warrantyClaim.update({ where: { id }, data });
       default:
         throw new Error(`Unknown type ${type}`);
     }
@@ -80,6 +181,26 @@ export const trashService = {
         return prisma.$executeRaw`DELETE FROM "Category" WHERE id = ${id}`;
       case "sale":
         return prisma.$executeRaw`DELETE FROM "Sale" WHERE id = ${id}`;
+      case "purchase":
+        return prisma.$executeRaw`DELETE FROM "Purchase" WHERE id = ${id}`;
+      case "expense":
+        return prisma.$executeRaw`DELETE FROM "Expense" WHERE id = ${id}`;
+      case "quotation":
+        return prisma.$executeRaw`DELETE FROM "HeldSale" WHERE id = ${id}`;
+      case "brand":
+        return prisma.$executeRaw`DELETE FROM "Brand" WHERE id = ${id}`;
+      case "productType":
+        return prisma.$executeRaw`DELETE FROM "ProductType" WHERE id = ${id}`;
+      case "model":
+        return prisma.$executeRaw`DELETE FROM "Model" WHERE id = ${id}`;
+      case "series":
+        return prisma.$executeRaw`DELETE FROM "Series" WHERE id = ${id}`;
+      case "warehouse":
+        return prisma.$executeRaw`DELETE FROM "Warehouse" WHERE id = ${id}`;
+      case "stockAdjustment":
+        return prisma.$executeRaw`DELETE FROM "StockAdjustment" WHERE id = ${id}`;
+      case "warrantyClaim":
+        return prisma.$executeRaw`DELETE FROM "WarrantyClaim" WHERE id = ${id}`;
       default:
         throw new Error(`Unknown type ${type}`);
     }
