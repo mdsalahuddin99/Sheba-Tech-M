@@ -91,50 +91,40 @@ export async function exchange(ctx: Ctx, input: SaleExchangeInput) {
 
     // B. Handle Financials for Return
     if (originalSale.customerId && totalReturnAmount > 0) {
-      // Create an adjustment transaction to add the returned value back to customer balance
       const customer = await tx.customer.findUnique({ where: { id: originalSale.customerId } });
       if (customer) {
-        const currentDue = Number(customer.due);
         const currentBalance = Number(customer.balance);
         
-        let dueDecrement = 0;
-        let balanceIncrement = 0;
-        
-        if (currentDue > 0) {
-          if (totalReturnAmount <= currentDue) {
-            dueDecrement = totalReturnAmount;
-          } else {
-            dueDecrement = currentDue;
-            balanceIncrement = totalReturnAmount - currentDue;
+        const refundMethod = (input as any).refundMethod || "ADVANCE";
+        const refundAccountId = (input as any).refundAccountId;
+
+        if (refundMethod === "CASH" && refundAccountId) {
+          // Record EXPENSE transaction on the selected cash account
+          const account = await tx.financialAccount.findUnique({ where: { id: refundAccountId } });
+          if (account) {
+            await tx.expense.create({
+              data: {
+                accountId: refundAccountId,
+                category: "Refund",
+                amount: totalReturnAmount,
+                notes: `Cash refund for Sale ID: ${originalSale.id.slice(0, 8).toUpperCase()}. Reason: ${reason}`,
+                date: new Date(),
+              }
+            });
+            await tx.financialAccount.update({
+              where: { id: refundAccountId },
+              data: { balance: { decrement: totalReturnAmount } }
+            });
           }
         } else {
-          balanceIncrement = totalReturnAmount;
-        }
-        
-        const newDue = currentDue - dueDecrement;
-        const newBalance = currentBalance + balanceIncrement;
-        
-        if (dueDecrement > 0) {
+          // Keep in Advance: Add to Customer's Balance
+          const newBalance = currentBalance + totalReturnAmount;
+          
           await tx.customerTransaction.create({
             data: {
               customerId: customer.id,
               type: "ADJUSTMENT",
-              amount: dueDecrement,
-              balanceBefore: currentBalance,
-              balanceAfter: currentBalance,
-              saleId: originalSale.id,
-              notes: `Exchange Return Offset. Due reduced. Reason: ${reason}`,
-              createdById: ctx.userId,
-            },
-          });
-        }
-        
-        if (balanceIncrement > 0) {
-          await tx.customerTransaction.create({
-            data: {
-              customerId: customer.id,
-              type: "ADJUSTMENT",
-              amount: balanceIncrement,
+              amount: totalReturnAmount,
               balanceBefore: currentBalance,
               balanceAfter: newBalance,
               saleId: originalSale.id,
@@ -142,12 +132,12 @@ export async function exchange(ctx: Ctx, input: SaleExchangeInput) {
               createdById: ctx.userId,
             },
           });
-        }
 
-        await tx.customer.update({
-          where: { id: customer.id },
-          data: { balance: newBalance, due: newDue },
-        });
+          await tx.customer.update({
+            where: { id: customer.id },
+            data: { balance: newBalance },
+          });
+        }
       }
     }
 

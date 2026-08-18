@@ -64,5 +64,7 @@ export const saleExchangeSchema = z.object({
   newItems: z.array(saleItemSchema).optional(),
   reason: z.string().min(1, "Reason is required"),
   tenders: z.array(saleTenderSchema).optional(),
+  refundMethod: z.enum(["CASH", "ADVANCE"]).optional(),
+  refundAccountId: z.string().optional(),
 });
 

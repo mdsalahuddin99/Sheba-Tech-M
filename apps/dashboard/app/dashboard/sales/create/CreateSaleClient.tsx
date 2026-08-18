@@ -67,9 +67,10 @@ export function CreateSaleClient() {
     resumeHeldSale, deleteHeldSale, handleCheckout, handleCameraBarcode,
     pendingMethod, setPendingMethod,
     pendingAmount, setPendingAmount,
-    pendingAccountId, setPendingAccountId
+    pendingAccountId, setPendingAccountId,
+    refundMethod, setRefundMethod,
+    refundAccountId, setRefundAccountId
   } = useCreateSale();
-
   return (
     <div className="w-full max-w-[1600px] mx-auto p-0 flex flex-col min-h-[calc(100vh-100px)] gap-2">
       {/* ── Standard POS Header ── */}
@@ -292,6 +293,53 @@ export function CreateSaleClient() {
                         Total Return Value: {formatCurrency(exchangeTotalReturn)}
                       </div>
                     </div>
+                    {exchangeTotalReturn - subtotal > 0 && (
+                      <div className="mt-3 bg-emerald-50 border border-emerald-200 p-3 rounded-[4px]">
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-2">
+                          <h4 className="text-sm font-bold text-emerald-800">
+                            Net Refund: {formatCurrency(exchangeTotalReturn - subtotal)}
+                          </h4>
+                        </div>
+                        <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
+                          <div className="flex gap-4">
+                            <label className="flex items-center gap-2 text-sm text-emerald-900 cursor-pointer">
+                              <input 
+                                type="radio" 
+                                name="refundMethod" 
+                                value="ADVANCE" 
+                                checked={refundMethod === "ADVANCE"} 
+                                onChange={() => setRefundMethod("ADVANCE")} 
+                                className="accent-emerald-600"
+                              />
+                              Keep in Advance
+                            </label>
+                            <label className="flex items-center gap-2 text-sm text-emerald-900 cursor-pointer">
+                              <input 
+                                type="radio" 
+                                name="refundMethod" 
+                                value="CASH" 
+                                checked={refundMethod === "CASH"} 
+                                onChange={() => setRefundMethod("CASH")} 
+                                className="accent-emerald-600"
+                              />
+                              Cash Refund
+                            </label>
+                          </div>
+                          {refundMethod === "CASH" && (
+                            <Select value={refundAccountId} onValueChange={setRefundAccountId}>
+                              <SelectTrigger className="h-8 w-48 text-xs border-emerald-300 bg-white">
+                                <SelectValue placeholder="Select Cash Account..." />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {cashAccounts?.map((a: any) => (
+                                  <SelectItem key={a.id} value={a.id}>{a.name}</SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          )}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )}
                 {!selectedWarehouseId ? (
@@ -522,7 +570,12 @@ export function CreateSaleClient() {
                 )}
                 <LoadingButton
                   loading={isCheckingOut || saleLoading}
-                  disabled={(!exchangeSaleId && voucherRows.length === 0) || !selectedWarehouseId || (exchangeSaleId && exchangeReturnItems.length === 0)}
+                  disabled={
+                    (!exchangeSaleId && voucherRows.length === 0) || 
+                    !selectedWarehouseId || 
+                    (exchangeSaleId && exchangeReturnItems.length === 0) ||
+                    (exchangeSaleId && exchangeTotalReturn - subtotal > 0 && refundMethod === "CASH" && !refundAccountId)
+                  }
                   className="h-8 sm:h-10 bg-primary text-primary-foreground shadow-none hover:bg-primary/95 min-w-0 sm:min-w-32 rounded-[4px] font-bold text-[10px] sm:text-xs px-2 sm:px-4 flex-1 sm:flex-none whitespace-nowrap"
                   onClick={handleCheckout}
                 >

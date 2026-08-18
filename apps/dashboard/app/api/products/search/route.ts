@@ -27,7 +27,8 @@ export const GET = apiHandler(async (ctx: Ctx, req: Request) => {
           OR: [
             { barcode: { equals: q, mode: "insensitive" as const } },
             { sku: { equals: q, mode: "insensitive" as const } },
-            { serialNumbers: { some: { serial: { equals: q, mode: "insensitive" as const } } } }
+            { serialNumbers: { some: { serial: { equals: q, mode: "insensitive" as const } } } },
+            { searchTags: { has: q } }
           ]
         }
       ];
@@ -61,7 +62,6 @@ export const GET = apiHandler(async (ctx: Ctx, req: Request) => {
   if (!exact) {
     const stockCondition = {
       OR: [
-        { isService: true },
         warehouseId 
           ? { warehouseStocks: { some: { warehouseId, qty: { gt: 0 } } } }
           : { stock: { gt: 0 } }

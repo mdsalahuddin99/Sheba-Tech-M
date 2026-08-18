@@ -94,6 +94,8 @@ export function useCreateSale() {
   const [exchangeSale, setExchangeSale] = useState<Sale | null>(null);
   const [exchangeReturnItems, setExchangeReturnItems] = useState<any[]>([]);
   const [exchangeReason, setExchangeReason] = useState("");
+  const [refundMethod, setRefundMethod] = useState<"ADVANCE" | "CASH">("ADVANCE");
+  const [refundAccountId, setRefundAccountId] = useState<string>("");
 
   const vSearchRef = useRef<HTMLInputElement>(null);
 
@@ -709,12 +711,15 @@ export function useCreateSale() {
       setIsCheckingOut(true);
       let sale;
       if (exchangeSaleId) {
+        const netRefund = exchangeTotalReturn - subtotal;
         sale = await salesApi.exchange({
           exchangeSaleId,
           returnItems: exchangeReturnItems,
           newItems: payload.items,
           reason: exchangeReason || "Customer exchange",
           tenders: finalTenders,
+          refundMethod: netRefund > 0 ? refundMethod : undefined,
+          refundAccountId: netRefund > 0 && refundMethod === "CASH" ? refundAccountId : undefined,
         });
         sale = sale.newSale || sale; // Ensure we have a valid Sale object to display
       } else if (editingSaleId) {
@@ -780,6 +785,7 @@ export function useCreateSale() {
     heldSales, refetchHeldSales, currentCustomer, customers,
     loadDraftId, subtotal, invoiceTotal, addProductToVoucher, exchangeTotalReturn,
     exchangeSaleId, exchangeSale, exchangeReturnItems, setExchangeReturnItems, exchangeReason, setExchangeReason,
+    refundMethod, setRefundMethod, refundAccountId, setRefundAccountId,
     handleBarcodeEnter, changeQty, changeSerials, changeWarranty,
     changePrice, changeDiscount, removeRow, clearVoucher, holdCurrentSale,
     resumeHeldSale, deleteHeldSale, handleCheckout, handleCameraBarcode,
