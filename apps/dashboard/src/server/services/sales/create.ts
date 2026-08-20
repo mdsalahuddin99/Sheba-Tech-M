@@ -28,6 +28,20 @@ async function __validateItemsStock(
   });
   const productMap = new Map(products.map((p: any) => [p.id, p]));
 
+  // Check for missing products — they may have been soft-deleted
+  const missingIds = productIds.filter(id => !productMap.has(id));
+  if (missingIds.length > 0) {
+    // Query deleted products to provide a clear error message
+    const deletedProducts = await tx.product.findMany({
+      where: { id: { in: missingIds }, deletedAt: { not: null } },
+    });
+    if (deletedProducts.length > 0) {
+      const names = deletedProducts.map((p: any) => `"${p.name}"`).join(", ");
+      throw new ServiceError("NOT_FOUND", `${names} ডিলিট করা হয়েছে। কার্ট থেকে সরিয়ে আবার চেষ্টা করুন।`);
+    }
+    throw new ServiceError("NOT_FOUND", `Product ${missingIds[0]} not found`);
+  }
+
   const trackedProductIds = products.filter((p: any) => p.trackSerials).map((p: any) => p.id);
   const [warehouseStocks, serialCountRows] = await Promise.all([
     warehouseId ? tx.warehouseStock.findMany({ where: { warehouseId, productId: { in: productIds } } }) : [],
@@ -50,8 +64,7 @@ async function __validateItemsStock(
 
   const updates: Promise<any>[] = [];
   for (const item of input.items) {
-    const product = productMap.get(item.productId);
-    if (!product) throw new ServiceError("NOT_FOUND", `Product ${item.productId} not found`);
+    const product = productMap.get(item.productId)!;
 
     if (product.isService) {
       // Services do not track stock or serials

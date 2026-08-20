@@ -104,18 +104,23 @@ export function ProductFilterBar({
       list = list.filter((p: any) => p.categoryId === selectedCat?.id || p.category?.name === category || p.category === category);
     }
     if (debouncedSearchQuery) {
-      const q = debouncedSearchQuery.toLowerCase();
+      const q = debouncedSearchQuery.toLowerCase().trim();
+      const terms = q.split(/\s+/).filter(Boolean);
       list = list.filter((p: any) => {
         const pName = p.name?.toLowerCase() || "";
         const sku = p.sku?.toLowerCase() || "";
         const barcode = p.barcode?.toLowerCase() || "";
         const model = (p.globalModel?.name || p.model)?.toLowerCase() || "";
         const brand = (p.globalBrand?.name || p.brand)?.toLowerCase() || "";
-        const tagsMatches = Array.isArray(p.searchTags) 
-          ? p.searchTags.some((tag: string) => tag.toLowerCase().includes(q))
-          : false;
-          
-        return pName.includes(q) || sku.includes(q) || barcode === q || model.includes(q) || brand.includes(q) || tagsMatches;
+        const tagsStr = Array.isArray(p.searchTags)
+          ? p.searchTags.map((t: string) => t.toLowerCase()).join(" ")
+          : "";
+
+        // Combine all searchable text into one string for multi-word matching
+        const searchableText = `${pName} ${sku} ${barcode} ${model} ${brand} ${tagsStr}`;
+        
+        // Every search term must match somewhere in the combined searchable text
+        return terms.every(term => searchableText.includes(term));
       });
     }
     return list.slice(0, 50);

@@ -44,6 +44,19 @@ export async function update(ctx: Ctx, id: string, input: SaleUpdateInput) {
     });
     const productMap = new Map(products.map((p: any) => [p.id, p]));
 
+    // Check for missing products — they may have been soft-deleted
+    const missingIds = allProductIds.filter(id => !productMap.has(id));
+    if (missingIds.length > 0) {
+      const deletedProducts = await tx.product.findMany({
+        where: { id: { in: missingIds }, deletedAt: { not: null } },
+      });
+      if (deletedProducts.length > 0) {
+        const names = deletedProducts.map((p: any) => `"${p.name}"`).join(", ");
+        throw new ServiceError("NOT_FOUND", `${names} ডিলিট করা হয়েছে। কার্ট থেকে সরিয়ে আবার চেষ্টা করুন।`);
+      }
+      throw new ServiceError("NOT_FOUND", `Product ${missingIds[0]} not found`);
+    }
+
     // Pre-load old warehouse stocks
     const oldWarehouseStocks = sale.warehouseId ? await tx.warehouseStock.findMany({
       where: { warehouseId: sale.warehouseId, productId: { in: sale.items.map(i => i.productId) } },
@@ -94,8 +107,7 @@ export async function update(ctx: Ctx, id: string, input: SaleUpdateInput) {
     const productSnapshots = new Map<string, { cost: number; name: string }>();
 
     for (const item of input.items) {
-      const product = productMap.get(item.productId);
-      if (!product) throw new ServiceError("NOT_FOUND", `Product ${item.productId} not found`);
+      const product = productMap.get(item.productId)!;
       
       if (product.isService) {
         productSnapshots.set(item.productId, { cost: 0, name: product.name });
